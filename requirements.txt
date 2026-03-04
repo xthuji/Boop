@@ -1,0 +1,12 @@
+# Requirements for building Boop Python
+# Install with: pip install -r requirements.txt
+
+# Runtime dependencies (Tkinter is usually included with Python)
+# tkinter
+
+# Build dependencies
+pyinstaller>=5.0
+Pillow>=9.0
+
+# Optional: For better macOS app integration
+# pyobjc-framework-Cocoa; sys_platform == 'darwin'

@@ -1,0 +1,304 @@
+"""
+Editor Component - Text editor with line numbers and syntax highlighting
+"""
+
+import tkinter as tk
+from tkinter import ttk
+from typing import Optional, Callable
+
+
+class Editor:
+    """Text editor component with line numbers and syntax highlighting."""
+    
+    def __init__(self, parent: tk.Widget, config):
+        """Initialize the editor.
+        
+        Args:
+            parent: Parent widget
+            config: Application configuration
+        """
+        self.parent = parent
+        self.config = config
+        self._text_widget: Optional[tk.Text] = None
+        self._line_numbers: Optional[tk.Text] = None
+        self._scrollbar: Optional[ttk.Scrollbar] = None
+        
+        # History for undo/redo
+        self._history = []
+        self._history_index = -1
+        
+        # Script execution history
+        self._script_history = []
+        self._current_script_history_index = -1
+        
+        self._create_ui()
+        self._bind_events()
+        # Initialize history with empty state
+        self._save_state()
+    
+    def _create_ui(self):
+        """Create the editor UI."""
+        # Main frame
+        frame = tk.Frame(self.parent)
+        frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Scrollbar
+        self._scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+        self._scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Line numbers
+        self._line_numbers = tk.Text(
+            frame,
+            width=4,
+            padx=5,
+            pady=2,
+            bg='#f0f0f0',
+            fg='#666666',
+            font=(self.config.font_family, self.config.font_size),
+            state=tk.DISABLED,
+            relief=tk.FLAT
+        )
+        self._line_numbers.pack(side=tk.LEFT, fill=tk.Y)
+        
+        # Text widget
+        self._text_widget = tk.Text(
+            frame,
+            font=(self.config.font_family, self.config.font_size),
+            wrap=tk.WORD,
+            relief=tk.FLAT,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        self._text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Link scrollbar
+        self._scrollbar.config(command=self._scroll)
+        self._text_widget.config(yscrollcommand=self._scrollbar.set)
+        self._line_numbers.config(yscrollcommand=self._scrollbar.set)
+    
+    def _bind_events(self):
+        """Bind keyboard and mouse events."""
+        # Text change events
+        self._text_widget.bind('<<Modified>>', self._on_modified)
+        
+        def binding_hotkey_action(shortcuts, action):
+            for shortcut in shortcuts:
+                # Convert shortcut strings to Tkinter binding format
+                self._text_widget.bind(f'<{shortcut.replace("+", "-")}>', action)
+                # Bind reverse order for three-part shortcuts (e.g. Ctrl+Shift+z)
+                parts = shortcut.split('+')
+                if parts and len(parts) == 3:
+                    self._text_widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}>', action)
+                elif parts and len(parts) == 4:
+                    self._text_widget.bind(f'<{parts[0]}-{parts[2]}-{parts[1]}-{parts[3]}>', action)
+                    self._text_widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}-{parts[3]}>', action)
+                    self._text_widget.bind(f'<{parts[1]}-{parts[2]}-{parts[0]}-{parts[3]}>', action)
+                    self._text_widget.bind(f'<{parts[2]}-{parts[1]}-{parts[0]}-{parts[3]}>', action)
+                    self._text_widget.bind(f'<{parts[2]}-{parts[0]}-{parts[1]}-{parts[3]}>', action)
+            
+        
+        # Bind shortcuts
+        binding_hotkey_action(self.config.shortcuts.get('undo', ['Ctrl+z']), self._undo)
+        binding_hotkey_action(self.config.shortcuts.get('redo', ['Ctrl+Shift+z']), self._redo)
+        binding_hotkey_action(self.config.shortcuts.get('cut', ['Ctrl+x']), self._cut)
+        binding_hotkey_action(self.config.shortcuts.get('copy', ['Ctrl+c']), self._copy)
+        binding_hotkey_action(self.config.shortcuts.get('paste', ['Ctrl+v']), self._paste)
+        
+        # Mouse wheel
+        self._text_widget.bind('<MouseWheel>', self._on_mousewheel)
+        self._line_numbers.bind('<MouseWheel>', self._on_mousewheel)
+    
+    def _scroll(self, *args):
+        """Sync scrollbar between text and line numbers."""
+        self._text_widget.yview(*args)
+        self._line_numbers.yview(*args)
+        self._update_line_numbers()
+    
+    def _on_mousewheel(self, event):
+        """Handle mouse wheel event."""
+        self._text_widget.yview_scroll(-1 * (event.delta // 120), 'units')
+        self._line_numbers.yview_scroll(-1 * (event.delta // 120), 'units')
+        self._update_line_numbers()
+    
+    def _on_modified(self, event):
+        """Handle text modification event."""
+        # Save state only if content has changed
+        self._update_line_numbers()
+        self._save_state()
+        # Reset the modified flag
+        self._text_widget.edit_modified(False)
+    
+    def _update_line_numbers(self):
+        """Update line numbers."""
+        lines = self._text_widget.get('1.0', 'end-1c').count('\n') + 1
+        line_numbers = '\n'.join(str(i) for i in range(1, lines + 1))
+        
+        self._line_numbers.config(state=tk.NORMAL)
+        self._line_numbers.delete('1.0', tk.END)
+        self._line_numbers.insert('1.0', line_numbers)
+        self._line_numbers.config(state=tk.DISABLED)
+    
+    def _save_state(self):
+        """Save current state for undo/redo."""
+        current_text = self.get_content()
+        # Only save state if content has actually changed
+        # This prevents duplicate entries in the history
+        if not self._history or current_text != self._history[self._history_index]:
+            # Remove any future history entries if we're not at the end
+            if self._history_index < len(self._history) - 1:
+                self._history = self._history[:self._history_index + 1]
+            # Add new state to history
+            self._history.append(current_text)
+            self._history_index = len(self._history) - 1
+    
+    def _undo(self, event):
+        """Handle undo operation."""
+        if self._history_index > 0:
+            # Move to previous state in history
+            self._history_index -= 1
+            previous_state = self._history[self._history_index]
+            # Update text without triggering new state save
+            self._text_widget.delete('1.0', tk.END)
+            self._text_widget.insert('1.0', previous_state)
+            self._update_line_numbers()
+        return 'break'
+    
+    def _redo(self, event):
+        """Handle redo operation."""
+        if self._history_index < len(self._history) - 1:
+            # Move to next state in history
+            self._history_index += 1
+            next_state = self._history[self._history_index]
+            # Update text without triggering new state save
+            self._text_widget.delete('1.0', tk.END)
+            self._text_widget.insert('1.0', next_state)
+            self._update_line_numbers()
+        return 'break'
+    
+    def _cut(self, event):
+        """Handle cut operation."""
+        self._text_widget.event_generate('<<Cut>>')
+        return 'break'
+    
+    def _copy(self, event):
+        """Handle copy operation."""
+        self._text_widget.event_generate('<<Copy>>')
+        return 'break'
+    
+    def _paste(self, event):
+        """Handle paste operation."""
+        self._text_widget.event_generate('<<Paste>>')
+        return 'break'
+    
+    def get_content(self) -> str:
+        """Get the editor content."""
+        return self._text_widget.get('1.0', 'end-1c')
+    
+    def set_content(self, text: str):
+        """Set the editor content."""
+        # Update the content
+        self._text_widget.delete('1.0', tk.END)
+        self._text_widget.insert('1.0', text)
+        self._update_line_numbers()
+        # Trigger the modified event to save the state
+        self._text_widget.event_generate('<<Modified>>')
+    
+    def get_selection(self) -> str:
+        """Get the selected text."""
+        try:
+            return self._text_widget.get(tk.SEL_FIRST, tk.SEL_LAST)
+        except tk.TclError:
+            return ""
+    
+    def get_cursor_position(self) -> tuple:
+        """Get the cursor position (line, column)."""
+        index = self._text_widget.index(tk.INSERT)
+        line, col = map(int, index.split('.'))
+        return line, col
+    
+    def get_char_count(self) -> int:
+        """Get the character count."""
+        return len(self.get_content())
+    
+    def focus(self):
+        """Focus the editor."""
+        self._text_widget.focus_set()
+    
+    def clear(self):
+        """Clear the editor."""
+        self.set_content("")
+    
+    def insert(self, text: str):
+        """Insert text at cursor position."""
+        self._text_widget.insert(tk.INSERT, text)
+    
+    def replace_selection(self, text: str):
+        """Replace selected text."""
+        try:
+            self._text_widget.delete(tk.SEL_FIRST, tk.SEL_LAST)
+        except tk.TclError:
+            pass
+        self._text_widget.insert(tk.INSERT, text)
+    
+    def record_script_execution(self, script_name: str):
+        """Record script execution for history."""
+        # Save current state before execution
+        before_state = self.get_content()
+        
+        # Create history entry
+        history_entry = {
+            'script_name': script_name,
+            'before': before_state,
+            'after': None  # Will be filled after execution
+        }
+        
+        # Remove any future history entries if we're not at the end
+        if self._current_script_history_index < len(self._script_history) - 1:
+            self._script_history = self._script_history[:self._current_script_history_index + 1]
+        
+        # Add new history entry
+        self._script_history.append(history_entry)
+        self._current_script_history_index = len(self._script_history) - 1
+        
+        # Save current state to undo/redo history
+        # This ensures the state before script execution is always saved
+        self._save_state()
+    
+    def update_script_execution_result(self, after_state: str):
+        """Update the after state for the last script execution."""
+        if self._script_history and self._current_script_history_index >= 0:
+            self._script_history[self._current_script_history_index]['after'] = after_state
+    
+    def navigate_history(self, direction: int):
+        """Navigate through script execution history.
+        
+        Args:
+            direction: 1 for next, -1 for previous
+        """
+        new_index = self._current_script_history_index + direction
+        
+        if 0 <= new_index < len(self._script_history):
+            history_entry = self._script_history[new_index]
+            # Use the 'after' state if available, otherwise 'before'
+            target_state = history_entry['after'] if history_entry['after'] else history_entry['before']
+            
+            # Update current state
+            self.set_content(target_state)
+            self._current_script_history_index = new_index
+            return True
+        
+        return False
+    
+    def get_history_size(self) -> int:
+        """Get the size of the script execution history."""
+        return len(self._script_history)
+    
+    def get_current_history_index(self) -> int:
+        """Get the current history index."""
+        return self._current_history_index
+    
+    def get_history_entry(self, index: int) -> dict:
+        """Get a specific history entry."""
+        if 0 <= index < len(self._script_history):
+            return self._script_history[index]
+        return None

@@ -1,0 +1,312 @@
+# Boop
+
+A Python-based text manipulation tool inspired by the original [Boop](https://github.com/IvanMathy/Boop) macOS app.
+
+**GUI-only application** - No command line interface, just like the original Boop.app.
+
+---
+
+## Features
+
+- 🎨 **Native GUI Interface** - Tkinter-based UI mimicking Boop.app design
+- ⌨️ **Keyboard Shortcuts** - Same shortcuts as original Boop
+- 📁 **Built-in Configuration** - Config stored in `boop/config.json`
+- 🔧 **Preferences Window** - GUI for all settings
+- 🐍 **Python Scripts** - Write text manipulation scripts in Python
+- 🎯 **Custom Script Directories** - Configure multiple script locations
+- 🔄 **Isolated Execution** - Scripts run in subprocesses for safety
+
+---
+
+## Quick Start
+
+### Installation
+
+```bash
+cd /path/to/BoopPython
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python3 -m boop
+```
+
+### Requirements
+
+- Python 3.9+
+- Tkinter (usually included with Python)
+
+### Build Standalone App
+
+See [BUILD.md](BUILD.md) for detailed build instructions.
+
+```bash
+# Build for current platform
+./build.sh
+
+# Output: dist/Boop-1.0.0-macos.dmg (or .tar.gz / .zip)
+```
+
+---
+
+## Usage
+
+### Launch the Application
+
+```bash
+python3 -m boop
+```
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+B` (or `Ctrl+B`) | Open Script Picker |
+| `Shift+Cmd+B` | Run Last Script |
+| `Shift+Cmd+R` | Reload Scripts |
+| `Cmd+,` | Open Preferences |
+| `Cmd+N` | Clear Editor |
+
+### Menu Options
+
+**Scripts Menu:**
+- Open Picker... - Open script selection dialog
+- Run Last Script - Re-run the last executed script
+- Reload Scripts - Refresh all scripts from directories
+- Preferences... - Open settings window
+
+**Edit Menu:**
+- Cut/Copy/Paste - Standard editing
+- Clear - Clear the editor
+
+**Help Menu:**
+- About - Application information
+
+---
+
+## Configuration
+
+Configuration is stored in `boop/config.json` within the application directory.
+
+### Configurable Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `script_directories` | List of script directories | `[boop/scripts]` |
+| `python_interpreter` | Python interpreter path | Current Python |
+| `font_family` | Editor font family | Menlo |
+| `font_size` | Editor font size | 14 |
+| `theme` | Color theme | system |
+
+### Modifying Configuration
+
+Use the **Preferences window** (`Cmd+,`) to modify settings:
+
+1. **Scripts Tab**: Add/remove script directories
+2. **Python Tab**: Set custom Python interpreter
+3. **Editor Tab**: Configure font and theme
+
+---
+
+## Writing Scripts
+
+Each Python script must have:
+1. A module-level docstring with JSON metadata
+2. A `main(state)` function
+
+### Script Template
+
+```python
+'''
+{
+    "api": 1,
+    "name": "My Script",
+    "description": "What this script does",
+    "author": "Your Name",
+    "icon": "star",
+    "tags": ["tag1", "tag2"],
+    "dependencies": ["requests", "beautifulsoup4"],
+    "help": "Detailed help text."
+}
+'''
+
+def main(state):
+    """Main function that processes text."""
+    # Get input text
+    text = state.text
+    
+    # Process the text
+    result = text.upper()
+    
+    # Set output
+    state.text = result
+    
+    # Show message
+    state.post_info("Text converted!")
+```
+
+### ScriptExecution API
+
+| Property/Method | Description |
+|-----------------|-------------|
+| `state.text` | Get/set current text (selection or full) |
+| `state.full_text` | Get/set entire editor content |
+| `state.selection` | Get/set selected text |
+| `state.insert(str)` | Insert text at cursor |
+| `state.post_info(msg)` | Show info message |
+| `state.post_error(msg)` | Show error message |
+
+### Dependency Management
+
+Boop Python supports managing dependencies for scripts. You can define dependencies in the script metadata, and the application will install them for you.
+
+#### Adding Dependencies to Scripts
+
+Add a `dependencies` field to your script's metadata: 
+
+```python
+'''
+{
+    "api": 1,
+    "name": "My Script",
+    "description": "What this script does",
+    "tags": ["example"],
+    "dependencies": ["requests==2.31.0", "beautifulsoup4==4.12.2"],
+    "help": "Detailed help text."
+}
+'''
+```
+
+#### Installing Dependencies
+
+To install dependencies:
+
+1. Open the Preferences window (`Cmd+,`)
+2. Go to the **Scripts** tab
+3. Click the **Install All Dependencies** button
+4. The application will automatically install all dependencies defined in your scripts
+
+#### How It Works
+
+- Dependencies are installed in the application's internal Python environment
+- This keeps your system Python environment clean and isolated
+- Dependencies are only installed once, and reused across all scripts
+- The application will use the internal Python environment for script execution
+
+### Example Scripts
+
+#### Convert to Uppercase
+
+```python
+'''
+{
+    "api": 1,
+    "name": "To Uppercase",
+    "description": "Convert text to uppercase",
+    "tags": ["case", "uppercase"]
+}
+'''
+
+def main(state):
+    state.text = state.text.upper()
+    state.post_info("Converted to uppercase")
+```
+
+#### Count Lines
+
+```python
+'''
+{
+    "api": 1,
+    "name": "Count Lines",
+    "description": "Count the number of lines",
+    "tags": ["count", "lines"]
+}
+'''
+
+def main(state):
+    line_count = len(state.full_text.split('\n'))
+    state.post_info(f"{line_count} lines")
+```
+
+#### Format JSON
+
+```python
+'''
+{
+    "api": 1,
+    "name": "JSON Format",
+    "description": "Format and indent JSON",
+    "tags": ["json", "format"]
+}
+'''
+
+import json
+
+def main(state):
+    try:
+        data = json.loads(state.text)
+        state.text = json.dumps(data, indent=2)
+        state.post_info("JSON formatted")
+    except json.JSONDecodeError as e:
+        state.post_error(f"Invalid JSON: {e}")
+```
+
+---
+
+## Project Structure
+
+```
+BoopPython/
+├── boop/
+│   ├── __init__.py          # Package init
+│   ├── __main__.py          # GUI entry point
+│   ├── config.json          # Application configuration
+│   ├── config/
+│   │   └── settings.py      # ConfigManager, BoopConfig
+│   ├── core/
+│   │   ├── script_execution.py  # ScriptExecution class
+│   │   ├── script_loader.py     # ScriptLoader class
+│   │   ├── script_metadata.py   # ScriptMetadata class
+│   │   └── script_runner.py     # ScriptRunner class
+│   ├── ui/
+│   │   ├── main_window.py       # Main application window
+│   │   ├── script_picker.py     # Script selection dialog
+│   │   └── preferences.py       # Preferences window
+│   └── scripts/                 # Default script directory
+├── icons/                       # Icon resources
+├── build.sh                     # Build script
+├── convert_icons.py             # Icon converter
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+├── BUILD.md                     # Build guide
+└── REQUIREMENTS.md              # Business requirements
+```
+
+---
+
+## Differences from Original Boop
+
+| Feature | Original Boop | Boop Python |
+|---------|--------------|-------------|
+| Script Language | JavaScript | Python |
+| Execution | JavaScriptCore (in-process) | Subprocess (isolated) |
+| Configuration | macOS Preferences | JSON config file |
+| UI | Native macOS (Swift) | Tkinter (Cross-platform) |
+| Script Path | ~/Library/... | Configurable via GUI |
+| CLI Support | No | No (GUI only) |
+
+---
+
+## Documentation
+
+- **[README.md](README.md)** - This file (overview and quick start)
+- **[BUILD.md](BUILD.md)** - Build instructions and troubleshooting
+- **[REQUIREMENTS.md](REQUIREMENTS.md)** - Business requirements document
+
+---
+
+## License
+
+Inspired by the original Boop project. See the original [LICENSE](https://github.com/IvanMathy/Boop/blob/main/LICENSE).

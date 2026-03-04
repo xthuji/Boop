@@ -1,0 +1,776 @@
+{
+  "testCases": [
+    {
+      "category": "Encoding/Decoding",
+      "scripts": [
+        {
+          "name": "Toggle Url",
+          "tests": [
+            {
+              "input": "encode\nhello world",
+              "expected": "hello%20world"
+            },
+            {
+              "input": "decode\nhello%20world",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Base64",
+          "tests": [
+            {
+              "input": "encode\nhello world",
+              "expected": "aGVsbG8gd29ybGQ="
+            },
+            {
+              "input": "decode\naGVsbG8gd29ybGQ=",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Html",
+          "tests": [
+            {
+              "input": "encode\n<div>Hello</div>",
+              "expected": "&lt;div&gt;Hello&lt;/div&gt;"
+            },
+            {
+              "input": "decode\n&lt;div&gt;Hello&lt;/div&gt;",
+              "expected": "<div>Hello</div>"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Hex",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "68656c6c6f"
+            },
+            {
+              "input": "decode\n68656c6c6f",
+              "expected": "hello"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Unicode",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "\\u0068\\u0065\\u006c\\u006c\\u006f"
+            },
+            {
+              "input": "decode\n\\u0068\\u0065\\u006c\\u006c\\u006f",
+              "expected": "hello"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Ascii",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "104 101 108 108 111"
+            },
+            {
+              "input": "decode\n104 101 108 108 111",
+              "expected": "hello"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "category": "Quotes Handling",
+      "scripts": [
+        {
+          "name": "Quotes Toggle",
+          "tests": [
+            {
+              "input": "\"\nHe said \"Hello\"",
+              "expected": "\"He said \\\"Hello\\\"\""
+            },
+            {
+              "input": "'\nIt's a test",
+              "expected": "'It\\'s a test'"
+            },
+            {
+              "input": "\"\nIt's a test",
+              "expected": "\"It's a test\""
+            },
+            {
+              "input": "'\nHe said \"Hello\"",
+              "expected": "'He said \"Hello\"'"
+            },
+            {
+              "input": "\"\nhello world",
+              "expected": "\"hello world\""
+            },
+            {
+              "input": "'\nhello world",
+              "expected": "'hello world'"
+            },
+            {
+              "input": "\\'\nIt's a test",
+              "expected": "It\\'s a test"
+            },
+            {
+              "input": "\\\"\nHe said \"Hello\"",
+              "expected": "He said \\\"Hello\\\""
+            },
+            {
+              "input": "toggle\n\"hello\"",
+              "expected": "'hello'"
+            },
+            {
+              "input": "t\n'hello'",
+              "expected": "\"hello\""
+            },
+            {
+              "input": "toggle\n\"hello\" 'world'",
+              "expected": "'hello' \"world\""
+            },
+            {
+              "input": "hello world",
+              "expected": "\"hello world\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Space/Tab Conversion",
+      "scripts": [
+        {
+          "name": "Space To Tab",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "hello\tworld"
+            },
+            {
+              "input": "1\nhello world",
+              "expected": "hello\tworld"
+            },
+            {
+              "input": "2\nhello  world",
+              "expected": "hello\tworld"
+            },
+            {
+              "input": "4\n    hello",
+              "expected": "\thello"
+            }
+          ]
+        },
+        {
+          "name": "Tab To Space",
+          "tests": [
+            {
+              "input": "hello\tworld",
+              "expected": "hello  world"
+            },
+            {
+              "input": "1\nhello\tworld",
+              "expected": "hello world"
+            },
+            {
+              "input": "2\nhello\tworld",
+              "expected": "hello  world"
+            },
+            {
+              "input": "4\n\thello",
+              "expected": "    hello"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Variable Case Conversion",
+      "scripts": [
+        {
+          "name": "Case To Camel",
+          "tests": [
+            {
+              "input": "hello_world",
+              "expected": "helloWorld"
+            }
+          ]
+        },
+        {
+          "name": "Case To Snake",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "hello_world"
+            }
+          ]
+        },
+        {
+          "name": "Case To Pascal",
+          "tests": [
+            {
+              "input": "hello_world",
+              "expected": "HelloWorld"
+            }
+          ]
+        },
+        {
+          "name": "Case To Snake Upper",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "HELLO_WORLD"
+            }
+          ]
+        },
+        {
+          "name": "Case To Kebab",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "hello-world"
+            }
+          ]
+        },
+        {
+          "name": "Case To Kebab Upper",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "HELLO-WORLD"
+            }
+          ]
+        },
+        {
+          "name": "Case To Lower",
+          "tests": [
+            {
+              "input": "HELLO WORLD",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "Case To Upper",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "HELLO WORLD"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Code Alignment",
+      "scripts": [
+        {
+          "name": "Align Code",
+          "tests": [
+            {
+              "input": "-h",
+              "expected": "\nAlign Code - 代码对齐\n\n用法：在第一行指定对齐配置（可选）\n  格式：symbol:spaceMode:alignAll\n\n参数说明：\n  symbol    - 对齐符号（默认=）\n  spaceMode - 空格模式（默认both）\n              both   - 符号前后都加空格\n              after  - 仅符号后加空格\n              none   - 不添加空格\n  alignAll  - 是否对齐所有符号（true/false，默认true）\n\n示例：\n  =:both:true\n  name=John\n  age=30\n  city=NewYork\n  \n  将输出（符号前后加空格）：\n  name  = John\n  age   = 30\n  city  = NewYork\n\n  ::after:true\n  name:John\n  age:30\n  city:NewYork\n  \n  将输出（仅符号后加空格）：\n  name: John\n  age: 30\n  city: NewYork\n\n  |:both:true\n  name|John|age|30\n  city|NewYork|country|USA\n  \n  将输出（对齐所有符号）：\n  name | John   | age | 30\n  city | NewYork| country | USA\n\n  =:both:false\n  name=John=age=30\n  city=NewYork=country=USA\n  \n  将输出（仅对齐第一个符号）：\n  name  = John=age=30\n  city  = NewYork=country=USA\n\n  name=John\n  age=30\n  \n  将输出（默认配置）：\n  name  = John\n  age   = 30\n\n"
+            },
+            {
+              "input": "name = John\nage = 30",
+              "expected": "name = John\nage  = 30"
+            },
+            {
+              "input": "::after\nname = John\nage = 30",
+              "expected": "name = John\nage  = 30"
+            },
+            {
+              "input": "::none\nname=John\nage=30",
+              "expected": "name=John\nage=30"
+            },
+            {
+              "input": "=>:both\nname => John\nage => 30",
+              "expected": "name => John\nage  => 30"
+            },
+            {
+              "input": "=:both:false\nname = John\nage = 30\ncity = NY",
+              "expected": "name = John\nage  = 30\ncity = NY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Data Format Conversion",
+      "scripts": [
+        {
+          "name": "Convert Data List Format",
+          "tests": [
+            {
+              "input": "[{\"name\":\"John\"}]",
+              "expected": "[\n  {\n    \"name\": \"John\"\n  }\n]"
+            },
+            {
+              "input": "json\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "csv\n[{\"name\":\"John\",\"age\":30},{\"name\":\"Jane\",\"age\":25}]",
+              "expected": "name,age\nJohn,30\nJane,25"
+            },
+            {
+              "input": "xml\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "<data>\n  <item>\n    <name>John</name>\n    <age>30</age>\n  </item>\n</data>"
+            },
+            {
+              "input": "<data>\n  <item>\n    <name>John</name>\n    <age>30</age>\n  </item>\n</data>",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "yaml\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "-\n  name: John\n  age: 30"
+            },
+            {
+              "input": "-\n  name: John\n  age: 30",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "tabtext\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "name\tage\nJohn\t30"
+            },
+            {
+              "input": "name\tage\nJohn\t30",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "sql:users:true\n[{\"name\":\"John\"},{\"name\":\"Jane\"}]",
+              "expected": "INSERT INTO users (name) VALUES ('John');\nINSERT INTO users (name) VALUES ('Jane');"
+            },
+            {
+              "input": "sql:products:false\n[{\"name\":\"Apple\"},{\"name\":\"Banana\"}]",
+              "expected": "INSERT INTO products (name) VALUES\n  ('Apple'),\n  ('Banana');"
+            },
+            {
+              "input": "INSERT INTO users (name, age) VALUES ('John', 30), ('Jane', 25);",
+              "expected": "[\n  {\n    \"table\": \"users\",\n    \"name\": \"John\",\n    \"age\": 30\n  },\n  {\n    \"table\": \"users\",\n    \"name\": \"Jane\",\n    \"age\": 25\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Insert Numbers",
+      "scripts": [
+        {
+          "name": "Insert Sequence Number",
+          "tests": [
+            {
+              "input": "first line\nsecond line",
+              "expected": "1 first line\n2 second line"
+            },
+            {
+              "input": "1:1:n: \nfirst line\nsecond line",
+              "expected": "1 first line\n2 second line"
+            },
+            {
+              "input": "1:1:c:、\nfirst line\nsecond line",
+              "expected": "一、first line\n二、second line"
+            },
+            {
+              "input": "A:1:a:、\nfirst line\nsecond line",
+              "expected": "A、first line\nB、second line"
+            },
+            {
+              "input": "a:1:b:、\nfirst line\nsecond line",
+              "expected": "a、first line\nb、second line"
+            },
+            {
+              "input": "1:1:n:. \nfirst line\nsecond line",
+              "expected": "1. first line\n2. second line"
+            },
+            {
+              "input": "10:2:n: \nfirst line\nsecond line",
+              "expected": "10 first line\n12 second line"
+            },
+            {
+              "input": "1:1:n: :02\nfirst line\nsecond line\nthird line",
+              "expected": "01 first line\n02 second line\n03 third line"
+            },
+            {
+              "input": "1:1:n: :03\nfirst line\nsecond line",
+              "expected": "001 first line\n002 second line"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "JSON Type Conversion",
+      "scripts": [
+        {
+          "name": "Convert Json Code",
+          "tests": [
+            {
+              "input": "[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        name: \"John\",\n        age: 30\n    }\n]"
+            },
+            {
+              "input": "js\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        name: \"John\",\n        age: 30\n    }\n]"
+            },
+            {
+              "input": "json\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        \"name\": \"John\",\n        \"age\": 30\n    }\n]"
+            },
+            {
+              "input": "py\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        'name': 'John',\n        'age': 30\n    }\n]"
+            },
+            {
+              "input": "lua\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "{\n    {\n        name = \"John\",\n        age = 30\n    }\n}"
+            },
+            {
+              "input": "php\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    [\n        'name' => 'John',\n        'age' => 30\n    ]\n];"
+            },
+            {
+              "input": "js:php\n[{name:\"John\",age:30}]",
+              "expected": "[\n    [\n        'name' => 'John',\n        'age' => 30\n    ]\n];"
+            },
+            {
+              "input": "js:json\n[{name:\"John\",age:30}]",
+              "expected": "[\n    {\n        \"name\": \"John\",\n        \"age\": 30\n    }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Advanced Line Processing",
+      "scripts": [
+        {
+          "name": "Lines Sort",
+          "tests": [
+            {
+              "input": "zebra\napple",
+              "expected": "apple\nzebra"
+            },
+            {
+              "input": "asc\nzebra\napple",
+              "expected": "apple\nzebra"
+            },
+            {
+              "input": "desc\nzebra\napple",
+              "expected": "zebra\napple"
+            },
+            {
+              "input": "reverse\nfirst line\nsecond line",
+              "expected": "second line\nfirst line"
+            },
+            {
+              "input": "3,orange\n1,apple\n2,banana",
+              "expected": "1,apple\n2,banana\n3,orange"
+            },
+            {
+              "input": "1:desc:string\n3,orange\n1,apple\n2,banana",
+              "expected": "3,orange\n2,banana\n1,apple"
+            },
+            {
+              "input": "0:asc:string\n3,orange\n1,apple\n2,banana",
+              "expected": "1,apple\n2,banana\n3,orange"
+            },
+            {
+              "input": "1:desc:string:|\n3|orange\n1|apple\n2|banana",
+              "expected": "3|orange\n2|banana\n1|apple"
+            }
+          ]
+        },
+        {
+          "name": "Convert Number Base",
+          "tests": [
+            {
+              "input": "255",
+              "expected": "FF"
+            },
+            {
+              "input": "2:10\n11111111",
+              "expected": "255"
+            },
+            {
+              "input": "10:16:false\n255",
+              "expected": "ff"
+            },
+            {
+              "input": "16:2:true\nFF",
+              "expected": "11111111"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Quick Replace",
+      "scripts": [
+        {
+          "name": "Quick Replace",
+          "tests": [
+            {
+              "input": "-h",
+              "expected": "\nQuick Replace - 快速替换\n\n用法：在第一行指定替换规则（必需）\n  格式：source:target\n\n参数说明：\n  source - 要查找的字符串\n  target - 要替换成的字符串\n\n示例：\n  hello:hi\n  hello world\n  hello everyone\n  \n  将输出：\n  hi world\n  hi everyone\n\n  apple:orange\n  I like apple\n  apple pie is good\n  \n  将输出：\n  I like orange\n  orange pie is good\n\n  :empty\n  remove this text\n  remove that text\n  \n  将输出（删除指定文本）：\n  empty text\n  empty that text\n\n"
+            },
+            {
+              "input": "old:new\nold text\nanother old text",
+              "expected": "new text\nanother new text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Data Format Conversion",
+      "scripts": [
+        {
+          "name": "Convert Data Key Value Format",
+          "tests": [
+            {
+              "input": "{\"name\":\"John\"}",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "json\n{\"name\":\"John\"}",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "url\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            },
+            {
+              "input": "?name=John",
+              "expected": "{\n  \"url_path\": \"http://example.com/\",\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "url\n?name=John",
+              "expected": "http://example.com/?name=John"
+            },
+            {
+              "input": "cookie\n{\"session\":\"abc123\"}",
+              "expected": "session=abc123"
+            },
+            {
+              "input": "session=abc123; user=john",
+              "expected": "{\n  \"session\": \"abc123\",\n  \"user\": \"john\"\n}"
+            },
+            {
+              "input": "cookie\nsession=abc123; user=john",
+              "expected": "session=abc123; user=john"
+            },
+            {
+              "input": "kv\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            },
+            {
+              "input": "name=John",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "kv\nname=John",
+              "expected": "name=John"
+            },
+            {
+              "input": "keyvalue\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Line Processing",
+      "scripts": [
+        {
+          "name": "Lines Join",
+          "tests": [
+            {
+              "input": "first\nsecond",
+              "expected": "firstsecond"
+            },
+            {
+              "input": ",\nfirst\nsecond",
+              "expected": "first,second"
+            },
+            {
+              "input": ", \nfirst\nsecond",
+              "expected": "first, second"
+            },
+            {
+              "input": "; \nfirst\nsecond",
+              "expected": "first; second"
+            },
+            {
+              "input": " \nfirst\nsecond",
+              "expected": "first second"
+            },
+            {
+              "input": ":\"\nfirst\nsecond",
+              "expected": "\"first\", \"second\""
+            },
+            {
+              "input": ":'\nfirst\nsecond",
+              "expected": "'first', 'second'"
+            },
+            {
+              "input": ":code\nfirst\nsecond",
+              "expected": "first\\nsecond"
+            }
+          ]
+        },
+        {
+          "name": "Lines Split",
+          "tests": [
+            {
+              "input": "\"first\", \"second\"",
+              "expected": "first\nsecond"
+            }
+          ]
+        },
+        {
+          "name": "Lines Remove Empty",
+          "tests": [
+            {
+              "input": "first line\n\nsecond line",
+              "expected": "first line\nsecond line"
+            }
+          ]
+        },
+        {
+          "name": "Lines Remove Duplicate",
+          "tests": [
+            {
+              "input": "apple\nbanana\napple",
+              "expected": "apple\nbanana"
+            }
+          ]
+        },
+        {
+          "name": "Lines Find Duplicate",
+          "tests": [
+            {
+              "input": "apple\nbanana\napple",
+              "expected": "apple (2 occurrences)"
+            }
+          ]
+        },
+        {
+          "name": "Lines Reverse String",
+          "tests": [
+            {
+              "input": "hello",
+              "expected": "olleh"
+            }
+          ]
+        },
+        {
+          "name": "Lines Trim",
+          "tests": [
+            {
+              "input": "  hello  ",
+              "expected": "hello"
+            },
+            {
+              "input": "start\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "s\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "left\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "end\n  hello  ",
+              "expected": "  hello"
+            },
+            {
+              "input": "e\n  hello  ",
+              "expected": "  hello"
+            },
+            {
+              "input": "right\n  hello  ",
+              "expected": "  hello"
+            }
+          ]
+        },
+        {
+          "name": "Lines Compare",
+          "tests": [
+            {
+              "input": "hello\n---\nhello",
+              "expected": "hello\n---\nhello\n\n=== 对比结果 ===\n状态: 完全一致\n文本1行数: 1\n文本2行数: 1\n差异行数: 0\n\n=== 详细差异 ===\n无差异\n"
+            },
+            {
+              "input": "first\nsecond\n---\nsecond\nfirst",
+              "expected": "first\nsecond\n---\nsecond\nfirst\n\n=== 对比结果 ===\n状态: 数据一致但顺序有差异\n文本1行数: 2\n文本2行数: 2\n差异行数: 2\n\n=== 详细差异 ===\n格式: [行号1]:[行号2] 内容\n符号: - 移除, + 添加, ~ 变更\n\n~ 1:1 first -> second\n~ 2:2 second -> first\n"
+            }
+          ]
+        },
+        {
+          "name": "Lines Shuffle Characters",
+          "tests": [
+            {
+              "input": "a",
+              "expected": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Time Conversion",
+      "scripts": [
+        {
+          "name": "Convert Time",
+          "tests": [
+            {
+              "input": "1727597037",
+              "expected": "2024-09-29 16:03:57"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Color Processing",
+      "scripts": [
+        {
+          "name": "Color Rgb To Hex",
+          "tests": [
+            {
+              "input": "rgb(255, 0, 0)",
+              "expected": "#FF0000"
+            },
+            {
+              "input": "255, 0, 0",
+              "expected": "#FF0000"
+            }
+          ]
+        },
+        {
+          "name": "Color Contrast",
+          "tests": [
+            {
+              "input": "#000000",
+              "expected": "#000000 // contrasts best with #fff with a ratio of 21 to 1; WCAG 2.0: AAA"
+            },
+            {
+              "input": "#FFFFFF",
+              "expected": "#FFFFFF // contrasts best with #000 with a ratio of 21 to 1; WCAG 2.0: AAA"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

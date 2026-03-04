@@ -1,0 +1,556 @@
+"""
+PreferencesPanel - Preferences configuration panel
+
+This module implements a panel for configuring application preferences.
+Uses tk.Toplevel for proper window management.
+"""
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+from pathlib import Path
+from typing import Optional
+
+from boop.config.settings import BoopConfig
+
+
+class PreferencesPanel:
+    """Preferences configuration panel using Toplevel window."""
+
+    def __init__(self, parent: tk.Tk, config: BoopConfig):
+        """Initialize the preferences panel.
+
+        Args:
+            parent: Parent window
+            config: Application configuration
+        """
+        self.parent = parent
+        self.config = config
+        self.dialog: Optional[tk.Toplevel] = None
+
+        self._create_dialog()
+
+    def _create_dialog(self):
+        """Create the preferences dialog."""
+        # Create Toplevel window
+        self.dialog = tk.Toplevel(self.parent)
+        self.dialog.title("Preferences")
+        self.dialog.transient(self.parent)
+        self.dialog.resizable(True, True)
+        
+        # Set modern minimalist style
+        style = ttk.Style()
+        
+        # Base colors for minimalist design
+        bg_color = '#ffffff'
+        fg_color = '#333333'
+        accent_color = '#007aff'  # macOS blue for primary buttons
+        cancel_color = '#f0f0f0'  # Light gray for cancel buttons
+        hover_color = '#f5f5f5'
+        
+        # Configure styles
+        style.configure('TNotebook', padding=0, background=bg_color)
+        style.configure('TNotebook.Tab', 
+                       padding=(16, 8), 
+                       font=('SF Pro Text', 12),
+                       background=bg_color,
+                       foreground=fg_color)
+        style.map('TNotebook.Tab', 
+                  background=[('selected', bg_color), ('!selected', bg_color), ('active', hover_color)],
+                  foreground=[('selected', accent_color), ('!selected', fg_color)])
+        style.configure('TFrame', background=bg_color)
+        style.configure('TLabel', background=bg_color, font=('SF Pro Text', 12), foreground=fg_color)
+        
+        # Cancel button style (gray)
+        style.configure('Cancel.TButton', 
+                       padding=(12, 6), 
+                       font=('SF Pro Text', 12))
+        # For macOS, we need to use map to set colors properly
+        style.map('Cancel.TButton', 
+                  background=[('!disabled', cancel_color), ('active', '#e0e0e0')],
+                  foreground=[('!disabled', fg_color)])
+        
+        # Save button style (blue)
+        style.configure('Save.TButton', 
+                       padding=(12, 6), 
+                       font=('SF Pro Text', 12))
+        # For macOS, we need to use map to set colors properly
+        style.map('Save.TButton', 
+                  background=[('!disabled', accent_color), ('active', '#0066cc')],
+                  foreground=[('!disabled', '#ffffff')])
+        
+        style.configure('TLabelframe', background=bg_color)
+        style.configure('TLabelframe.Label', 
+                       font=('SF Pro Text', 12, 'semibold'),
+                       background=bg_color,
+                       foreground=fg_color)
+        style.configure('TEntry', 
+                       padding=(8, 6), 
+                       font=('SF Pro Text', 12),
+                       fieldbackground=bg_color,
+                       foreground=fg_color)
+        
+        # Center the dialog
+        width = 700
+        height = 580
+        self.dialog.geometry(f"{width}x{height}")
+        self.dialog.update_idletasks()
+        
+        x = (self.dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.dialog.winfo_screenheight() // 2) - (height // 2)
+        self.dialog.geometry(f"{width}x{height}+{x}+{y}")
+        
+        # Make dialog modal-like
+        self.dialog.grab_set()
+        self.dialog.focus_set()
+
+        self._create_ui()
+        self._bind_events()
+
+    def _create_ui(self):
+        """Create the preferences UI."""
+        # Main container with minimalist background
+        main_frame = ttk.Frame(self.dialog)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+
+        # Notebook for different preference sections with minimalist styling
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        # General settings tab
+        general_frame = ttk.Frame(notebook)
+        notebook.add(general_frame, text="General")
+        self._create_general_tab(general_frame)
+
+        # Scripts tab
+        scripts_frame = ttk.Frame(notebook)
+        notebook.add(scripts_frame, text="Scripts")
+        self._create_scripts_tab(scripts_frame)
+
+        # Logs tab
+        logs_frame = ttk.Frame(notebook)
+        notebook.add(logs_frame, text="Logs")
+        self._create_logs_tab(logs_frame)
+
+        # Buttons with minimalist styling
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X, pady=(0, 0))
+
+        # Cancel button
+        cancel_btn = ttk.Button(
+            button_frame,
+            text="Cancel",
+            command=self._close,
+            style='Cancel.TButton'
+        )
+        cancel_btn.pack(side=tk.LEFT, padx=(0, 10))
+
+        # Save button
+        save_btn = ttk.Button(
+            button_frame,
+            text="Save",
+            command=self._save,
+            style='Save.TButton'
+        )
+        save_btn.pack(side=tk.RIGHT, padx=(10, 0))
+
+    def _create_general_tab(self, parent):
+        """Create the general settings tab."""
+        # Window settings with minimalist styling
+        window_frame = ttk.LabelFrame(parent, text="Window", padding=(10, 5))
+        window_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # Window width
+        width_frame = ttk.Frame(window_frame)
+        width_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(width_frame, text="Window Width:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.width_var = tk.StringVar(value=str(self.config.window_width))
+        width_entry = ttk.Entry(width_frame, textvariable=self.width_var)
+        width_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Window height
+        height_frame = ttk.Frame(window_frame)
+        height_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(height_frame, text="Window Height:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.height_var = tk.StringVar(value=str(self.config.window_height))
+        height_entry = ttk.Entry(height_frame, textvariable=self.height_var)
+        height_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Font settings with minimalist styling
+        font_frame = ttk.LabelFrame(parent, text="Font", padding=(10, 5))
+        font_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # Font family
+        font_family_frame = ttk.Frame(font_frame)
+        font_family_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(font_family_frame, text="Font Family:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.font_family_var = tk.StringVar(value=self.config.font_family)
+        font_family_entry = ttk.Entry(font_family_frame, textvariable=self.font_family_var)
+        font_family_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Font size
+        font_size_frame = ttk.Frame(font_frame)
+        font_size_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(font_size_frame, text="Font Size:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.font_size_var = tk.StringVar(value=str(self.config.font_size))
+        font_size_entry = ttk.Entry(font_size_frame, textvariable=self.font_size_var)
+        font_size_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+    def _create_scripts_tab(self, parent):
+        """Create the scripts settings tab."""
+        # Script directories with minimalist styling
+        dirs_frame = ttk.LabelFrame(parent, text="Script Directories", padding=(10, 5))
+        dirs_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # Listbox for script directories with minimalist styling
+        self.dirs_listbox = tk.Listbox(dirs_frame, height=3, relief=tk.FLAT, borderwidth=1, bg='white', font=('SF Pro Text', 12))
+        self.dirs_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(dirs_frame, orient=tk.VERTICAL, command=self.dirs_listbox.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.dirs_listbox.configure(yscrollcommand=scrollbar.set)
+
+        # Add existing directories
+        for directory in self.config.script_directories:
+            self.dirs_listbox.insert(tk.END, directory)
+
+        # Buttons with minimalist styling
+        button_frame = ttk.Frame(dirs_frame, padding=(10, 0))
+        button_frame.pack(side=tk.RIGHT, fill=tk.Y)
+
+        add_button = ttk.Button(
+            button_frame,
+            text="Add",
+            command=self._add_directory,
+            width=8
+        )
+        add_button.pack(fill=tk.X, pady=3)
+
+        remove_button = ttk.Button(
+            button_frame,
+            text="Remove",
+            command=self._remove_directory,
+            width=8
+        )
+        remove_button.pack(fill=tk.X, pady=3)
+
+        # Python interpreter with minimalist styling
+        python_frame = ttk.LabelFrame(parent, text="Python", padding=(10, 5))
+        python_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        python_frame_row = ttk.Frame(python_frame)
+        python_frame_row.pack(fill=tk.X, pady=5)
+        ttk.Label(python_frame_row, text="Python Interpreter:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.python_var = tk.StringVar(value=self.config.python_path)
+        python_entry = ttk.Entry(python_frame_row, textvariable=self.python_var)
+        python_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
+
+        # Add browse button for Python interpreter
+        browse_button = ttk.Button(
+            python_frame_row,
+            text="Browse",
+            command=self._browse_python
+        )
+        browse_button.pack(side=tk.LEFT, padx=0)
+
+        # Script timeout
+        timeout_frame = ttk.Frame(python_frame)
+        timeout_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(timeout_frame, text="Script Timeout (s):", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.timeout_var = tk.StringVar(value=str(self.config.script_timeout))
+        timeout_entry = ttk.Entry(timeout_frame, textvariable=self.timeout_var)
+        timeout_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Dependencies management with minimalist styling
+        dependencies_frame = ttk.LabelFrame(parent, text="Dependencies", padding=(10, 5))
+        dependencies_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # Install dependencies button
+        install_frame = ttk.Frame(dependencies_frame)
+        install_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(install_frame, text="Script Dependencies:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        install_button = ttk.Button(
+            install_frame,
+            text="Install All Dependencies",
+            command=self._install_dependencies,
+            style='Save.TButton'
+        )
+        install_button.pack(side=tk.LEFT, padx=0)
+        ttk.Label(
+            install_frame,
+            text="Installs dependencies defined in script metadata",
+            font=('SF Pro Text', 10),
+            foreground='#666666'
+        ).pack(side=tk.LEFT, padx=10)
+
+    def _create_logs_tab(self, parent):
+        """Create the logs tab."""
+        # Log display
+        log_frame = ttk.LabelFrame(parent, text="Recent Logs", padding=(10, 5))
+        log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # Log file path
+        log_path_frame = ttk.Frame(log_frame)
+        log_path_frame.pack(fill=tk.X, pady=(0, 5))
+        ttk.Label(log_path_frame, text="Log File Path:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        log_dir = Path(__file__).parent.parent.parent / "logs"
+        log_file = log_dir / "boop.log"
+        self.log_path_var = tk.StringVar(value=str(log_file))
+        log_path_entry = ttk.Entry(log_path_frame, textvariable=self.log_path_var)
+        log_path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        self.log_text = tk.Text(
+            log_frame,
+            font=('SF Pro Text', 11),
+            bg='#f9f9f9',
+            borderwidth=1,
+            relief=tk.SUNKEN,
+            wrap=tk.WORD
+        )
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_text.configure(state=tk.DISABLED)
+
+        # Load logs
+        self._load_logs()
+
+        # Buttons
+        button_frame = ttk.Frame(parent)
+        button_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # Clear button
+        clear_button = ttk.Button(
+            button_frame,
+            text="Clear Logs",
+            command=self._clear_logs
+        )
+        clear_button.pack(side=tk.RIGHT, padx=(0, 8))
+
+        # Refresh button
+        refresh_button = ttk.Button(
+            button_frame,
+            text="Refresh",
+            command=self._load_logs
+        )
+        refresh_button.pack(side=tk.RIGHT, padx=(0, 8))
+
+        # Open button
+        open_button = ttk.Button(
+            button_frame,
+            text="Open Log",
+            command=self._open_log_in_editor
+        )
+        open_button.pack(side=tk.RIGHT, padx=(0, 8))
+
+    def _bind_events(self):
+        """Bind keyboard events."""
+        pass
+
+    def _add_directory(self):
+        """Add a script directory."""
+        from tkinter import filedialog
+        directory = filedialog.askdirectory(title="Select Script Directory")
+        if directory:
+            if directory not in self.config.script_directories:
+                self.dirs_listbox.insert(tk.END, directory)
+
+    def _remove_directory(self):
+        """Remove a script directory."""
+        selection = self.dirs_listbox.curselection()
+        if selection:
+            self.dirs_listbox.delete(selection[0])
+
+    def _browse_python(self):
+        """Browse for Python interpreter."""
+        from tkinter import filedialog
+        file_path = filedialog.askopenfilename(
+            title="Select Python Interpreter",
+            filetypes=[("Python Executable", "python*"), ("All Files", "*")]
+        )
+        if file_path:
+            self.python_var.set(file_path)
+
+    def _load_logs(self):
+        """Load log files."""
+        log_dir = Path(__file__).parent.parent.parent / "logs"
+        log_file = log_dir / "boop.log"
+
+        self.log_text.configure(state=tk.NORMAL)
+        self.log_text.delete('1.0', tk.END)
+
+        if log_file.exists():
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    logs = f.read()
+                self.log_text.insert(tk.END, logs)
+            except Exception as e:
+                self.log_text.insert(tk.END, f"Error reading log file: {e}")
+        else:
+            self.log_text.insert(tk.END, "No log file found.")
+
+        self.log_text.configure(state=tk.DISABLED)
+        self.log_text.see(tk.END)
+
+    def _clear_logs(self):
+        """Clear log files."""
+        log_dir = Path(__file__).parent.parent.parent / "logs"
+        log_file = log_dir / "boop.log"
+
+        if log_file.exists():
+            if messagebox.askyesno("Clear Logs", "Are you sure you want to clear all logs?"):
+                try:
+                    log_file.unlink()
+                    self._load_logs()
+                    messagebox.showinfo("Success", "Logs cleared successfully.")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to clear logs: {e}")
+
+    def _open_log_in_editor(self):
+        """Open log file in default text editor."""
+        import subprocess
+        import platform
+
+        log_dir = Path(__file__).parent.parent.parent / "logs"
+        log_file = log_dir / "boop.log"
+
+        if log_file.exists():
+            try:
+                if platform.system() == "Darwin":  # macOS
+                    subprocess.run(["open", str(log_file)])
+                elif platform.system() == "Windows":  # Windows
+                    subprocess.run(["start", str(log_file)], shell=True)
+                else:  # Linux
+                    subprocess.run(["xdg-open", str(log_file)])
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to open log file: {e}")
+        else:
+            messagebox.showinfo("Info", "Log file does not exist.")
+
+    def _save(self):
+        """Save preferences."""
+        try:
+            # Update window settings
+            self.config.window_width = int(self.width_var.get())
+            self.config.window_height = int(self.height_var.get())
+            self.config.font_family = self.font_family_var.get()
+            self.config.font_size = int(self.font_size_var.get())
+
+            # Update script settings
+            self.config.script_directories = list(self.dirs_listbox.get(0, tk.END))
+            self.config.python_path = self.python_var.get()
+            self.config.script_timeout = int(self.timeout_var.get())
+
+            # Save to file
+            config_path = Path(__file__).parent.parent / "config.json"
+            self.config.save(config_path)
+
+            messagebox.showinfo("Success", "Preferences saved successfully.")
+            self._close()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save preferences: {e}")
+
+    def _install_dependencies(self):
+        """Install dependencies defined in script metadata."""
+        import subprocess
+        import sys
+        from pathlib import Path
+        from boop.core.script import ScriptManager
+        
+        # Create a script manager to load all scripts
+        script_manager = ScriptManager(self.config)
+        script_manager.load_scripts()
+        
+        # Collect all dependencies from scripts
+        dependencies = set()
+        for script in script_manager.list_scripts():
+            if script.metadata.dependencies:
+                dependencies.update(script.metadata.dependencies)
+        
+        if not dependencies:
+            messagebox.showinfo("Info", "No dependencies found in scripts.")
+            return
+        
+        # Get Python interpreter path
+        python_exe = self.config.python_path
+        if not python_exe:
+            # Use internal Python if available
+            if hasattr(sys, '_MEIPASS'):
+                internal_python = Path(sys._MEIPASS) / "python_env" / "bin" / "python3"
+                if internal_python.exists():
+                    python_exe = str(internal_python)
+        
+        if not python_exe:
+            messagebox.showerror("Error", "No Python interpreter found. Please set Python path in preferences.")
+            return
+        
+        # Create a progress window
+        progress_window = tk.Toplevel(self.dialog)
+        progress_window.title("Installing Dependencies")
+        progress_window.transient(self.dialog)
+        progress_window.geometry("400x200")
+        progress_window.grab_set()
+        
+        # Progress label
+        progress_label = tk.Label(progress_window, text="Installing dependencies...", pady=20)
+        progress_label.pack(fill=tk.X)
+        
+        # Progress bar
+        progress_bar = ttk.Progressbar(progress_window, length=350, mode='indeterminate')
+        progress_bar.pack(pady=10)
+        progress_bar.start()
+        
+        # Status text
+        status_text = tk.Text(progress_window, height=5, wrap=tk.WORD)
+        status_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        status_text.insert(tk.END, f"Found {len(dependencies)} dependencies to install:\n")
+        for dep in dependencies:
+            status_text.insert(tk.END, f"- {dep}\n")
+        status_text.insert(tk.END, "\nInstalling...\n")
+        status_text.see(tk.END)
+        
+        # Update the window
+        progress_window.update()
+        
+        try:
+            # Install dependencies
+            for dep in dependencies:
+                status_text.insert(tk.END, f"Installing {dep}...\n")
+                status_text.see(tk.END)
+                progress_window.update()
+                
+                # Run pip install
+                result = subprocess.run(
+                    [python_exe, "-m", "pip", "install", dep],
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                
+                if result.returncode == 0:
+                    status_text.insert(tk.END, f"✓ Successfully installed {dep}\n")
+                else:
+                    status_text.insert(tk.END, f"✗ Failed to install {dep}: {result.stderr}\n")
+                status_text.see(tk.END)
+                progress_window.update()
+            
+            status_text.insert(tk.END, "\nDependency installation completed!\n")
+            status_text.see(tk.END)
+            progress_bar.stop()
+            
+            # Add a close button
+            close_button = tk.Button(progress_window, text="Close", command=progress_window.destroy)
+            close_button.pack(pady=10)
+            
+        except Exception as e:
+            status_text.insert(tk.END, f"Error: {str(e)}\n")
+            status_text.see(tk.END)
+            progress_bar.stop()
+            
+            # Add a close button
+            close_button = tk.Button(progress_window, text="Close", command=progress_window.destroy)
+            close_button.pack(pady=10)
+    
+    def _close(self):
+        """Close the preferences panel."""
+        if self.dialog and self.dialog.winfo_exists():
+            self.dialog.destroy()
+            self.dialog = None

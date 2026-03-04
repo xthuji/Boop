@@ -1,0 +1,14 @@
+{
+  "script_directories": [
+    "scripts",
+    "/Users/huji/work/MyProject/code_mine/github/my-folder/BoopPython/boop/scripts"
+  ],
+  "python_path": "",
+  "default_encoding": "utf-8",
+  "window_width": 800,
+  "window_height": 600,
+  "font_family": "Menlo",
+  "font_size": 14,
+  "theme": "system",
+  "script_timeout": 30
+}

@@ -1,0 +1,511 @@
+{
+  "testCases": [
+    {
+      "category": "Code Formatting",
+      "scripts": [
+        {
+          "name": "Format CSS",
+          "tests": [
+            {
+              "input": "body{color:red;margin:0;padding:0}",
+              "expected": "body {\n    color: red;\n    margin: 0;\n    padding: 0;\n}"
+            },
+            {
+              "input": ".class{color:#fff}",
+              "expected": ".class {\n    color: #fff;\n}"
+            },
+            {
+              "input": "#id{font-size:16px}",
+              "expected": "#id {\n    font-size: 16px;\n}"
+            },
+            {
+              "input": "@media (max-width:600px){.container{width:100%;display:flex}}",
+              "expected": "@media (max-width: 600px) {\n    .container {\n        width: 100%;\n        display: flex;\n    }\n}"
+            },
+            {
+              "input": "a:hover{text-decoration:none;/*comment*/color:#000!important}",
+              "expected": "a:hover {\n    text-decoration: none;\n    /* comment */\n    color: #000 !important;\n}"
+            },
+            {
+              "input": "/* comment */.box{width:100px;height:100px;background:red}",
+              "expected": "/* comment */\n.box {\n    width: 100px;\n    height: 100px;\n    background: red;\n}"
+            },
+            {
+              "input": "ul li{list-style:none}",
+              "expected": "ul li {\n    list-style: none;\n}"
+            },
+            {
+              "input": "h1,h2,h3{margin:0}",
+              "expected": "h1, h2, h3 {\n    margin: 0;\n}"
+            },
+            {
+              "input": ":root{--primary-color:#3498db;--secondary-color:#2ecc71}",
+              "expected": ":root {\n    --primary-color: #3498db;\n    --secondary-color: #2ecc71;\n}"
+            },
+            {
+              "input": ".grid-container{display:grid;grid-template-columns:1fr 2fr;grid-gap:20px}",
+              "expected": ".grid-container {\n    display: grid;\n    grid-template-columns: 1fr 2fr;\n    grid-gap: 20px;\n}"
+            },
+            {
+              "input": ".flex-container{display:flex;justify-content:center;align-items:center}",
+              "expected": ".flex-container {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n}"
+            }
+          ]
+        },
+        {
+          "name": "Format JSON",
+          "tests": [
+            {
+              "input": "{\"name\":\"John\",\"age\":30}",
+              "expected": "{\n    \"name\": \"John\",\n    \"age\": 30\n}"
+            },
+            {
+              "input": "[{\"name\":\"John\"},{\"name\":\"Jane\"}]",
+              "expected": "[\n    {\n        \"name\": \"John\"\n    },\n    {\n        \"name\": \"Jane\"\n    }\n]"
+            },
+            {
+              "input": "{\"user\":{\"id\":1,\"tags\":[\"admin\",\"web\"]}}",
+              "expected": "{\n    \"user\": {\n        \"id\": 1,\n        \"tags\": [\n            \"admin\",\n            \"web\"\n        ]\n    }\n}"
+            },
+            {
+              "input": "[{},null,true,123.45]",
+              "expected": "[\n    {},\n    null,\n    true,\n    123.45\n]"
+            },
+            {
+              "input": "{\"nested\":{\"deep\":{\"value\":42}}}",
+              "expected": "{\n    \"nested\": {\n        \"deep\": {\n            \"value\": 42\n        }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Format SQL",
+          "tests": [
+            {
+              "input": "SELECT*FROM users WHERE id=1",
+              "expected": "SELECT * FROM users WHERE id = 1"
+            },
+            {
+              "input": "INSERT INTO users(name,age)VALUES('John',30)",
+              "expected": "INSERT INTO users (name, age) VALUES ('John', 30)"
+            },
+            {
+              "input": "UPDATE users SET name='Jane' WHERE id=1",
+              "expected": "UPDATE users SET name = 'Jane' WHERE id = 1"
+            },
+            {
+              "input": "SELECT u.name,o.total FROM users u JOIN orders o ON u.id=o.user_id WHERE o.status='paid' ORDER BY o.total DESC",
+              "expected": "SELECT\n    u.name,\n    o.total\nFROM users u\nJOIN orders o ON u.id = o.user_id\nWHERE o.status = 'paid'\nORDER BY o.total DESC"
+            },
+            {
+              "input": "CREATE TABLE test(id INT PRIMARY KEY,name VARCHAR(255) NOT NULL);",
+              "expected": "CREATE TABLE test (\n    id INT PRIMARY KEY,\n    name VARCHAR(255) NOT NULL\n);"
+            },
+            {
+              "input": "DELETE FROM users WHERE id=1",
+              "expected": "DELETE FROM users WHERE id = 1"
+            },
+            {
+              "input": "SELECT * FROM users WHERE age > 18 AND active = true",
+              "expected": "SELECT * FROM users WHERE age > 18 AND active = true"
+            }
+          ]
+        },
+        {
+          "name": "Format Xml",
+          "tests": [
+            {
+              "input": "<root><item>test</item></root>",
+              "expected": "<root>\n    <item>test</item>\n</root>"
+            },
+            {
+              "input": "<data><name>John</name><age>30</age></data>",
+              "expected": "<data>\n    <name>John</name>\n    <age>30</age>\n</data>"
+            },
+            {
+              "input": "<root><user id=\"1\"><name>John</name><active>true</active></user></root>",
+              "expected": "<root>\n    <user id=\"1\">\n        <name>John</name>\n        <active>true</active>\n    </user>\n</root>"
+            },
+            {
+              "input": "<meta name=\"viewport\" content=\"width=device-width\" />",
+              "expected": "<meta name=\"viewport\" content=\"width=device-width\" />"
+            },
+            {
+              "input": "<html><body><h1>Hello</h1><p>World</p></body></html>",
+              "expected": "<html>\n    <body>\n        <h1>Hello</h1>\n        <p>World</p>\n    </body>\n</html>"
+            }
+          ]
+        },
+        {
+          "name": "Format Java",
+          "tests": [
+            {
+              "input": "public class HelloWorld{public static void main(String[]args){System.out.println(\"Hello\");}}",
+              "expected": "public class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}"
+            },
+            {
+              "input": "if(x>0){return true;}else{return false;}",
+              "expected": "if (x > 0) {\n    return true;\n} else {\n    return false;\n}"
+            },
+            {
+              "input": "public class Main{@Test public void test(){if(debug){System.out.println(\"running\");}else{return;}}}",
+              "expected": "public class Main {\n    @Test\n    public void test() {\n        if (debug) {\n            System.out.println(\"running\");\n        } else {\n            return;\n        }\n    }\n}"
+            },
+            {
+              "input": "List<String> list=new ArrayList<>();list.stream().filter(s->s.length()>0).collect(Collectors.toList());",
+              "expected": "List<String> list = new ArrayList<>();\nlist.stream()\n    .filter(s -> s.length() > 0)\n    .collect(Collectors.toList());"
+            },
+            {
+              "input": "for(int i=0;i<10;i++){System.out.println(i);}",
+              "expected": "for (int i = 0; i < 10; i++) {\n    System.out.println(i);\n}"
+            }
+          ]
+        },
+        {
+          "name": "Format JavaScript",
+          "tests": [
+            {
+              "input": "function hello(){console.log('world');}",
+              "expected": "function hello() {\n    console.log('world');\n}"
+            },
+            {
+              "input": "const obj={name:'John',age:30};",
+              "expected": "const obj = {\n    name: 'John',\n    age: 30\n};"
+            },
+            {
+              "input": "if(x>0){return true;}else{return false;}",
+              "expected": "if (x > 0) {\n    return true;\n} else {\n    return false;\n}"
+            },
+            {
+              "input": "const sum=(a,b)=>{const res=a+b;return res;};console.log(sum(5,10));",
+              "expected": "const sum = (a, b) => {\n    const res = a + b;\n    return res;\n};\nconsole.log(sum(5, 10));"
+            },
+            {
+              "input": "async function fetchData(){try{let response=await fetch(url);return await response.json();}catch(e){console.error(e)}}",
+              "expected": "async function fetchData() {\n    try {\n        let response = await fetch(url);\n        return await response.json();\n    } catch (e) {\n        console.error(e);\n    }\n}"
+            },
+            {
+              "input": "let x=10;if(x>5){console.log('x is greater than 5');}",
+              "expected": "let x = 10;\nif (x > 5) {\n    console.log('x is greater than 5');\n}"
+            },
+            {
+              "input": "import {foo,bar} from './module.js';export const baz=foo+bar;",
+              "expected": "import { foo, bar } from './module.js';\nexport const baz = foo + bar;"
+            },
+            {
+              "input": "const {name,age}=user;const [first,second]=array;",
+              "expected": "const { name, age } = user;\nconst [first, second] = array;"
+            },
+            {
+              "input": "const greeting=`Hello ${name}! You are ${age} years old.`;",
+              "expected": "const greeting = `Hello ${name}! You are ${age} years old.`;"
+            }
+          ]
+        },
+        {
+          "name": "Format Typescript",
+          "tests": [
+            {
+              "input": "interface Person{name:string;age:number;}",
+              "expected": "interface Person {\n    name: string;\n    age: number;\n}"
+            },
+            {
+              "input": "function hello(name:string):void{console.log(name);}",
+              "expected": "function hello(name: string): void {\n    console.log(name);\n}"
+            },
+            {
+              "input": "const obj:Person={name:'John',age:30};",
+              "expected": "const obj: Person = {\n    name: 'John',\n    age: 30\n};"
+            },
+            {
+              "input": "type User={id:number;role:'admin'|'user'};const u:User={id:1,role:'admin'};",
+              "expected": "type User = {\n    id: number;\n    role: 'admin' | 'user'\n};\nconst u: User = {\n    id: 1,\n    role: 'admin'\n};"
+            },
+            {
+              "input": "class User{constructor(public name:string){}}",
+              "expected": "class User {\n    constructor(public name: string) {\n    }\n}"
+            },
+            {
+              "input": "function identity<T>(arg:T):T{return arg;}",
+              "expected": "function identity<T>(arg: T): T {\n    return arg;\n}"
+            },
+            {
+              "input": "interface Animal{name:string;}interface Dog extends Animal{breed:string;}",
+              "expected": "interface Animal {\n    name: string;\n}\ninterface Dog extends Animal {\n    breed: string;\n}"
+            },
+            {
+              "input": "type Result=string|number|boolean;const value:Result='test';",
+              "expected": "type Result = string | number | boolean;\nconst value: Result = 'test';"
+            }
+          ]
+        },
+        {
+          "name": "Format Python",
+          "tests": [
+            {
+              "input": "def hello():\nprint('world')",
+              "expected": "def hello():\n    print('world')"
+            },
+            {
+              "input": "if x>0:\nreturn True\nelse:\nreturn False",
+              "expected": "if x > 0:\n    return True\nelse:\n    return False"
+            },
+            {
+              "input": "class Person:\ndef __init__(self,name):\nself.name=name",
+              "expected": "class Person:\n    def __init__(self, name):\n        self.name = name"
+            },
+            {
+              "input": "def process(items):\nresults=[i*2 for i in items if i>0]\nreturn results",
+              "expected": "def process(items):\n    results = [i * 2 for i in items if i > 0]\n    return results"
+            },
+            {
+              "input": "@decorator\ndef func(a,b=None):\n\"\"\"docstring\"\"\"\npass",
+              "expected": "@decorator\ndef func(a, b=None):\n    \"\"\"docstring\"\"\"\n    pass"
+            },
+            {
+              "input": "for i in range(10):\nprint(i)",
+              "expected": "for i in range(10):\n    print(i)"
+            },
+            {
+              "input": "def create_dict(items):\nreturn {k:v for k,v in items if v>0}",
+              "expected": "def create_dict(items):\n    return {k: v for k, v in items if v > 0}"
+            },
+            {
+              "input": "async def fetch_data():\nresponse=await aiohttp.get('https://api.example.com')\ndata=await response.json()\nreturn data",
+              "expected": "async def fetch_data():\n    response = await aiohttp.get('https://api.example.com')\n    data = await response.json()\n    return data"
+            },
+            {
+              "input": "def greet(name:str,age:int)->str:\nreturn f'Hello {name}, you are {age} years old'",
+              "expected": "def greet(name: str, age: int) -> str:\n    return f'Hello {name}, you are {age} years old'"
+            }
+          ]
+        },
+        {
+          "name": "Format Lua",
+          "tests": [
+            {
+              "input": "function hello()\nprint('world')\nend",
+              "expected": "function hello()\n    print('world')\nend"
+            },
+            {
+              "input": "local obj={name='John',age=30}",
+              "expected": "local obj = {\n    name = 'John',\n    age = 30\n}"
+            },
+            {
+              "input": "if x>0 then\nreturn true\nelse\nreturn false\nend",
+              "expected": "if x > 0 then\n    return true\nelse\n    return false\nend"
+            },
+            {
+              "input": "for i=1,10 do if i%2==0 then print(i) end end",
+              "expected": "for i = 1, 10 do\n    if i % 2 == 0 then\n        print(i)\n    end\nend"
+            },
+            {
+              "input": "local function add(a,b)\nreturn a+b\nend",
+              "expected": "local function add(a, b)\n    return a + b\nend"
+            }
+          ]
+        },
+        {
+          "name": "Format HTML",
+          "tests": [
+            {
+              "input": "<div><p>Hello</p><p>World</p></div>",
+              "expected": "<div>\n    <p>Hello</p>\n    <p>World</p>\n</div>"
+            },
+            {
+              "input": "<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>",
+              "expected": "<html>\n    <head>\n        <title>Test</title>\n    </head>\n    <body>\n        <h1>Hello</h1>\n    </body>\n</html>"
+            },
+            {
+              "input": "<ul><li>Item 1</li><li>Item 2</li></ul>",
+              "expected": "<ul>\n    <li>Item 1</li>\n    <li>Item 2</li>\n</ul>"
+            },
+            {
+              "input": "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Doc</title></head><body><main><h1>Title</h1><p>Text</p></main></body></html>",
+              "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n    <head>\n        <meta charset=\"UTF-8\">\n        <title>Doc</title>\n    </head>\n    <body>\n        <main>\n            <h1>Title</h1>\n            <p>Text</p>\n        </main>\n    </body>\n</html>"
+            },
+            {
+              "input": "<div class=\"container\"><h2>Header</h2><p>Content</p></div>",
+              "expected": "<div class=\"container\">\n    <h2>Header</h2>\n    <p>Content</p>\n</div>"
+            },
+            {
+              "input": "<form><input type=\"text\" name=\"username\"><button type=\"submit\">Submit</button></form>",
+              "expected": "<form>\n    <input type=\"text\" name=\"username\">\n    <button type=\"submit\">Submit</button>\n</form>"
+            },
+            {
+              "input": "<header><nav><ul><li><a href=\"#\">Home</a></li><li><a href=\"#about\">About</a></li></ul></nav></header>",
+              "expected": "<header>\n    <nav>\n        <ul>\n            <li><a href=\"#\">Home</a></li>\n            <li><a href=\"#about\">About</a></li>\n        </ul>\n    </nav>\n</header>"
+            },
+            {
+              "input": "<div style=\"color:red;font-size:16px\">Styled text</div>",
+              "expected": "<div style=\"color:red;font-size:16px\">Styled text</div>"
+            }
+          ]
+        },
+        {
+          "name": "Format Ruby",
+          "tests": [
+            {
+              "input": "def hello() puts 'world' end",
+              "expected": "def hello()\n  puts 'world'\nend"
+            },
+            {
+              "input": "class Person def initialize(name) @name = name end end",
+              "expected": "class Person\n  def initialize(name)\n    @name = name\n  end\nend"
+            },
+            {
+              "input": "if x > 0 then puts 'positive' else puts 'negative' end",
+              "expected": "if x > 0 then\n  puts 'positive'\nelse\n  puts 'negative'\nend"
+            },
+            {
+              "input": "array = [1, 2, 3].map { |x| x * 2 }",
+              "expected": "array = [1, 2, 3].map { |x| x * 2 }"
+            },
+            {
+              "input": "hash = {name: 'John', age: 30}",
+              "expected": "hash = {name: 'John', age: 30}"
+            }
+          ]
+        },
+        {
+          "name": "Format Shell",
+          "tests": [
+            {
+              "input": "#!/bin/bash if [ -f file.txt ]; then echo 'File exists'; fi",
+              "expected": "#!/bin/bash\nif [ -f file.txt ]; then\n    echo 'File exists'\nfi"
+            },
+            {
+              "input": "for i in {1..5}; do echo $i; done",
+              "expected": "for i in {1..5}; do\n    echo $i\ndone"
+            },
+            {
+              "input": "function hello() { echo 'Hello $1'; }",
+              "expected": "function hello() {\n    echo 'Hello $1'\n}"
+            },
+            {
+              "input": "if [ $x -gt 0 ]; then echo 'Positive'; else echo 'Non-positive'; fi",
+              "expected": "if [ $x -gt 0 ]; then\n    echo 'Positive'\nelse\n    echo 'Non-positive'\nfi"
+            }
+          ]
+        },
+        {
+          "name": "Format YAML",
+          "tests": [
+            {
+              "input": "name:John\nage:30",
+              "expected": "name: John\nage: 30"
+            },
+            {
+              "input": "users:\n- name:John\n  age:30\n- name:Jane\n  age:25",
+              "expected": "users:\n- name: John\n  age: 30\n- name: Jane\n  age: 25"
+            },
+            {
+              "input": "config:\n  server:localhost\n  port:8080",
+              "expected": "config:\n  server: localhost\n  port: 8080"
+            }
+          ]
+        },
+        {
+          "name": "Format Properties",
+          "tests": [
+            {
+              "input": "key1=value1\nkey2=value2",
+              "expected": "key1=value1\nkey2=value2"
+            },
+            {
+              "input": "# Comment\napp.name=My App\napp.version=1.0.0",
+              "expected": "# Comment\napp.name=My App\napp.version=1.0.0"
+            },
+            {
+              "input": "database.url=jdbc:mysql://localhost:3306/db\ndatabase.username=root",
+              "expected": "database.url=jdbc:mysql://localhost:3306/db\ndatabase.username=root"
+            }
+          ]
+        },
+        {
+          "name": "Format INI",
+          "tests": [
+            {
+              "input": "[General]\nname=John\nage=30",
+              "expected": "[General]\nname = John\nage = 30"
+            },
+            {
+              "input": "[Server]\nhost=localhost\nport=8080\n[Database]\ndbname=test",
+              "expected": "[Server]\nhost = localhost\nport = 8080\n[Database]\ndbname = test"
+            }
+          ]
+        },
+        {
+          "name": "Format Go",
+          "tests": [
+            {
+              "input": "package main\nimport \"fmt\"\nfunc main(){fmt.Println(\"Hello\")}",
+              "expected": "package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello\")\n}"
+            },
+            {
+              "input": "type Person struct{Name string;Age int}",
+              "expected": "type Person struct {\n    Name string\n    Age int\n}"
+            },
+            {
+              "input": "func add(a,b int) int {return a+b}",
+              "expected": "func add(a, b int) int {\n    return a + b\n}"
+            },
+            {
+              "input": "if x>0 {fmt.Println(\"Positive\")} else {fmt.Println(\"Negative\")}",
+              "expected": "if x > 0 {\n    fmt.Println(\"Positive\")\n} else {\n    fmt.Println(\"Negative\")\n}"
+            },
+            {
+              "input": "type Reader interface{Read(p []byte) (n int, err error)}",
+              "expected": "type Reader interface {\n    Read(p []byte) (n int, err error)\n}"
+            },
+            {
+              "input": "func process(ch chan int){for i:=0;i<5;i++{ch<-i}close(ch)}",
+              "expected": "func process(ch chan int) {\n    for i := 0; i < 5; i++ {\n        ch <- i\n    }\n    close(ch)\n}"
+            },
+            {
+              "input": "func divide(a,b int) (int,error){if b==0{return 0,errors.New(\"division by zero\")}return a/b,nil}",
+              "expected": "func divide(a, b int) (int, error) {\n    if b == 0 {\n        return 0, errors.New(\"division by zero\")\n    }\n    return a / b, nil\n}"
+            }
+          ]
+        },
+        {
+          "name": "Format AppleScript",
+          "tests": [
+            {
+              "input": "display dialog \"Hello\" buttons {\"OK\"}",
+              "expected": "display dialog \"Hello\" buttons {\"OK\"}"
+            },
+            {
+              "input": "set x to 10\nif x > 5 then display dialog \"Greater than 5\"",
+              "expected": "set x to 10\nif x > 5 then\n    display dialog \"Greater than 5\"\nend if"
+            },
+            {
+              "input": "tell application \"Finder\" to activate",
+              "expected": "tell application \"Finder\"\n    activate\nend tell"
+            }
+          ]
+        },
+        {
+          "name": "Format Scala",
+          "tests": [
+            {
+              "input": "object HelloWorld {def main(args: Array[String]): Unit = println(\"Hello\")}",
+              "expected": "object HelloWorld {\n  def main(args: Array[String]): Unit = println(\"Hello\")\n}"
+            },
+            {
+              "input": "class Person(val name: String, val age: Int)",
+              "expected": "class Person(val name: String, val age: Int)"
+            },
+            {
+              "input": "val list = List(1, 2, 3).map(_ * 2)",
+              "expected": "val list = List(1, 2, 3).map(_ * 2)"
+            },
+            {
+              "input": "if (x > 0) println(\"Positive\") else println(\"Negative\")",
+              "expected": "if (x > 0) println(\"Positive\") else println(\"Negative\")"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
