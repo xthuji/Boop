@@ -1,0 +1,272 @@
+{
+  "testCases": [
+    {
+      "category": "Code Alignment",
+      "scripts": [
+        {
+          "name": "align_code",
+          "tests": [
+            {
+              "input": "name = John\nage = 30",
+              "expected": "name = John\nage  = 30"
+            },
+            {
+              "input": "::after\nname = John\nage = 30",
+              "expected": "name = John\nage  = 30"
+            },
+            {
+              "input": "::none\nname=John\nage=30",
+              "expected": "name=John\nage=30"
+            },
+            {
+              "input": "=>:both\nname => John\nage => 30",
+              "expected": "name => John\nage  => 30"
+            },
+            {
+              "input": "=:both:false\nname = John\nage = 30\ncity = NY",
+              "expected": "name = John\nage  = 30\ncity = NY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Insert Numbers",
+      "scripts": [
+        {
+          "name": "insert_sequence_number",
+          "tests": [
+            {
+              "input": "first line\nsecond line",
+              "expected": "1 first line\n2 second line"
+            },
+            {
+              "input": "1:1:n: \nfirst line\nsecond line",
+              "expected": "1 first line\n2 second line"
+            },
+            {
+              "input": "1:1:c:、\nfirst line\nsecond line",
+              "expected": "一、first line\n二、second line"
+            },
+            {
+              "input": "A:1:a:、\nfirst line\nsecond line",
+              "expected": "A、first line\nB、second line"
+            },
+            {
+              "input": "a:1:b:、\nfirst line\nsecond line",
+              "expected": "a、first line\nb、second line"
+            },
+            {
+              "input": "1:1:n:. \nfirst line\nsecond line",
+              "expected": "1. first line\n2. second line"
+            },
+            {
+              "input": "10:2:n: \nfirst line\nsecond line",
+              "expected": "10 first line\n12 second line"
+            },
+            {
+              "input": "1:1:n: :02\nfirst line\nsecond line\nthird line",
+              "expected": "01 first line\n02 second line\n03 third line"
+            },
+            {
+              "input": "1:1:n: :03\nfirst line\nsecond line",
+              "expected": "001 first line\n002 second line"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Quick Replace",
+      "scripts": [
+        {
+          "name": "quick_replace",
+          "tests": [
+            {
+              "input": "old:new\nold text\nanother old text",
+              "expected": "new text\nanother new text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Quotes Handling",
+      "scripts": [
+        {
+          "name": "quotes_fix_smart",
+          "tests": [
+            {
+              "input": "“hello” ‘world’",
+              "expected": "\"hello\" 'world'"
+            },
+            {
+              "input": "It’s a test",
+              "expected": "It's a test"
+            },
+            {
+              "input": "She said “Hello”",
+              "expected": "She said \"Hello\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "JSON Processing",
+      "scripts": [
+        {
+          "name": "sort_json",
+          "tests": [
+            {
+              "input": "{\"z\": 1, \"a\": 2, \"m\": 3}",
+              "expected": "{\n  \"a\": 2,\n  \"m\": 3,\n  \"z\": 1\n}"
+            },
+            {
+              "input": "{\"b\": {\"z\": 1, \"a\": 2}, \"a\": [3, 1, 2]}",
+              "expected": "{\n  \"a\": [\n    3,\n    1,\n    2\n  ],\n  \"b\": {\n    \"a\": 2,\n    \"z\": 1\n  }\n}"
+            },
+            {
+              "input": "invalid json",
+              "expected": "无效的JSON格式"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Text Counting",
+      "scripts": [
+        {
+          "name": "count_characters",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "11"
+            },
+            {
+              "input": "\nhello\nworld\n",
+              "expected": "13"
+            }
+          ]
+        },
+        {
+          "name": "count_lines",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "1"
+            },
+            {
+              "input": "hello\nworld",
+              "expected": "2"
+            },
+            {
+              "input": "hello\n\nworld",
+              "expected": "3"
+            }
+          ]
+        },
+        {
+          "name": "count_words",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "2"
+            },
+            {
+              "input": "hello\nworld\nhow are you",
+              "expected": "5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Hash Generation",
+      "scripts": [
+        {
+          "name": "generate_hash",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+            },
+            {
+              "input": "sha1\nhello world",
+              "expected": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+            },
+            {
+              "input": "1\nhello world",
+              "expected": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+            },
+            {
+              "input": "sha256\nhello world",
+              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+            },
+            {
+              "input": "256\nhello world",
+              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+            },
+            {
+              "input": "sha512\nhello world",
+              "expected": "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
+            },
+            {
+              "input": "512\nhello world",
+              "expected": "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
+            }
+          ]
+        },
+        {
+          "name": "generate_md5",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "5eb63bbbe01eeed093cb22bb8f5acdc3"
+            }
+          ]
+        },
+        {
+          "name": "generate_placeholder_text",
+          "tests": [
+            {
+              "input": "5",
+              "expected": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            }
+          ]
+        },
+        {
+          "name": "generate_sum",
+          "tests": [
+            {
+              "input": "1\n2\n3",
+              "expected": "6"
+            }
+          ]
+        },
+        {
+          "name": "calculate_size",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "11 bytes"
+            },
+            {
+              "input": "",
+              "expected": "0 bytes"
+            },
+            {
+              "input": "你好世界",
+              "expected": "12 bytes"
+            },
+            {
+              "input": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+              "expected": "445 bytes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

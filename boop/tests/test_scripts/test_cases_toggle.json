@@ -1,0 +1,355 @@
+{
+  "testCases": [
+    {
+      "category": "Encoding/Decoding",
+      "scripts": [
+        {
+          "name": "toggle_url",
+          "tests": [
+            {
+              "input": "encode\nhello world",
+              "expected": "hello%20world"
+            },
+            {
+              "input": "decode\nhello%20world",
+              "expected": "hello world"
+            },
+            {
+              "input": "e\nhello world",
+              "expected": "hello%20world"
+            },
+            {
+              "input": "d\nhello%20world",
+              "expected": "hello world"
+            },
+            {
+              "input": "toggle\nhello world",
+              "expected": "hello%20world"
+            },
+            {
+              "input": "t\nhello%20world",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "toggle_base64",
+          "tests": [
+            {
+              "input": "encode\nhello world",
+              "expected": "aGVsbG8gd29ybGQ="
+            },
+            {
+              "input": "decode\naGVsbG8gd29ybGQ=",
+              "expected": "hello world"
+            },
+            {
+              "input": "e\nhello world",
+              "expected": "aGVsbG8gd29ybGQ="
+            },
+            {
+              "input": "d\naGVsbG8gd29ybGQ=",
+              "expected": "hello world"
+            },
+            {
+              "input": "toggle\nhello world",
+              "expected": "aGVsbG8gd29ybGQ="
+            },
+            {
+              "input": "t\naGVsbG8gd29ybGQ=",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "toggle_html",
+          "tests": [
+            {
+              "input": "encode\n<div>Hello</div>",
+              "expected": "&lt;div&gt;Hello&lt;/div&gt;"
+            },
+            {
+              "input": "decode\n&lt;div&gt;Hello&lt;/div&gt;",
+              "expected": "<div>Hello</div>"
+            },
+            {
+              "input": "e\n<div>Hello</div>",
+              "expected": "&lt;div&gt;Hello&lt;/div&gt;"
+            },
+            {
+              "input": "d\n&lt;div&gt;Hello&lt;/div&gt;",
+              "expected": "<div>Hello</div>"
+            },
+            {
+              "input": "toggle\n<div>Hello</div>",
+              "expected": "&lt;div&gt;Hello&lt;/div&gt;"
+            },
+            {
+              "input": "t\n&lt;div&gt;Hello&lt;/div&gt;",
+              "expected": "<div>Hello</div>"
+            }
+          ]
+        },
+        {
+          "name": "toggle_hex",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "68656c6c6f"
+            },
+            {
+              "input": "decode\n68656c6c6f",
+              "expected": "hello"
+            },
+            {
+              "input": "e\nhello",
+              "expected": "68656c6c6f"
+            },
+            {
+              "input": "d\n68656c6c6f",
+              "expected": "hello"
+            },
+            {
+              "input": "toggle\nhello",
+              "expected": "68656c6c6f"
+            },
+            {
+              "input": "t\n68656c6c6f",
+              "expected": "hello"
+            }
+          ]
+        },
+        {
+          "name": "toggle_unicode",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "\\u0068\\u0065\\u006c\\u006c\\u006f"
+            },
+            {
+              "input": "decode\n\\u0068\\u0065\\u006c\\u006c\\u006f",
+              "expected": "hello"
+            },
+            {
+              "input": "e\nhello",
+              "expected": "\\u0068\\u0065\\u006c\\u006c\\u006f"
+            },
+            {
+              "input": "d\n\\u0068\\u0065\\u006c\\u006c\\u006f",
+              "expected": "hello"
+            },
+            {
+              "input": "toggle\nhello",
+              "expected": "\\u0068\\u0065\\u006c\\u006c\\u006f"
+            },
+            {
+              "input": "t\n\\u0068\\u0065\\u006c\\u006c\\u006f",
+              "expected": "hello"
+            }
+          ]
+        },
+        {
+          "name": "toggle_ascii",
+          "tests": [
+            {
+              "input": "encode\nhello",
+              "expected": "104 101 108 108 111"
+            },
+            {
+              "input": "decode\n104 101 108 108 111",
+              "expected": "hello"
+            },
+            {
+              "input": "e\nhello",
+              "expected": "104 101 108 108 111"
+            },
+            {
+              "input": "d\n104 101 108 108 111",
+              "expected": "hello"
+            },
+            {
+              "input": "toggle\nhello",
+              "expected": "104 101 108 108 111"
+            },
+            {
+              "input": "t\n104 101 108 108 111",
+              "expected": "hello"
+            }
+          ]
+        },
+        {
+          "name": "toggle_quotes",
+          "tests": [
+            {
+              "input": "double\nhello 'world'",
+              "expected": "hello \"world\""
+            },
+            {
+              "input": "single\nhello \"world\"",
+              "expected": "hello 'world'"
+            },
+            {
+              "input": "d\nhello 'world'",
+              "expected": "hello \"world\""
+            },
+            {
+              "input": "s\nhello \"world\"",
+              "expected": "hello 'world'"
+            },
+            {
+              "input": "escape_double\nhello \"world\"",
+              "expected": "hello \\\"world\\\""
+            },
+            {
+              "input": "escape_single\nhello 'world'",
+              "expected": "hello \\'world\\'"
+            },
+            {
+              "input": "ed\nhello \"world\"",
+              "expected": "hello \\\"world\\\""
+            },
+            {
+              "input": "es\nhello 'world'",
+              "expected": "hello \\'world\\'"
+            },
+            {
+              "input": "toggle\n\"hello\"",
+              "expected": "'hello'"
+            },
+            {
+              "input": "t\n'hello'",
+              "expected": "\"hello\""
+            },
+            {
+              "input": "toggle\n\"hello\" 'world'",
+              "expected": "\"hello\" 'world'"
+            },
+            {
+              "input": "toggle\nhello world",
+              "expected": "\"hello world\""
+            },
+            {
+              "input": "hello world",
+              "expected": "\"hello world\""
+            },
+            {
+              "input": "d\nhello world",
+              "expected": "\"hello world\""
+            },
+            {
+              "input": "s\nhello world",
+              "expected": "'hello world'"
+            }
+          ]
+        },
+        {
+          "name": "toggle_slashes",
+          "tests": [
+            {
+              "input": "path/to/file",
+              "expected": "path\\to\\file"
+            },
+            {
+              "input": "path\\to\\file",
+              "expected": "path/to/file"
+            },
+            {
+              "input": "back\npath/to/file",
+              "expected": "path\\to\\file"
+            },
+            {
+              "input": "forward\npath\\to\\file",
+              "expected": "path/to/file"
+            },
+            {
+              "input": "b\na/b/c",
+              "expected": "a\\b\\c"
+            },
+            {
+              "input": "f\na\\b\\c",
+              "expected": "a/b/c"
+            }
+          ]
+        },
+        {
+          "name": "toggle_color",
+          "tests": [
+            {
+              "input": "rgb(255, 0, 0)",
+              "expected": "#FF0000"
+            },
+            {
+              "input": "255, 0, 0",
+              "expected": "#FF0000"
+            },
+            {
+              "input": "255 128 64",
+              "expected": "#FF8040"
+            },
+            {
+              "input": "#FF0000",
+              "expected": "rgb(255, 0, 0)"
+            },
+            {
+              "input": "#F00",
+              "expected": "rgb(255, 0, 0)"
+            },
+            {
+              "input": "#00FF00",
+              "expected": "rgb(0, 255, 0)"
+            },
+            {
+              "input": "#0F0",
+              "expected": "rgb(0, 255, 0)"
+            },
+            {
+              "input": "hex\nrgb(0, 128, 255)",
+              "expected": "#0080FF"
+            },
+            {
+              "input": "rgb\n#0080FF",
+              "expected": "rgb(0, 128, 255)"
+            },
+            {
+              "input": "h\n100, 200, 50",
+              "expected": "#64C832"
+            },
+            {
+              "input": "r\n#64C832",
+              "expected": "rgb(100, 200, 50)"
+            }
+          ]
+        },
+        {
+          "name": "toggle_url_defang",
+          "tests": [
+            {
+              "input": "defang\nhttps://example.com/path",
+              "expected": "hXXps[://]example[.]com/path"
+            },
+            {
+              "input": "refang\nhXXps[://]example[.]com/path",
+              "expected": "https://example.com/path"
+            },
+            {
+              "input": "toggle\nhttps://example.com/path",
+              "expected": "hXXps[://]example[.]com/path"
+            },
+            {
+              "input": "toggle\nhXXps[://]example[.]com/path",
+              "expected": "https://example.com/path"
+            },
+            {
+              "input": "d\nhttp://test.com",
+              "expected": "hXXp[://]test[.]com"
+            },
+            {
+              "input": "r\nhXXp[://]test[.]com",
+              "expected": "http://test.com"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

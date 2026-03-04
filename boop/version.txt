@@ -1,0 +1,35 @@
+# Version information for Boop
+# This file is used by PyInstaller to set version information
+
+VERSION = 1.0.0
+FILEVERSION = 1,0,0,0
+PRODUCTVERSION = 1,0,0,0
+FILEFLAGSMASK = 0x3fL
+#ifdef _DEBUG
+FILEFLAGS = 0x1L
+#else
+FILEFLAGS = 0x0L
+#endif
+FILEOS = 0x40004L
+FILETYPE = 0x1L
+FILESUBTYPE = 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "Boop Team"
+            VALUE "FileDescription", "Boop - A simple script runner"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "Boop"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Boop Team"
+            VALUE "OriginalFilename", "Boop"
+            VALUE "ProductName", "Boop"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1252
+    END
+END

@@ -1,0 +1,204 @@
+{
+  "testCases": [
+    {
+      "category": "Data Format Conversion",
+      "scripts": [
+        {
+          "name": "convert_data_key_value_format",
+          "tests": [
+            {
+              "input": "{\"name\":\"John\"}",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "json\n{\"name\":\"John\"}",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "url\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            },
+            {
+              "input": "?name=John",
+              "expected": "{\n  \"url_path\": \"http://example.com/\",\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "url\n?name=John",
+              "expected": "http://example.com/?name=John"
+            },
+            {
+              "input": "cookie\n{\"session\":\"abc123\"}",
+              "expected": "session=abc123"
+            },
+            {
+              "input": "session=abc123; user=john",
+              "expected": "{\n  \"session\": \"abc123\",\n  \"user\": \"john\"\n}"
+            },
+            {
+              "input": "cookie\nsession=abc123; user=john",
+              "expected": "session=abc123; user=john"
+            },
+            {
+              "input": "kv\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            },
+            {
+              "input": "name=John",
+              "expected": "{\n  \"name\": \"John\"\n}"
+            },
+            {
+              "input": "kv\nname=John",
+              "expected": "name=John"
+            },
+            {
+              "input": "keyvalue\n{\"name\":\"John\"}",
+              "expected": "name=John"
+            }
+          ]
+        },
+        {
+          "name": "convert_data_list_format",
+          "tests": [
+            {
+              "input": "[{\"name\":\"John\"}]",
+              "expected": "[\n  {\n    \"name\": \"John\"\n  }\n]"
+            },
+            {
+              "input": "json\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "csv\n[{\"name\":\"John\",\"age\":30},{\"name\":\"Jane\",\"age\":25}]",
+              "expected": "name,age\nJohn,30\nJane,25"
+            },
+            {
+              "input": "xml\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "<data>\n  <item>\n    <name>John</name>\n    <age>30</age>\n  </item>\n</data>"
+            },
+            {
+              "input": "<data>\n  <item>\n    <name>John</name>\n    <age>30</age>\n  </item>\n</data>",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "yaml\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "-\n  name: John\n  age: 30"
+            },
+            {
+              "input": "-\n  name: John\n  age: 30",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "tabtext\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "name\tage\nJohn\t30"
+            },
+            {
+              "input": "name\tage\nJohn\t30",
+              "expected": "[\n  {\n    \"name\": \"John\",\n    \"age\": 30\n  }\n]"
+            },
+            {
+              "input": "sql:users:true\n[{\"name\":\"John\"},{\"name\":\"Jane\"}]",
+              "expected": "INSERT INTO users (name) VALUES ('John');\nINSERT INTO users (name) VALUES ('Jane');"
+            },
+            {
+              "input": "sql:products:false\n[{\"name\":\"Apple\"},{\"name\":\"Banana\"}]",
+              "expected": "INSERT INTO products (name) VALUES\n  ('Apple'),\n  ('Banana');"
+            },
+            {
+              "input": "INSERT INTO users (name, age) VALUES ('John', 30), ('Jane', 25);",
+              "expected": "[\n  {\n    \"table\": \"users\",\n    \"name\": \"John\",\n    \"age\": 30\n  },\n  {\n    \"table\": \"users\",\n    \"name\": \"Jane\",\n    \"age\": 25\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "convert_data_yaml_json",
+          "tests": [
+            {
+              "input": "name: John\nage: 30",
+              "expected": "{\n  \"name\": \"John\",\n  \"age\": 30\n}"
+            },
+            {
+              "input": "yaml\n{\"name\": \"John\", \"age\": 30}",
+              "expected": "name: John\nage: 30"
+            },
+            {
+              "input": "json\nname: John\nage: 30",
+              "expected": "{\n  \"name\": \"John\",\n  \"age\": 30\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "String Conversion",
+      "scripts": [
+        {
+          "name": "convert_json_code",
+          "tests": [
+            {
+              "input": "[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        name: \"John\",\n        age: 30\n    }\n]"
+            },
+            {
+              "input": "js\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        name: \"John\",\n        age: 30\n    }\n]"
+            },
+            {
+              "input": "json\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        \"name\": \"John\",\n        \"age\": 30\n    }\n]"
+            },
+            {
+              "input": "py\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    {\n        'name': 'John',\n        'age': 30\n    }\n]"
+            },
+            {
+              "input": "lua\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "{\n    {\n        name = \"John\",\n        age = 30\n    }\n}"
+            },
+            {
+              "input": "php\n[{\"name\":\"John\",\"age\":30}]",
+              "expected": "[\n    [\n        'name' => 'John',\n        'age' => 30\n    ]\n];"
+            },
+            {
+              "input": "js:php\n[{name:\"John\",age:30}]",
+              "expected": "[\n    [\n        'name' => 'John',\n        'age' => 30\n    ]\n];"
+            },
+            {
+              "input": "js:json\n[{name:\"John\",age:30}]",
+              "expected": "[\n    {\n        \"name\": \"John\",\n        \"age\": 30\n    }\n]"
+            }
+          ]
+        },
+        {
+          "name": "convert_number_base",
+          "tests": [
+            {
+              "input": "255",
+              "expected": "FF"
+            },
+            {
+              "input": "2:10\n11111111",
+              "expected": "255"
+            },
+            {
+              "input": "10:16:false\n255",
+              "expected": "ff"
+            },
+            {
+              "input": "16:2:true\nFF",
+              "expected": "11111111"
+            }
+          ]
+        },
+        {
+          "name": "convert_time",
+          "tests": [
+            {
+              "input": "1727597037",
+              "expected": "2024-09-29 16:03:57"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
