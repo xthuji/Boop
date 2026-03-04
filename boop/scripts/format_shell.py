@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format Shell",
-  "description": "Professional Shell script formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["shell", "format", "minify"],
-  "help": "Format or minify Shell script with proper indentation and spacing.\n\nExample:\nInput:\n#!/bin/bash\nif [ $1 -eq 1 ]; then echo \"Hello\"; fi\n\nOutput:\n#!/bin/bash\nif [ $1 -eq 1 ]; then\n    echo \"Hello\"\nfi\n\nIf the script is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 Shell 脚本",
+  "icon": "🐚",
+  "tags": ["shell","bash","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 Shell 脚本\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nif [ true ];then echo \"Hello\";fi\n\n输出:\nif [ true ]; then\n    echo \"Hello\"\nfi"
+}"""
 
 import re
 
@@ -134,7 +132,7 @@ def main(state):
     """Format or minify Shell text."""
     if not state.text or not state.text.strip():
         return
-    
+
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
@@ -154,7 +152,7 @@ def minify_code(code):
     """Minify Shell code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
     code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
     # 移除多余空格和换行
@@ -167,15 +165,8 @@ def process_format_code(text):
     """Process Shell code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-def run(text, *args):
-    """Boop script entry point."""
-    try:
-        return process_format_code(text)
-    except Exception as e:
-        return f"Error formatting Shell: {str(e)}"

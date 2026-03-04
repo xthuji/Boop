@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "排序JSON",
-    "description": "排序JSON对象的键",
+    "name": "Sort JSON",
+    "description": "对 JSON 对象的键进行排序",
     "icon": "code",
-    "tags": ["format", "json", "sort"],
-    "help": "排序JSON对象的键\n\nExample:\nInput:\n{\"b\": 2, \"a\": 1}\n\nOutput:\n{\n  \"a\": 1,\n  \"b\": 2\n}"
+    "tags": ["json","sort"],
+    "help": "对 JSON 对象的键进行字母排序\n\n示例:\n输入:\n{\"z\": 1, \"a\": 2, \"m\": 3}\n\n输出:\n{\"a\": 2, \"m\": 3, \"z\": 1}"
 }
 '''
 

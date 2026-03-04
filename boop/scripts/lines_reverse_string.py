@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
-  "name": "Lines Reverse String",
-  "description": "Reverses string for each line",
-  "icon": "flip",
-  "tags": ["reverse", "string", "transform"],
-  "help": "Reverses each line of the input text.\n\nExample:\nInput:\nhello\nworld\n\nOutput:\nolleh\ndlrow"
-}
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
+  "name": "Reverse String",
+  "description": "反转字符串",
+  "icon": "🔄",
+  "tags": ["text","reverse","string"],
+  "help": "反转字符串\n\n示例:\n输入:\nhello\n\n输出:\nolleh"
+}"""
 
 
 def main(state):

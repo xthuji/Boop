@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "添加Markdown引号",
-    "description": "为文本添加Markdown引号格式",
-    "icon": "text",
-    "tags": ["format", "markdown", "quotes"],
-    "help": "为文本添加Markdown引号格式\n\nExample:\nInput:\nhello world\ntest\n\nOutput:\n> hello world\n> test"
+  "name": "Add Markdown Quotes",
+  "description": "为文本添加 Markdown 引用格式",
+  "icon": "📝",
+  "tags": ["markdown","quotes","format"],
+  "help": "为文本添加 Markdown 引用格式\n\n示例:\n输入:\nhello\nworld\n\n输出:\n> hello\n> world"
 }
 '''
 

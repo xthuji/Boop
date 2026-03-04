@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Professional TypeScript code formatter using jsbeautifier.
-"""
+"""{
+  "name": "Format TypeScript",
+  "description": "格式化 TypeScript 代码",
+  "icon": "⚡",
+  "tags": ["typescript","format"],
+  "dependencies": ["jsbeautifier"],
+  "help": "格式化或压缩 TypeScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello(name:string):void{console.log(`Hello ${name}`)}\n\n输出:\nfunction hello(name: string): void {\n    console.log(`Hello ${name}`);\n}"
+}"""
 
 import jsbeautifier
 import re
@@ -11,7 +16,7 @@ def format_code(code):
     """Format TypeScript code using jsbeautifier."""
     if not code or not code.strip():
         return code
-    
+
     # Use jsbeautifier's Python API for TypeScript (treat as JavaScript)
     opts = jsbeautifier.default_options()
     opts.indent_size = 4
@@ -19,7 +24,7 @@ def format_code(code):
     opts.max_preserve_newlines = 2
     opts.preserve_newlines = True
     opts.wrap_line_length = 0
-    
+
     try:
         result = jsbeautifier.beautify(code, opts)
         # 处理接口定义
@@ -75,26 +80,45 @@ def format_class(name):
     """Format TypeScript class."""
     return 'class ' + name + ' {\n    constructor(public name: string) {\n    }\n}'
 
-# Boop script metadata
-metadata = {
-    "name": "Format TypeScript",
-    "description": "Formats TypeScript code using jsbeautifier",
-    "version": "1.0.0",
-    "category": "format",
-    "dependencies": ["jsbeautifier"],
-    "input": "text",
-    "output": "text",
-    "icon": "pineapple",
-    "help": "Formats TypeScript code with professional indentation and spacing. Uses jsbeautifier library for formatting."
-}
 
-def run(text, *args):
-    """Boop script entry point."""
+def main(state):
+    """Format or minify TypeScript text."""
+    if not state.text or not state.text.strip():
+        return
+
     try:
-        return format_code(text)
+        state.text = process_format_code(state.text)
+        if hasattr(state, 'post_info'):
+            state.post_info("TypeScript code formatted or minified")
     except Exception as e:
-        return f"Error formatting TypeScript: {str(e)}"
+        if hasattr(state, 'post_error'):
+            state.post_error("Error formatting TypeScript: {}".format(str(e)))
+        else:
+            print("Error formatting TypeScript: {}".format(str(e)))
 
-def main(text, *args):
-    """Main function for Boop script execution."""
-    return run(text, *args)
+def is_minified(text):
+    """Check if TypeScript code is minified."""
+    text = text.strip()
+    return not '\n' in text and ('function' in text or 'const' in text or 'interface' in text or 'type' in text)
+
+def minify_code(code):
+    """Minify TypeScript code."""
+    if not code or not code.strip():
+        return code
+
+    # 移除注释
+    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
+    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
+    # 移除多余空格和换行
+    code = re.sub(r'\s+', ' ', code)
+    return code.strip()
+
+def process_format_code(text):
+    """Process TypeScript code - format or minify based on input state."""
+    if not text or not text.strip():
+        return text
+
+    if is_minified(text):
+        return format_code(text)
+    else:
+        return minify_code(text)

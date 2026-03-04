@@ -9,12 +9,18 @@ A Python-based text manipulation tool inspired by the original [Boop](https://gi
 ## Features
 
 - 🎨 **Native GUI Interface** - Tkinter-based UI mimicking Boop.app design
-- ⌨️ **Keyboard Shortcuts** - Same shortcuts as original Boop
-- 📁 **Built-in Configuration** - Config stored in `boop/config.json`
+- ⌨️ **Keyboard Shortcuts** - Customizable shortcuts
+- 📁 **Built-in Configuration** - Config stored in `config.json`
 - 🔧 **Preferences Window** - GUI for all settings
 - 🐍 **Python Scripts** - Write text manipulation scripts in Python
 - 🎯 **Custom Script Directories** - Configure multiple script locations
 - 🔄 **Isolated Execution** - Scripts run in subprocesses for safety
+- 📝 **Line Numbers** - Editor with line number display
+- ↩️ **Undo/Redo** - History-based undo/redo functionality
+- 🔍 **Script Search** - Search scripts by name and tags
+- 📊 **Status Bar** - Shows cursor position and character count
+- ⚡ **Fast Startup** - Background script metadata loading
+- 🗄️ **Metadata Caching** - JSON-based metadata cache for faster loading
 
 ---
 
@@ -63,49 +69,57 @@ python3 -m boop
 | Shortcut | Action |
 |----------|--------|
 | `Cmd+B` (or `Ctrl+B`) | Open Script Picker |
-| `Shift+Cmd+B` | Run Last Script |
-| `Shift+Cmd+R` | Reload Scripts |
 | `Cmd+,` | Open Preferences |
-| `Cmd+N` | Clear Editor |
+| `Cmd+Q` | Quit Application |
+| `Cmd+Z` (or `Ctrl+Z`) | Undo |
+| `Cmd+Shift+Z` (or `Ctrl+Shift+Z`) | Redo |
+| `Cmd+X` (or `Ctrl+X`) | Cut |
+| `Cmd+C` (or `Ctrl+C`) | Copy |
+| `Cmd+V` (or `Ctrl+V`) | Paste |
+| `Cmd+A` (or `Ctrl+A`) | Select All |
 
 ### Menu Options
 
-**Scripts Menu:**
-- Open Picker... - Open script selection dialog
-- Run Last Script - Re-run the last executed script
-- Reload Scripts - Refresh all scripts from directories
+**Boop Menu:**
+- About Boop - Application information
 - Preferences... - Open settings window
+- Quit - Exit the application
 
 **Edit Menu:**
+- Undo - Undo last action
+- Redo - Redo last action
 - Cut/Copy/Paste - Standard editing
-- Clear - Clear the editor
+- Select All - Select all text
 
-**Help Menu:**
-- About - Application information
+**Script Menu:**
+- Run Script - Open script selection dialog
 
 ---
 
 ## Configuration
 
-Configuration is stored in `boop/config.json` within the application directory.
+Configuration is stored in `config.json` in the project root directory.
 
 ### Configurable Settings
 
 | Setting | Description | Default |
 |---------|-------------|---------|
 | `script_directories` | List of script directories | `[boop/scripts]` |
-| `python_interpreter` | Python interpreter path | Current Python |
+| `python_path` | Python interpreter path | Current Python |
+| `window_width` | Window width | 800 |
+| `window_height` | Window height | 600 |
+| `maximize_window` | Whether to maximize window on startup | false |
 | `font_family` | Editor font family | Menlo |
 | `font_size` | Editor font size | 14 |
-| `theme` | Color theme | system |
+| `shortcuts` | Keyboard shortcuts configuration | Built-in shortcuts |
 
 ### Modifying Configuration
 
 Use the **Preferences window** (`Cmd+,`) to modify settings:
 
-1. **Scripts Tab**: Add/remove script directories
-2. **Python Tab**: Set custom Python interpreter
-3. **Editor Tab**: Configure font and theme
+1. **General Tab**: Set Python interpreter path and window settings
+2. **Scripts Tab**: Add/remove script directories and install dependencies
+3. **Editor Tab**: Configure font settings
 
 ---
 
@@ -194,94 +208,54 @@ To install dependencies:
 - Dependencies are only installed once, and reused across all scripts
 - The application will use the internal Python environment for script execution
 
-### Example Scripts
+### Script System Overview
 
-#### Convert to Uppercase
+Boop Python comes with a variety of built-in scripts that cover common text manipulation tasks, including:
 
-```python
-'''
-{
-    "api": 1,
-    "name": "To Uppercase",
-    "description": "Convert text to uppercase",
-    "tags": ["case", "uppercase"]
-}
-'''
+- **Text Transformation**: Case conversion, whitespace handling, line manipulation
+- **Formatting**: JSON, YAML, XML, CSS, and other file formats
+- **Encoding/Decoding**: Base64, URL encoding, ASCII/Unicode conversion
+- **Data Analysis**: Character, word, and line counting
+- **Utilities**: Hash generation, sequence number insertion, text comparison
 
-def main(state):
-    state.text = state.text.upper()
-    state.post_info("Converted to uppercase")
-```
-
-#### Count Lines
-
-```python
-'''
-{
-    "api": 1,
-    "name": "Count Lines",
-    "description": "Count the number of lines",
-    "tags": ["count", "lines"]
-}
-'''
-
-def main(state):
-    line_count = len(state.full_text.split('\n'))
-    state.post_info(f"{line_count} lines")
-```
-
-#### Format JSON
-
-```python
-'''
-{
-    "api": 1,
-    "name": "JSON Format",
-    "description": "Format and indent JSON",
-    "tags": ["json", "format"]
-}
-'''
-
-import json
-
-def main(state):
-    try:
-        data = json.loads(state.text)
-        state.text = json.dumps(data, indent=2)
-        state.post_info("JSON formatted")
-    except json.JSONDecodeError as e:
-        state.post_error(f"Invalid JSON: {e}")
-```
+The script system is extensible, allowing you to add your own custom scripts to handle specific text processing needs. All scripts run in isolated subprocesses for safety and stability.
 
 ---
 
 ## Project Structure
 
 ```
-BoopPython/
+Boop/
 ├── boop/
 │   ├── __init__.py          # Package init
 │   ├── __main__.py          # GUI entry point
-│   ├── config.json          # Application configuration
 │   ├── config/
 │   │   └── settings.py      # ConfigManager, BoopConfig
 │   ├── core/
-│   │   ├── script_execution.py  # ScriptExecution class
-│   │   ├── script_loader.py     # ScriptLoader class
-│   │   ├── script_metadata.py   # ScriptMetadata class
-│   │   └── script_runner.py     # ScriptRunner class
+│   │   ├── __init__.py      # Core package init
+│   │   ├── cache.py         # Metadata cache
+│   │   ├── event.py         # Event system
+│   │   ├── logging.py       # Logging system
+│   │   ├── path.py          # Path utilities
+│   │   ├── script.py        # Script manager
+│   │   ├── script_metadata.py # Script metadata
+│   │   ├── script_wrapper.py # Script execution wrapper
+│   │   └── utils.py         # Utility functions
+│   ├── scripts/             # Default script directory
+│   ├── tests/               # Test files
 │   ├── ui/
-│   │   ├── main_window.py       # Main application window
-│   │   ├── script_picker.py     # Script selection dialog
-│   │   └── preferences.py       # Preferences window
-│   └── scripts/                 # Default script directory
-├── icons/                       # Icon resources
-├── build.sh                     # Build script
-├── convert_icons.py             # Icon converter
-├── requirements.txt             # Python dependencies
-├── README.md                    # This file
-├── BUILD.md                     # Build guide
-└── REQUIREMENTS.md              # Business requirements
+│   │   ├── __init__.py      # UI package init
+│   │   ├── editor.py        # Editor component
+│   │   ├── main.py          # Main application window
+│   │   ├── preferences.py   # Preferences window
+│   │   └── script_picker.py # Script selection dialog
+├── config.json              # Application configuration
+├── icons/                   # Icon resources
+├── build.sh                 # Build script
+├── requirements.txt         # Python dependencies
+├── README.md                # This file
+├── SIMPLIFIED_DESIGN.md     # Design document
+└── REQUIREMENTS.md          # Business requirements
 ```
 
 ---
@@ -302,8 +276,8 @@ BoopPython/
 ## Documentation
 
 - **[README.md](README.md)** - This file (overview and quick start)
-- **[BUILD.md](BUILD.md)** - Build instructions and troubleshooting
 - **[REQUIREMENTS.md](REQUIREMENTS.md)** - Business requirements document
+- **[SIMPLIFIED_DESIGN.md](SIMPLIFIED_DESIGN.md)** - Technical design document
 
 ---
 

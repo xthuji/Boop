@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "Sort Lines",
-    "description": "Sort lines alphabetically",
-    "icon": "sort",
-    "tags": ["sort", "lines", "alphabetize"],
-    "help": "Sorts all lines in the text alphabetically (A-Z).\nEmpty lines are preserved in their sorted position."
+  "name": "Sort Lines",
+  "description": "对文本行进行排序",
+  "icon": "📋",
+  "tags": ["text","sort","lines"],
+  "help": "对文本行进行排序 (字母顺序)\n\n示例:\n输入:\nbanana\napple\ncherry\n\n输出:\napple\nbanana\ncherry"
 }
 '''
 

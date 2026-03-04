@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "转换为小写",
-    "description": "将文本转换为小写",
-    "icon": "type",
-    "tags": ["format", "case", "lower"],
-    "help": "将文本转换为小写\n\nExample:\nInput:\nHELLO WORLD\n\nOutput:\nhello world"
+  "name": "To Lower Case",
+  "description": "将文本转换为小写格式",
+  "icon": "🐪",
+  "tags": ["format","case","lower"],
+  "help": "将文本转换为全小写格式\n\n示例:\n输入:\nHELLO WORLD\n\n输出:\nhello world"
 }
 '''
 

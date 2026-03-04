@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
-  "name": "Text Compare",
-  "description": "Compare two text sections separated by '\\n---\\n' and show detailed differences",
-  "icon": "flip",
-  "tags": ["string", "match", "text", "compare", "line", "diff"],
-  "help": "Compare two text sections and show detailed differences.\n\nUsage: Provide two text sections separated by '\\n---\\n' (3 or more dashes)\n\nExample:\nInput:\napple\nbanana\ncherry\n---\napple\norange\ncherry\n\nOutput:\n=== 对比结果 ===\n状态：数据完全不同\n文本 1 行数：3\n文本 2 行数：3\n差异行数：2\n\n=== 详细差异 ===\n~ 2:2 banana -> orange\n+   :3 cherry"
-}
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
+  "name": "Compare Lines",
+  "description": "比较两行文本的差异",
+  "icon": "📊",
+  "tags": ["text","compare","lines"],
+  "help": "比较两行文本的差异\n\n示例:\n输入:\nhello world\nhello word\n\n输出:\n差异位置：7\n行 1: w\n行 2: d"
+}"""
 
 
 def _preprocess_text(text):

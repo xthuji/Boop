@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "列表格式转换",
-    "description": "在不同列表格式之间转换",
-    "icon": "text",
-    "tags": ["convert", "data", "list"],
-    "help": "在不同列表格式之间转换\n\nExample:\nInput:\n- item1\n- item2\n- item3\n\nOutput:\n* item1\n* item2\n* item3"
+  "name": "Convert List Format",
+  "description": "在不同列表格式之间转换",
+  "icon": "📋",
+  "tags": ["convert","data","list"],
+  "help": "在不同列表格式之间转换 (减号和星号格式)\n\n示例:\n输入:\n- item1\n- item2\n- item3\n\n输出:\n* item1\n* item2\n* item3"
 }
 '''
 

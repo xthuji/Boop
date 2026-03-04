@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "字符计数",
-    "description": "计算文本中的字符数量",
-    "icon": "counter",
-    "tags": ["count", "characters"],
-    "help": "计算文本中的字符数量\n\nExample:\nInput:\nhello world\n\nOutput:\n总字符数: 11\n非空白字符数: 11\n单词数: 2"
+  "name": "Count Characters",
+  "description": "计算文本中的字符数量",
+  "icon": "🔤",
+  "tags": ["count","characters"],
+  "help": "计算文本中的字符数量\n\n示例:\n输入:\nhello world\n\n输出:\n总字符数：11\n非空白字符数：11\n单词数：2"
 }
 '''
 

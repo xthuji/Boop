@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import Optional
 
 from boop.config.settings import BoopConfig
-from boop.core.script import ScriptManager, LoadedScript
-from boop.core.utils import run_script_in_subprocess
+from boop.core.script import ScriptManager
+from boop.core.utils import run_script_in_subprocess, center_window
 from boop.core.event import event_system
+from boop.core.logging import logger
 from boop.ui.editor import Editor
 from boop.ui.script_picker import ScriptPickerPopup
 
@@ -24,37 +25,70 @@ class MainWindow:
         Args:
             config: Application configuration
         """
+        import time
+        self.init_start_time = time.time()
+        logger.info(f"Initializing MainWindow at {time.strftime('%H:%M:%S.%f')}")
         self.config = config
         self.root = tk.Tk()
         self.root.title("Boop Python")
-        self.root.geometry(f"{config.window_width}x{config.window_height}")
+        
+        # Maximize window if configured
+        if hasattr(config, 'maximize_window') and config.maximize_window:
+            import sys
+            platform = sys.platform
+            
+            try:
+                # Try platform-specific maximize
+                if platform == 'win32':  # Windows
+                    self.root.state('zoomed')
+                    logger.info("Window maximized (Windows)")
+                elif platform == 'linux':  # Linux
+                    try:
+                        self.root.attributes('-zoomed', True)
+                        logger.info("Window maximized (Linux)")
+                    except Exception:
+                        # Fallback to setting full screen size
+                        self.root.geometry(f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0")
+                        logger.info("Using fallback maximize for Linux")
+                else:  # macOS and other platforms
+                    # For macOS, set window to full screen size
+                    self.root.geometry(f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0")
+                    logger.info("Window maximized (macOS)")
+            except Exception as e:
+                # If maximizing fails, just log the error and continue
+                logger.error(f"Failed to maximize window: {e}")
+                # Fallback to centered window with user-specified size
+                center_window(self.root, config.window_width, config.window_height)
+                self.root.state('normal')
+        else:
+            # Center window with user-specified size
+            center_window(self.root, config.window_width, config.window_height)
+            logger.info(f"Window created with size: {config.window_width}x{config.window_height}, centered")
+        
+        logger.info(f"Window created in {time.time() - self.init_start_time:.3f}s")
         
         self.script_manager = ScriptManager(config)
+        logger.info(f"ScriptManager created in {time.time() - self.init_start_time:.3f}s")
+        
         self.editor: Optional[Editor] = None
         self.status_var = tk.StringVar(value="Ready")
         
         self._create_ui()
+        logger.info(f"UI created in {time.time() - self.init_start_time:.3f}s")
+        
         self._bind_events()
-        self._load_scripts()
+        logger.info(f"Events bound in {time.time() - self.init_start_time:.3f}s")
+        
+        # Don't load scripts at startup - load on demand
+        logger.info(f"Startup completed in {time.time() - self.init_start_time:.3f}s")
+        
+        # Load script metadata in background after startup
+        self.root.after(1000, self._load_script_metadata)
     
     def _create_ui(self):
-        """Create the main window UI."""
-        # Determine platform-specific modifiers
-        import sys
-        is_mac = sys.platform == 'darwin'
-        
+        """Create the main window UI."""        
         # Menu bar
         menubar = tk.Menu(self.root)
-        
-        # File menu
-        file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="New", command=self._new_file, accelerator=self._get_accelerator("new_file"))
-        file_menu.add_command(label="Open...", command=self._open_file, accelerator=self._get_accelerator("open_file"))
-        file_menu.add_command(label="Save", command=self._save_file, accelerator=self._get_accelerator("save_file"))
-        file_menu.add_command(label="Save As...", command=self._save_as_file)
-        file_menu.add_separator()
-        file_menu.add_command(label="Quit", command=self._quit, accelerator=self._get_accelerator("quit"))
-        menubar.add_cascade(label="File", menu=file_menu)
         
         # Edit menu
         edit_menu = tk.Menu(menubar, tearoff=0)
@@ -66,25 +100,18 @@ class MainWindow:
         edit_menu.add_command(label="Paste", command=self._paste, accelerator=self._get_accelerator("paste"))
         edit_menu.add_separator()
         edit_menu.add_command(label="Select All", command=self._select_all, accelerator=self._get_accelerator("select_all"))
-        edit_menu.add_separator()
-        edit_menu.add_command(label="Previous Script Result", command=self._navigate_history_previous, accelerator=self._get_accelerator("navigate_previous"))
-        edit_menu.add_command(label="Next Script Result", command=self._navigate_history_next, accelerator=self._get_accelerator("navigate_next"))
         menubar.add_cascade(label="Edit", menu=edit_menu)
-        
-        # Scripts menu
-        scripts_menu = tk.Menu(menubar, tearoff=0)
-        scripts_menu.add_command(label="Run Script...", command=self._open_script_picker, accelerator=self._get_accelerator("run_script"))
-        scripts_menu.add_command(label="Reload Scripts", command=self._load_scripts)
-        menubar.add_cascade(label="Scripts", menu=scripts_menu)
-        
-        # Preferences menu
-        preferences_menu = tk.Menu(menubar, tearoff=0)
-        preferences_menu.add_command(label="Preferences...", command=self._open_preferences, accelerator=self._get_accelerator("preferences"))
-        menubar.add_cascade(label="Preferences", menu=preferences_menu)
-        
+
+        # Script menu
+        script_menu = tk.Menu(menubar, tearoff=0)
+        script_menu.add_command(label="Run Script", command=self._open_script_picker, accelerator=self._get_accelerator("run_script"))
+        menubar.add_cascade(label="Script", menu=script_menu)
+
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About", command=self._show_about)
+        help_menu.add_command(label="About Boop", command=self._show_about)
+        help_menu.add_separator()
+        help_menu.add_command(label="Preferences", command=self._open_preferences, accelerator=self._get_accelerator("preferences"))
         menubar.add_cascade(label="Help", menu=help_menu)
         
         self.root.config(menu=menubar)
@@ -95,6 +122,8 @@ class MainWindow:
         
         # Editor
         self.editor = Editor(main_frame, self.config)
+        # Set focus to editor
+        self.editor.focus()
         
         # Status bar
         status_bar = tk.Frame(self.root, height=20, relief=tk.SUNKEN, bd=1)
@@ -130,11 +159,6 @@ class MainWindow:
         if isinstance(shortcut, list) and shortcut:
             shortcut = shortcut[0]
         
-        # Convert Command to Cmd for display purposes on macOS
-        import sys
-        is_mac = sys.platform == 'darwin'
-        if is_mac:
-            return shortcut.replace('Command+', 'Cmd+')
         return shortcut
     
     def _bind_events(self):
@@ -147,14 +171,9 @@ class MainWindow:
                 self.root.bind(f'<{shortcut.replace("+", "-")}>', action)
         
         # Bind shortcuts
-        binding_hotkey_action(self.config.shortcuts.get('new_file', ['Ctrl+n']), lambda e: self._new_file())
-        binding_hotkey_action(self.config.shortcuts.get('open_file', ['Ctrl+o']), lambda e: self._open_file())
-        binding_hotkey_action(self.config.shortcuts.get('save_file', ['Ctrl+s']), lambda e: self._save_file())
         binding_hotkey_action(self.config.shortcuts.get('quit', ['Ctrl+q']), lambda e: self._quit())
         binding_hotkey_action(self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
         binding_hotkey_action(self.config.shortcuts.get('preferences', ['Ctrl+,']), lambda e: self._open_preferences())
-        binding_hotkey_action(self.config.shortcuts.get('navigate_previous', ['Ctrl+Left']), lambda e: self._navigate_history_previous())
-        binding_hotkey_action(self.config.shortcuts.get('navigate_next', ['Ctrl+Right']), lambda e: self._navigate_history_next())
         
         # Editor events
         if self.editor:
@@ -162,7 +181,6 @@ class MainWindow:
             self.editor._text_widget.bind('<ButtonRelease>', self._update_status)
         
         # Event system subscriptions
-        event_system.subscribe('scripts_loaded', self._on_scripts_loaded)
         event_system.subscribe('script_execution_started', self._on_script_execution_started)
         event_system.subscribe('script_execution_completed', self._on_script_execution_completed)
     
@@ -173,15 +191,28 @@ class MainWindow:
             self.cursor_var.set(f"Ln {line}, Col {col}")
             self.char_count_var.set(f"{self.editor.get_char_count()} chars")
     
-    def _load_scripts(self):
-        """Load scripts from configured directories."""
-        self.status_var.set("Loading scripts...")
-        count = self.script_manager.load_scripts()
-        self.status_var.set(f"Loaded {count} scripts")
+
+    
+    def _load_script_metadata(self):
+        """Load script metadata in background after startup."""
+        import time
+        start_time = time.time()
+        logger.info(f"Starting to load script metadata at {time.strftime('%H:%M:%S.%f')}")
+        
+        try:
+            # Use ScriptManager's load_metadata method
+            total_scripts = self.script_manager.load_metadata()
+            
+            logger.info(f"Loaded metadata for {total_scripts} scripts in {time.time() - start_time:.3f}s")
+            self.status_var.set(f"Loaded metadata for {total_scripts} scripts")
+        except Exception as e:
+            logger.error(f"Error loading script metadata: {e}")
+            self.status_var.set("Error loading script metadata")
     
     def _open_script_picker(self):
         """Open script picker popup."""
         if self.editor:
+            # Open script picker directly - no need to load scripts
             ScriptPickerPopup(
                 self.root,
                 self.script_manager,
@@ -189,35 +220,38 @@ class MainWindow:
                 self.editor._text_widget
             )
     
-    def _execute_script(self, script: Optional[LoadedScript]):
+    def _execute_script(self, script_tuple: Optional[tuple]):
         """Execute a script on the current text.
         
         Args:
-            script: Script to execute
+            script_tuple: Tuple of (ScriptMetadata, Path) to execute
         """
-        if not script:
+        if not script_tuple:
             return
         
         if not self.editor:
             return
         
+        metadata, file_path = script_tuple
+        
         # Check for help mode
         content = self.editor.get_content()
         if content.startswith('-h'):
             # Show help information
-            self._show_script_help(script)
+            self._show_script_help(metadata, file_path)
             return
         
         # Record script execution start
-        self.editor.record_script_execution(script.metadata.name)
+        self.editor.record_script_execution(metadata.name)
         
         # Execute script
-        self.status_var.set(f"Executing script: {script.metadata.name}")
-        event_system.publish('script_execution_started', script_name=script.metadata.name)
+        logger.info(f"Executing script: {metadata.name}")
+        self.status_var.set(f"Executing script: {metadata.name}")
+        event_system.publish('script_execution_started', script_name=metadata.name)
         
         # Run script in subprocess
         result = run_script_in_subprocess(
-            script.file_path,
+            file_path,
             content,
             self.config.python_path
         )
@@ -229,24 +263,27 @@ class MainWindow:
             self.editor.set_content(result['output'])
             # Update script execution result in history
             self.editor.update_script_execution_result(result['output'])
-            self.status_var.set(f"Script executed successfully: {script.metadata.name}")
+            self.status_var.set(f"Script executed successfully: {metadata.name}")
+            logger.info(f"Script executed successfully: {metadata.name}")
         else:
             error_msg = result['error'] or 'Unknown error'
             messagebox.showerror("Script Error", f"Error executing script: {error_msg}")
-            self.status_var.set(f"Script execution failed: {script.metadata.name}")
+            self.status_var.set(f"Script execution failed: {metadata.name}")
+            logger.error(f"Script execution failed: {metadata.name}, error: {error_msg}")
         
         event_system.publish(
             'script_execution_completed',
-            script_name=script.metadata.name,
+            script_name=metadata.name,
             success=result['success'],
             error=result['error']
         )
     
-    def _show_script_help(self, script: LoadedScript):
+    def _show_script_help(self, metadata, file_path):
         """Show script help information.
         
         Args:
-            script: Script to show help for
+            metadata: Script metadata
+            file_path: Path to the script file
         """
         if not self.editor:
             return
@@ -261,58 +298,11 @@ class MainWindow:
             body = ''
         
         # Create help content
-        help_content = f"-h\n\n{script.metadata.help}\n\n{body}"
+        help_content = f"-h\n\n{metadata.help}\n\n{body}"
         self.editor.set_content(help_content)
-        self.status_var.set(f"Showing help for: {script.metadata.name}")
+        self.status_var.set(f"Showing help for: {metadata.name}")
     
-    def _new_file(self):
-        """Create a new file."""
-        if self.editor:
-            if messagebox.askyesno("New File", "Are you sure you want to create a new file? Unsaved changes will be lost."):
-                self.editor.clear()
-                self.status_var.set("Ready")
-    
-    def _open_file(self):
-        """Open a file."""
-        from tkinter import filedialog
-        
-        file_path = filedialog.askopenfilename(
-            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
-        )
-        
-        if file_path:
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                if self.editor:
-                    self.editor.set_content(content)
-                self.status_var.set(f"Opened: {Path(file_path).name}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to open file: {e}")
-    
-    def _save_file(self):
-        """Save the current file."""
-        # For now, just show a message
-        messagebox.showinfo("Save", "Save functionality not yet implemented")
-    
-    def _save_as_file(self):
-        """Save the current file as a new file."""
-        from tkinter import filedialog
-        
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
-        )
-        
-        if file_path:
-            try:
-                if self.editor:
-                    content = self.editor.get_content()
-                    with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(content)
-                self.status_var.set(f"Saved: {Path(file_path).name}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save file: {e}")
+
     
     def _undo(self):
         """Undo last action."""
@@ -344,21 +334,7 @@ class MainWindow:
         if self.editor:
             self.editor._text_widget.tag_add(tk.SEL, '1.0', tk.END)
     
-    def _navigate_history_previous(self):
-        """Navigate to previous script execution result."""
-        if self.editor:
-            if self.editor.navigate_history(-1):
-                self.status_var.set("Navigated to previous script result")
-            else:
-                self.status_var.set("No previous script result")
-    
-    def _navigate_history_next(self):
-        """Navigate to next script execution result."""
-        if self.editor:
-            if self.editor.navigate_history(1):
-                self.status_var.set("Navigated to next script result")
-            else:
-                self.status_var.set("No next script result")
+
     
     def _show_about(self):
         """Show about dialog."""
@@ -369,6 +345,7 @@ class MainWindow:
     
     def _open_preferences(self):
         """Open preferences panel."""
+        logger.info("Opening preferences panel")
         from boop.ui.preferences import PreferencesPanel
         PreferencesPanel(self.root, self.config)
     
@@ -377,9 +354,7 @@ class MainWindow:
         if messagebox.askyesno("Quit", "Are you sure you want to quit?"):
             self.root.quit()
     
-    def _on_scripts_loaded(self, count: int):
-        """Handle scripts loaded event."""
-        self.status_var.set(f"Loaded {count} scripts")
+
     
     def _on_script_execution_started(self, script_name: str):
         """Handle script execution started event."""

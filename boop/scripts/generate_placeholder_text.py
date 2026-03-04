@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Generate Placeholder Text",
-  "description": "Generates Lorem Ipsum placeholder text",
-  "icon": "roman",
-  "tags": ["generate", "lorem", "ipsum", "text"],
-  "help": "Generates 100 words of Lorem Ipsum placeholder text.\n\nExample:\nInput:\n(anything)\n\nOutput:\nLorem ipsum dolor sit amet..."
-}
-"""
+  "description": "生成占位符文本",
+  "icon": "📝",
+  "tags": ["text","placeholder","generate"],
+  "help": "生成占位符文本 (Lorem Ipsum)\n\n示例:\n输入:\n5\n\n输出:\nLorem ipsum dolor sit amet, consectetur adipiscing elit."
+}"""
 
 import random
 

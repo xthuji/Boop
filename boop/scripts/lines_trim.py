@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "修剪行空白",
-    "description": "修剪每行文本的空白字符",
-    "icon": "text",
-    "tags": ["text", "trim", "whitespace"],
-    "help": "修剪每行文本的空白字符\n\nExample:\nInput:\n  hello world  \n  test  \n\nOutput:\nhello world\ntest"
+  "name": "Trim Lines",
+  "description": "移除每行首尾的空白字符",
+  "icon": "✂️",
+  "tags": ["text","trim","lines"],
+  "help": "移除每行首尾的空白字符\n\n示例:\n输入:\n  hello  \n  world  \n\n输出:\nhello\nworld"
 }
 '''
 

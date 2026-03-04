@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Find Duplicate Lines",
-  "description": "Finds and displays duplicate lines from the text",
-  "icon": "filtration",
-  "tags": ["lines", "duplicate", "find"],
-  "help": "Finds duplicate lines and shows how many times each appears.\n\nExample:\nInput:\napple\nbanana\napple\ncherry\nbanana\n\nOutput:\napple (2 occurrences)\nbanana (2 occurrences)"
-}
-"""
+  "description": "查找文本中的重复行",
+  "icon": "🔍",
+  "tags": ["text","duplicate","lines"],
+  "help": "查找文本中的重复行\n\n示例:\n输入:\napple\nbanana\napple\ncherry\nbanana\n\n输出:\n重复行:\napple (2 次)\nbanana (2 次)"
+}"""
 
 from collections import Counter
 

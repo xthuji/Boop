@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "切换斜杠",
-    "description": "在反斜杠和正斜杠之间切换",
-    "icon": "text",
-    "tags": ["text", "slashes", "convert"],
-    "help": "在反斜杠和正斜杠之间切换\n\n- 如果输入包含反斜杠，转换为正斜杠\n- 如果输入包含正斜杠，转换为反斜杠\n\nExample 1 (反斜杠转正斜杠):\nInput:\nC:\\Users\\huji\n\nOutput:\nC:/Users/huji\n\nExample 2 (正斜杠转反斜杠):\nInput:\nC:/Users/huji\n\nOutput:\nC:\\Users\\huji"
+  "name": "Toggle Slashes",
+  "description": "在正斜杠和反斜杠之间切换",
+  "icon": "➡️",
+  "tags": ["slashes","toggle","path"],
+  "help": "在正斜杠 (/) 和反斜杠 (\\) 之间切换\n\n示例:\n输入:\npath/to/file\n\n输出:\npath\\to\\file"
 }
 '''
 

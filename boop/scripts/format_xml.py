@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Professional XML code formatter and minifier.
-Optimized with pure Python implementation from Boop FormatXML.js.
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
+  "name": "Format XML",
+  "description": "格式化 XML 文档",
+  "icon": "📄",
+  "tags": ["xml","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 XML 文档\n\n如果文档已格式化，将进行压缩。\n\n示例:\n输入:\n<root><child>text</child></root>\n\n输出:\n<root>\n    <child>text</child>\n</root>"
+}"""
 
 import re
 
@@ -97,26 +103,43 @@ def format_code(code):
     result = re.sub(r'\n{3,}', '\n\n', result)
     return result.strip() + CONFIG['NEWLINE']
 
-# Boop script metadata
-metadata = {
-    "name": "Format XML",
-    "description": "Formats XML code with proper indentation and spacing",
-    "version": "1.0.0",
-    "category": "format",
-    "dependencies": [],
-    "input": "text",
-    "output": "text",
-    "icon": "pineapple",
-    "help": "Formats XML code with professional indentation and spacing. Handles comments, CDATA sections, and processing instructions."
-}
 
-def run(text, *args):
-    """Boop script entry point."""
+def main(state):
+    """Format or minify XML text."""
+    if not state.text or not state.text.strip():
+        return
+
     try:
-        return format_code(text)
+        state.text = process_format_code(state.text)
+        if hasattr(state, 'post_info'):
+            state.post_info("XML formatted")
     except Exception as e:
-        return f"Error formatting XML: {str(e)}"
+        if hasattr(state, 'post_error'):
+            state.post_error("Error formatting XML: {}".format(str(e)))
+        else:
+            print("Error formatting XML: {}".format(str(e)))
 
-def main(text, *args):
-    """Main function for Boop script execution."""
-    return run(text, *args)
+def is_minified(text):
+    """Check if XML is minified."""
+    return not '\n' in text and re.search(r'<[^>]+>', text)
+
+def minify_code(text):
+    """Minify XML."""
+    if not text or not text.strip():
+        return text
+
+    # 移除注释
+    text = re.sub(r'<!--[\s\S]*?-->', '', text)
+    # 移除多余空格
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def process_format_code(text):
+    """Process XML text - format or minify based on input state."""
+    if not text or not text.strip():
+        return text
+
+    if is_minified(text):
+        return format_code(text)
+    else:
+        return minify_code(text)

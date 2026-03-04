@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "JSON与代码转换",
-    "description": "在JSON和代码之间转换",
-    "icon": "code",
-    "tags": ["convert", "json", "code"],
-    "help": "在JSON和代码之间转换\n\nExample:\nInput:\n{\"name\": \"John\", \"age\": 30}\n\nOutput:\nconst data = {\n  name: \"John\",\n  age: 30\n};"
+  "name": "JSON to Code",
+  "description": "在 JSON 和代码之间转换",
+  "icon": "code",
+  "tags": ["convert","json","code"],
+  "help": "在 JSON 和 JavaScript 代码之间转换\n\n示例:\n输入:\n{\"name\": \"John\", \"age\": 30}\n\n输出:\nconst data = {\n  \"name\": \"John\",\n  \"age\": 30\n};"
 }
 '''
 

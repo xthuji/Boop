@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format Scala",
-  "description": "Professional Scala code formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["scala", "format", "minify"],
-  "help": "Format or minify Scala code with proper indentation and spacing.\n\nExample:\nInput:\nobject Hello{def main(args:Array[String]){println(\"Hello\")}}\n\nOutput:\nobject Hello {\n  def main(args: Array[String]) {\n    println(\"Hello\")\n  }\n}\n\nIf the code is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 Scala 代码",
+  "icon": "📈",
+  "tags": ["scala","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 Scala 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nobject Test{def main(args:Array[String]){println(\"Hello\")}}\n\n输出:\nobject Test {\n    def main(args: Array[String]) {\n        println(\"Hello\")\n    }\n}"
+}"""
 
 import re
 
@@ -202,7 +200,7 @@ def main(state):
     """Format or minify Scala text."""
     if not state.text or not state.text.strip():
         return
-    
+
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
@@ -216,30 +214,26 @@ def main(state):
 def is_minified(text):
     """Check if Scala code is minified."""
     text = text.strip()
-    return not '\n' in text and ('class' in text or 'object' in text or 'def' in text)
+    return not '\n' in text and ('def' in text or 'class' in text or 'object' in text)
 
 def minify_code(code):
     """Minify Scala code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
-    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
     code = re.sub(r'/\*[\s\S]*?\*/', '', code)
+    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
     # 移除多余空格和换行
     code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
     return code.strip()
 
 def process_format_code(text):
     """Process Scala code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-

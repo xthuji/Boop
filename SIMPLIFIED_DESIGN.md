@@ -44,15 +44,20 @@ boop/
 │   ├── __init__.py
 │   ├── event.py        # 事件系统
 │   ├── script.py       # 脚本管理
+│   ├── script_metadata.py # 脚本元数据
+│   ├── script_wrapper.py # 脚本执行包装器
+│   ├── cache.py        # 元数据缓存
+│   ├── path.py         # 路径管理
+│   ├── logging.py      # 日志管理
 │   └── utils.py        # 通用工具
 ├── scripts/            # 内置脚本
+├── tests/              # 测试文件
 ├── ui/                 # 用户界面
 │   ├── __init__.py
 │   ├── editor.py       # 编辑器组件
 │   ├── main.py         # 主窗口
 │   ├── preferences.py  # 偏好设置
-│   ├── script_picker.py # 脚本选择器
-│   └── icons/           # 图标目录
+│   └── script_picker.py # 脚本选择器
 └── config.json         # 配置文件
 ```
 
@@ -63,13 +68,17 @@ boop/
 | main | 应用入口 | boop/__main__.py |
 | config | 配置管理 | boop/config/settings.py |
 | event | 事件系统 | boop/core/event.py |
-| script | 脚本加载和执行 | boop/core/script.py |
+| script | 脚本管理和元数据加载 | boop/core/script.py |
+| script_metadata | 脚本元数据处理 | boop/core/script_metadata.py |
+| script_wrapper | 脚本执行包装器 | boop/core/script_wrapper.py |
+| cache | 元数据缓存管理 | boop/core/cache.py |
+| path | 路径管理 | boop/core/path.py |
+| logging | 日志管理 | boop/core/logging.py |
 | utils | 通用工具 | boop/core/utils.py |
 | editor | 编辑器组件 | boop/ui/editor.py |
 | main_window | 主窗口 | boop/ui/main.py |
 | script_picker | 脚本选择器 | boop/ui/script_picker.py |
 | preferences | 偏好设置 | boop/ui/preferences.py |
-| icons | 图标存储 | boop/ui/icons/ |
 
 ### 3.3 架构图
 
@@ -146,21 +155,33 @@ event_system = EventSystem()
 
 ### 4.2 脚本系统
 
-脚本系统负责脚本的加载和执行，支持在隔离的子进程中运行脚本：
+脚本系统负责脚本元数据的加载、缓存和执行，支持在隔离的子进程中运行脚本：
 
 ```python
 # 脚本管理器核心结构
 class ScriptManager:
-    def load_scripts(self):
-        # 加载所有脚本
+    def __init__(self, config=None):
+        # 初始化脚本管理器
+        self._metadata_cache = MetadataCache()
+    
+    def load_metadata(self):
+        # 加载所有脚本的元数据
         pass
     
-    def run_script(self, script, input_text, selection=None):
-        # 在子进程中执行脚本
+    def get_all_metadata(self):
+        # 获取所有缓存的元数据
         pass
     
-    def shutdown(self):
-        # 关闭进程池
+    def get_metadata(self, file_path):
+        # 获取特定脚本的元数据
+        pass
+    
+    def create_metadata_from_dict(self, metadata_dict, file_path):
+        # 从字典创建 ScriptMetadata 对象
+        pass
+    
+    def clear_metadata_cache(self):
+        # 清除元数据缓存
         pass
 ```
 
@@ -172,20 +193,23 @@ sequenceDiagram
     participant MainWindow as 主窗口
     participant ScriptPicker as 脚本选择器
     participant ScriptManager as 脚本管理器
+    participant Editor as 编辑器
     participant Subprocess as 子进程
     participant EventSystem as 事件系统
 
     User->>MainWindow: 打开脚本选择器 (Cmd+B)
     MainWindow->>ScriptPicker: 创建并显示
     User->>ScriptPicker: 选择脚本
-    ScriptPicker->>MainWindow: 返回选中脚本
-    MainWindow->>ScriptManager: 执行脚本
-    ScriptManager->>EventSystem: 发布 script_execution_started 事件
-    ScriptManager->>Subprocess: 在子进程中执行脚本
-    Subprocess-->>ScriptManager: 返回执行结果
-    ScriptManager->>EventSystem: 发布 script_execution_completed 事件
-    ScriptManager-->>MainWindow: 返回执行结果
-    MainWindow->>MainWindow: 更新编辑器内容
+    ScriptPicker->>MainWindow: 返回选中脚本 (ScriptMetadata, Path)
+    MainWindow->>Editor: 记录脚本执行开始
+    Editor->>Editor: 保存当前状态到历史
+    MainWindow->>EventSystem: 发布 script_execution_started 事件
+    MainWindow->>Subprocess: 在子进程中执行脚本
+    Subprocess-->>MainWindow: 返回执行结果
+    MainWindow->>Editor: 更新编辑器内容
+    Editor->>Editor: 保存新状态到历史
+    Editor->>Editor: 更新脚本执行历史结果
+    MainWindow->>EventSystem: 发布 script_execution_completed 事件
     EventSystem-->>MainWindow: 通知状态更新
 ```
 
@@ -193,32 +217,32 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A[开始加载脚本] --> B[遍历脚本目录]
-    B --> C{文件是否已加载?}
-    C -->|是| D{文件是否修改?}
-    C -->|否| E[加载脚本]
-    D -->|是| E
-    D -->|否| F[跳过]
-    E --> G[解析脚本元数据]
-    G --> H[添加到脚本缓存]
-    F --> I{还有文件?}
-    H --> I
-    I -->|是| B
-    I -->|否| J[构建分类索引]
-    J --> K[发布 scripts_loaded 事件]
-    K --> L[结束]
+    A[开始加载脚本元数据] --> B[遍历脚本目录]
+    B --> C{文件是否存在?}
+    C -->|是| D[解析脚本元数据]
+    C -->|否| E[跳过]
+    D --> F[添加到元数据缓存]
+    F --> G{还有文件?}
+    E --> G
+    G -->|是| B
+    G -->|否| H[结束]
 ```
 
 ### 4.3 编辑器组件
 
-编辑器组件提供文本编辑功能，支持行号显示和语法高亮：
+编辑器组件提供文本编辑功能，支持行号显示和基于历史的 undo/redo 功能：
 
 ```python
 # 编辑器核心结构
 class Editor:
     def __init__(self, parent, config):
         # 初始化编辑器
-        pass
+        # 历史记录初始化
+        self._history = []
+        self._history_index = -1
+        # 脚本执行历史
+        self._script_history = []
+        self._current_script_history_index = -1
     
     def get_content(self):
         # 获取编辑器内容
@@ -228,16 +252,32 @@ class Editor:
         # 设置编辑器内容
         pass
     
-    def get_selection(self):
-        # 获取选中文本
-        pass
-    
     def get_cursor_position(self):
         # 获取光标位置
         pass
     
     def get_char_count(self):
         # 获取字符计数
+        pass
+    
+    def _save_state(self):
+        # 保存当前状态到历史
+        pass
+    
+    def _undo(self, event):
+        # 撤销操作
+        pass
+    
+    def _redo(self, event):
+        # 重做操作
+        pass
+    
+    def record_script_execution(self, script_name):
+        # 记录脚本执行
+        pass
+    
+    def update_script_execution_result(self, after_state):
+        # 更新脚本执行结果
         pass
 ```
 
@@ -359,13 +399,12 @@ class Preferences:
 |--------|------|--------|------|
 | script_directories | List[str] | [默认脚本目录] | 脚本目录列表 |
 | python_path | str | "" | Python 解释器路径 |
-| default_encoding | str | "utf-8" | 默认编码 |
 | window_width | int | 800 | 窗口宽度 |
 | window_height | int | 600 | 窗口高度 |
 | font_family | str | "Menlo" | 编辑器字体 |
 | font_size | int | 14 | 字体大小 |
-| theme | str | "system" | 主题 (light/dark/system) |
-| script_timeout | int | 30 | 脚本执行超时时间(秒) |
+| maximize_window | bool | false | 是否最大化窗口 |
+| shortcuts | Dict[str, List[str]] | 内置快捷键 | 快捷键配置 |
 
 ### 6.2 配置加载和保存
 

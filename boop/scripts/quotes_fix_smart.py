@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "修复智能引号",
-    "description": "将智能引号转换为普通引号",
-    "icon": "text",
-    "tags": ["text", "quotes", "fix"],
-    "help": "将智能引号转换为普通引号\n\nExample:\nInput:\n“hello world”\n\nOutput:\n\"hello world\""
+  "name": "Fix Smart Quotes",
+  "description": "修复智能引号为普通引号",
+  "icon": "📝",
+  "tags": ["quotes","fix","text"],
+  "help": "修复智能引号为普通引号\n\n示例:\n输入:\n\"hello\" 'world'\n\n输出:\n\"hello\" 'world'"
 }
 '''
 

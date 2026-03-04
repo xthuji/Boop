@@ -3,6 +3,7 @@ Event System - Publish-subscribe pattern for component communication
 """
 
 from typing import Dict, List, Callable, Any
+from boop.core.logging import logger
 
 
 class EventSystem:
@@ -37,7 +38,7 @@ class EventSystem:
     
     def publish(self, event_name: str, *args: Any, **kwargs: Any) -> None:
         """Publish an event to all subscribers.
-        
+
         Args:
             event_name: Name of the event to publish
             *args: Positional arguments to pass to subscribers
@@ -48,7 +49,7 @@ class EventSystem:
                 try:
                     callback(*args, **kwargs)
                 except Exception as e:
-                    print(f"Error in event handler: {e}")
+                    logger.error(f"Error in event handler: {e}", exc_info=True)
 
 
 # Global event system instance

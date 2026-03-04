@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "Base64编解码",
-    "description": "在Base64编码和解码之间切换",
-    "icon": "lock",
-    "tags": ["base64", "encode", "decode"],
-    "help": "在Base64编码和解码之间切换\n\n- 如果输入是编码后的Base64，进行解码\n- 如果输入是未编码的文本，进行编码\n\nExample 1 (解码):\nInput:\naGVsbG8gd29ybGQ=\n\nOutput:\nhello world\n\nExample 2 (编码):\nInput:\nhello world\n\nOutput:\naGVsbG8gd29ybGQ="
+  "name": "Toggle Base64",
+  "description": "在 Base64 编码和解码之间切换",
+  "icon": "🔒",
+  "tags": ["base64","encode","decode"],
+  "help": "在 Base64 编码和解码之间切换\n\n- 如果输入是编码后的 Base64，进行解码\n- 如果输入是未编码的文本，进行编码\n\n示例 1 (解码):\n输入:\naGVsbG8gd29ybGQ=\n\n输出:\nhello world\n\n示例 2 (编码):\n输入:\nhello world\n\n输出:\naGVsbG8gd29ybGQ="
 }
 '''
 

@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "URL防御转换",
-    "description": "在URL防御格式和正常URL之间切换",
-    "icon": "link",
-    "tags": ["url", "defang", "convert"],
-    "help": "在URL防御格式和正常URL之间切换\n\n- 如果输入是防御格式的URL，转换为正常URL\n- 如果输入是正常URL，转换为防御格式\n\nExample 1 (防御格式转正常URL):\nInput:\nhttp[:]//www[.]example[.]com\n\nOutput:\nhttp://www.example.com\n\nExample 2 (正常URL转防御格式):\nInput:\nhttp://www.example.com\n\nOutput:\nhttp[:]//www[.]example[.]com"
+  "name": "Toggle URL Defang",
+  "description": "对 URL 进行伪装处理",
+  "icon": "🌐",
+  "tags": ["url","defang","security"],
+  "help": "对 URL 进行伪装处理 (用于安全分析)\n\n示例:\n输入:\nhttps://example.com/path\n\n输出:\nhxxps://example[.]com/path"
 }
 '''
 

@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "移除空行",
-    "description": "移除文本中的空行",
-    "icon": "text",
-    "tags": ["text", "remove", "empty", "lines"],
-    "help": "移除文本中的空行\n\nExample:\nInput:\nhello\n\nworld\n\nOutput:\nhello\nworld"
+  "name": "Remove Empty Lines",
+  "description": "移除文本中的空行",
+  "icon": "🗑️",
+  "tags": ["text","remove","empty","lines"],
+  "help": "移除文本中的空行\n\n示例:\n输入:\nhello\n\nworld\n\n输出:\nhello\nworld"
 }
 '''
 

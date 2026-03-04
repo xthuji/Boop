@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Optional
 
 from boop.config.settings import BoopConfig
+from boop.core.logging import logger
+from boop.core.utils import center_window
+from boop.core.path import get_log_path, get_user_data_dir
 
 
 class PreferencesPanel:
@@ -90,14 +93,7 @@ class PreferencesPanel:
                        foreground=fg_color)
         
         # Center the dialog
-        width = 700
-        height = 580
-        self.dialog.geometry(f"{width}x{height}")
-        self.dialog.update_idletasks()
-        
-        x = (self.dialog.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (height // 2)
-        self.dialog.geometry(f"{width}x{height}+{x}+{y}")
+        center_window(self.dialog, 700, 580)
         
         # Make dialog modal-like
         self.dialog.grab_set()
@@ -159,21 +155,36 @@ class PreferencesPanel:
         window_frame = ttk.LabelFrame(parent, text="Window", padding=(10, 5))
         window_frame.pack(fill=tk.X, padx=10, pady=5)
 
+        # Maximize window option
+        maximize_frame = ttk.Frame(window_frame)
+        maximize_frame.pack(fill=tk.X, pady=5)
+        self.maximize_var = tk.BooleanVar(value=getattr(self.config, 'maximize_window', False))
+        maximize_checkbox = ttk.Checkbutton(
+            maximize_frame,
+            text="Maximize Window",
+            variable=self.maximize_var,
+            command=self._toggle_maximize
+        )
+        maximize_checkbox.pack(side=tk.LEFT, padx=(0, 10))
+
         # Window width
         width_frame = ttk.Frame(window_frame)
         width_frame.pack(fill=tk.X, pady=5)
         ttk.Label(width_frame, text="Window Width:", width=15).pack(side=tk.LEFT, padx=(0, 10))
         self.width_var = tk.StringVar(value=str(self.config.window_width))
-        width_entry = ttk.Entry(width_frame, textvariable=self.width_var)
-        width_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.width_entry = ttk.Entry(width_frame, textvariable=self.width_var)
+        self.width_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Window height
         height_frame = ttk.Frame(window_frame)
         height_frame.pack(fill=tk.X, pady=5)
         ttk.Label(height_frame, text="Window Height:", width=15).pack(side=tk.LEFT, padx=(0, 10))
         self.height_var = tk.StringVar(value=str(self.config.window_height))
-        height_entry = ttk.Entry(height_frame, textvariable=self.height_var)
-        height_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.height_entry = ttk.Entry(height_frame, textvariable=self.height_var)
+        self.height_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Initial toggle based on current value
+        self._toggle_maximize()
 
         # Font settings with minimalist styling
         font_frame = ttk.LabelFrame(parent, text="Font", padding=(10, 5))
@@ -199,14 +210,18 @@ class PreferencesPanel:
         """Create the scripts settings tab."""
         # Script directories with minimalist styling
         dirs_frame = ttk.LabelFrame(parent, text="Script Directories", padding=(10, 5))
-        dirs_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        dirs_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # Create a frame for listbox and scrollbar
+        list_frame = ttk.Frame(dirs_frame)
+        list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
         # Listbox for script directories with minimalist styling
-        self.dirs_listbox = tk.Listbox(dirs_frame, height=3, relief=tk.FLAT, borderwidth=1, bg='white', font=('SF Pro Text', 12))
-        self.dirs_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        self.dirs_listbox = tk.Listbox(list_frame, height=2, relief=tk.FLAT, borderwidth=1, bg='white', font=('SF Pro Text', 12))
+        self.dirs_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Scrollbar
-        scrollbar = ttk.Scrollbar(dirs_frame, orient=tk.VERTICAL, command=self.dirs_listbox.yview)
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.dirs_listbox.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.dirs_listbox.configure(yscrollcommand=scrollbar.set)
 
@@ -215,22 +230,20 @@ class PreferencesPanel:
             self.dirs_listbox.insert(tk.END, directory)
 
         # Buttons with minimalist styling
-        button_frame = ttk.Frame(dirs_frame, padding=(10, 0))
+        button_frame = ttk.Frame(dirs_frame)
         button_frame.pack(side=tk.RIGHT, fill=tk.Y)
 
         add_button = ttk.Button(
             button_frame,
             text="Add",
-            command=self._add_directory,
-            width=8
+            command=self._add_directory
         )
         add_button.pack(fill=tk.X, pady=3)
 
         remove_button = ttk.Button(
             button_frame,
             text="Remove",
-            command=self._remove_directory,
-            width=8
+            command=self._remove_directory
         )
         remove_button.pack(fill=tk.X, pady=3)
 
@@ -265,23 +278,42 @@ class PreferencesPanel:
         dependencies_frame = ttk.LabelFrame(parent, text="Dependencies", padding=(10, 5))
         dependencies_frame.pack(fill=tk.X, padx=10, pady=5)
 
+        # Dependencies list with dropdown
+        dep_list_frame = ttk.Frame(dependencies_frame)
+        dep_list_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(dep_list_frame, text="Script Dependencies:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Create a dropdown list for dependencies
+        self.dep_var = tk.StringVar(value="Click to view dependencies")
+        dep_dropdown = ttk.Combobox(
+            dep_list_frame,
+            textvariable=self.dep_var,
+            state="readonly"
+        )
+        dep_dropdown.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
+        
         # Install dependencies button
-        install_frame = ttk.Frame(dependencies_frame)
-        install_frame.pack(fill=tk.X, pady=5)
-        ttk.Label(install_frame, text="Script Dependencies:", width=15).pack(side=tk.LEFT, padx=(0, 10))
         install_button = ttk.Button(
-            install_frame,
-            text="Install All Dependencies",
-            command=self._install_dependencies,
-            style='Save.TButton'
+            dep_list_frame,
+            text="Install",
+            command=self._install_dependencies
         )
         install_button.pack(side=tk.LEFT, padx=0)
-        ttk.Label(
-            install_frame,
-            text="Installs dependencies defined in script metadata",
-            font=('SF Pro Text', 10),
-            foreground='#666666'
-        ).pack(side=tk.LEFT, padx=10)
+        
+        # Load dependencies into dropdown
+        self._load_dependencies(dep_dropdown)
+
+        # Clear metadata cache button
+        cache_frame = ttk.Frame(dependencies_frame)
+        cache_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(cache_frame, text="Metadata Cache:", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        clear_cache_button = ttk.Button(
+            cache_frame,
+            text="Clear Script Metadata Cache",
+            command=self._clear_metadata_cache,
+            style='Cancel.TButton'
+        )
+        clear_cache_button.pack(side=tk.LEFT, padx=0)
 
     def _create_logs_tab(self, parent):
         """Create the logs tab."""
@@ -293,7 +325,9 @@ class PreferencesPanel:
         log_path_frame = ttk.Frame(log_frame)
         log_path_frame.pack(fill=tk.X, pady=(0, 5))
         ttk.Label(log_path_frame, text="Log File Path:", width=15).pack(side=tk.LEFT, padx=(0, 10))
-        log_dir = Path(__file__).parent.parent.parent / "logs"
+        
+        # Use centralized log path
+        log_dir = get_log_path()
         log_file = log_dir / "boop.log"
         self.log_path_var = tk.StringVar(value=str(log_file))
         log_path_entry = ttk.Entry(log_path_frame, textvariable=self.log_path_var)
@@ -307,6 +341,11 @@ class PreferencesPanel:
             relief=tk.SUNKEN,
             wrap=tk.WORD
         )
+        
+        # Add scrollbar for log text
+        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.log_text.configure(yscrollcommand=scrollbar.set)
         self.log_text.pack(fill=tk.BOTH, expand=True)
         self.log_text.configure(state=tk.DISABLED)
 
@@ -343,7 +382,21 @@ class PreferencesPanel:
 
     def _bind_events(self):
         """Bind keyboard events."""
-        pass
+        # Bind Enter key to save button
+        self.dialog.bind('<Return>', lambda e: self._save())
+        # Bind Esc key to cancel button
+        self.dialog.bind('<Escape>', lambda e: self._close())
+
+    def _toggle_maximize(self):
+        """Toggle the enable state of window size inputs based on maximize setting."""
+        if self.maximize_var.get():
+            # Disable size inputs when maximize is checked
+            self.width_entry.config(state=tk.DISABLED)
+            self.height_entry.config(state=tk.DISABLED)
+        else:
+            # Enable size inputs when maximize is unchecked
+            self.width_entry.config(state=tk.NORMAL)
+            self.height_entry.config(state=tk.NORMAL)
 
     def _add_directory(self):
         """Add a script directory."""
@@ -368,10 +421,42 @@ class PreferencesPanel:
         )
         if file_path:
             self.python_var.set(file_path)
+    
+    def _load_dependencies(self, dropdown):
+        """Load dependencies into the dropdown list."""
+        from boop.core.script import ScriptManager
+        
+        try:
+            # Create script manager and load metadata
+            script_manager = ScriptManager(self.config)
+            script_manager.load_metadata()
+            
+            # Get all cached metadata
+            all_cached_metadata = script_manager.get_all_metadata()
+            
+            # Collect all dependencies from scripts
+            dependencies = set()
+            for file_path_str, metadata_dict in all_cached_metadata.items():
+                if 'dependencies' in metadata_dict and metadata_dict['dependencies']:
+                    dependencies.update(metadata_dict['dependencies'])
+            
+            # Add dependencies to dropdown
+            if dependencies:
+                dep_list = sorted(list(dependencies))
+                dropdown['values'] = dep_list
+                if dep_list:
+                    self.dep_var.set(f"{len(dep_list)} dependencies found")
+            else:
+                dropdown['values'] = ["No dependencies found"]
+                self.dep_var.set("No dependencies found")
+        except Exception as e:
+            dropdown['values'] = ["Error loading dependencies"]
+            self.dep_var.set("Error loading dependencies")
 
     def _load_logs(self):
         """Load log files."""
-        log_dir = Path(__file__).parent.parent.parent / "logs"
+        # Use centralized log path
+        log_dir = get_log_path()
         log_file = log_dir / "boop.log"
 
         self.log_text.configure(state=tk.NORMAL)
@@ -392,7 +477,8 @@ class PreferencesPanel:
 
     def _clear_logs(self):
         """Clear log files."""
-        log_dir = Path(__file__).parent.parent.parent / "logs"
+        # Use centralized log path
+        log_dir = get_log_path()
         log_file = log_dir / "boop.log"
 
         if log_file.exists():
@@ -408,8 +494,10 @@ class PreferencesPanel:
         """Open log file in default text editor."""
         import subprocess
         import platform
+        from boop.core.utils import get_user_data_dir
 
-        log_dir = Path(__file__).parent.parent.parent / "logs"
+        # Use centralized log path
+        log_dir = get_log_path()
         log_file = log_dir / "boop.log"
 
         if log_file.exists():
@@ -427,10 +515,15 @@ class PreferencesPanel:
 
     def _save(self):
         """Save preferences."""
+        logger.info("Saving preferences")
         try:
+            # Check if Python path has changed
+            old_python_path = self.config.python_path
+            
             # Update window settings
             self.config.window_width = int(self.width_var.get())
             self.config.window_height = int(self.height_var.get())
+            self.config.maximize_window = self.maximize_var.get()
             self.config.font_family = self.font_family_var.get()
             self.config.font_size = int(self.font_size_var.get())
 
@@ -439,49 +532,62 @@ class PreferencesPanel:
             self.config.python_path = self.python_var.get()
             self.config.script_timeout = int(self.timeout_var.get())
 
-            # Save to file
-            config_path = Path(__file__).parent.parent / "config.json"
+            # Save to file - use user data directory
+            # Get user data directory
+            user_data_dir = get_user_data_dir()
+            
+            # Config path in user data directory
+            config_path = user_data_dir / "config.json"
             self.config.save(config_path)
+            logger.info(f"Preferences saved to: {config_path}")
 
-            messagebox.showinfo("Success", "Preferences saved successfully.")
+            # Show restart prompt if Python path changed
+            if old_python_path != self.config.python_path:
+                logger.info(f"Python path changed from {old_python_path} to {self.config.python_path}")
+                messagebox.showinfo("Restart Required", "Python path has been changed. Please restart the application for changes to take effect.")
+            else:
+                messagebox.showinfo("Success", "Preferences saved successfully.")
+            
             self._close()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save preferences: {e}")
+            logger.error(f"Failed to save preferences: {e}")
 
     def _install_dependencies(self):
         """Install dependencies defined in script metadata."""
+        logger.info("Installing dependencies")
         import subprocess
         import sys
         from pathlib import Path
         from boop.core.script import ScriptManager
         
-        # Create a script manager to load all scripts
+        # Create script manager and load metadata
         script_manager = ScriptManager(self.config)
-        script_manager.load_scripts()
+        script_manager.load_metadata()
+        
+        # Get all cached metadata
+        all_cached_metadata = script_manager.get_all_metadata()
         
         # Collect all dependencies from scripts
         dependencies = set()
-        for script in script_manager.list_scripts():
-            if script.metadata.dependencies:
-                dependencies.update(script.metadata.dependencies)
+        for file_path_str, metadata_dict in all_cached_metadata.items():
+            if 'dependencies' in metadata_dict and metadata_dict['dependencies']:
+                dependencies.update(metadata_dict['dependencies'])
         
         if not dependencies:
             messagebox.showinfo("Info", "No dependencies found in scripts.")
+            logger.info("No dependencies found in scripts")
             return
         
         # Get Python interpreter path
         python_exe = self.config.python_path
-        if not python_exe:
-            # Use internal Python if available
-            if hasattr(sys, '_MEIPASS'):
-                internal_python = Path(sys._MEIPASS) / "python_env" / "bin" / "python3"
-                if internal_python.exists():
-                    python_exe = str(internal_python)
         
         if not python_exe:
             messagebox.showerror("Error", "No Python interpreter found. Please set Python path in preferences.")
+            logger.error("No Python interpreter found for dependency installation")
             return
         
+        logger.info(f"Found {len(dependencies)} dependencies to install: {dependencies}")
         # Create a progress window
         progress_window = tk.Toplevel(self.dialog)
         progress_window.title("Installing Dependencies")
@@ -494,9 +600,8 @@ class PreferencesPanel:
         progress_label.pack(fill=tk.X)
         
         # Progress bar
-        progress_bar = ttk.Progressbar(progress_window, length=350, mode='indeterminate')
+        progress_bar = ttk.Progressbar(progress_window, length=350, mode='determinate', maximum=len(dependencies))
         progress_bar.pack(pady=10)
-        progress_bar.start()
         
         # Status text
         status_text = tk.Text(progress_window, height=5, wrap=tk.WORD)
@@ -512,12 +617,17 @@ class PreferencesPanel:
         
         try:
             # Install dependencies
-            for dep in dependencies:
+            for i, dep in enumerate(dependencies):
                 status_text.insert(tk.END, f"Installing {dep}...\n")
                 status_text.see(tk.END)
                 progress_window.update()
                 
+                # Update progress bar
+                progress_bar['value'] = i
+                progress_window.update()
+                
                 # Run pip install
+                logger.info(f"Installing dependency: {dep}")
                 result = subprocess.run(
                     [python_exe, "-m", "pip", "install", dep],
                     capture_output=True,
@@ -527,14 +637,19 @@ class PreferencesPanel:
                 
                 if result.returncode == 0:
                     status_text.insert(tk.END, f"✓ Successfully installed {dep}\n")
+                    logger.info(f"Successfully installed dependency: {dep}")
                 else:
                     status_text.insert(tk.END, f"✗ Failed to install {dep}: {result.stderr}\n")
+                    logger.error(f"Failed to install dependency: {dep}, error: {result.stderr}")
                 status_text.see(tk.END)
                 progress_window.update()
             
+            # Update progress bar to 100%
+            progress_bar['value'] = len(dependencies)
+            
             status_text.insert(tk.END, "\nDependency installation completed!\n")
             status_text.see(tk.END)
-            progress_bar.stop()
+            logger.info("Dependency installation completed")
             
             # Add a close button
             close_button = tk.Button(progress_window, text="Close", command=progress_window.destroy)
@@ -544,11 +659,27 @@ class PreferencesPanel:
             status_text.insert(tk.END, f"Error: {str(e)}\n")
             status_text.see(tk.END)
             progress_bar.stop()
+            logger.error(f"Error during dependency installation: {e}")
             
             # Add a close button
             close_button = tk.Button(progress_window, text="Close", command=progress_window.destroy)
             close_button.pack(pady=10)
     
+    def _clear_metadata_cache(self):
+        """Clear metadata cache."""
+        logger.info("Clearing metadata cache")
+        from boop.core.script import ScriptManager
+        
+        try:
+            # Create a script manager and clear cache
+            script_manager = ScriptManager(self.config)
+            script_manager.clear_metadata_cache()
+            messagebox.showinfo("Success", "Metadata cache cleared successfully.")
+            logger.info("Metadata cache cleared successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to clear metadata cache: {e}")
+            logger.error(f"Failed to clear metadata cache: {e}")
+
     def _close(self):
         """Close the preferences panel."""
         if self.dialog and self.dialog.winfo_exists():

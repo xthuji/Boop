@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format Lua",
-  "description": "Professional Lua code formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["lua", "format", "minify"],
-  "help": "Format or minify Lua code with proper indentation and spacing.\n\nExample:\nInput:\nfunction hello() print(\"Hello\") end\n\nOutput:\nfunction hello()\n    print(\"Hello\")\nend\n\nIf the code is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 Lua 代码",
+  "icon": "📱",
+  "tags": ["lua","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 Lua 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello()print(\"Hello\")end\n\n输出:\nfunction hello()\n    print(\"Hello\")\nend"
+}"""
 
 import re
 
@@ -20,19 +18,19 @@ KEYWORDS_WITH_SPACE = ['if', 'for', 'while', 'repeat', 'function', 'local', 'ret
 
 class TokenManager:
     """Token manager for protecting comments and strings."""
-    
+
     def __init__(self):
         self.placeholders = []
-    
+
     def protect(self, code):
         """Protect comments and strings with placeholders."""
         result = ''
         i = 0
         n = len(code)
-        
+
         while i < n:
             char = code[i]
-            
+
             # Handle long comments --[[
             if char == '-' and i + 1 < n and code[i + 1] == '-' and i + 2 < n and code[i + 2] == '[' and i + 3 < n and code[i + 3] == '[':
                 j = i + 4
@@ -89,16 +87,16 @@ class TokenManager:
             else:
                 result += char
                 i += 1
-        
+
         return result
-    
+
     def _add_token(self, content):
         """Add a token to placeholders list."""
         idx = len(self.placeholders)
         token_id = '__LUA_TK_{}__'.format(idx)
         self.placeholders.append({'id': token_id, 'content': content})
         return token_id
-    
+
     def restore(self, code):
         """Restore protected tokens back to original content."""
         result = code
@@ -111,10 +109,10 @@ def format_code(code):
     """Format Lua code."""
     if not code or not code.strip():
         return code
-    
+
     tokens = TokenManager()
     processed = tokens.protect(code)
-    
+
     # Preprocessing: split control structures to new lines
     # Handle then: move content after then to next line
     processed = re.sub(r'\b(then)\s+(.+)', r'\1\n\2', processed)
@@ -128,11 +126,11 @@ def format_code(code):
     # Handle until - keep condition on same line
     processed = re.sub(r'\b(until)\s+(.+)', r'\n\1 \2', processed)
     processed = re.sub(r'\bend\s*\n?', r'\nend\n', processed)
-    
+
     lines = processed.split('\n')
     formatted_lines = []
     level = 0
-    
+
     for line_idx, line in enumerate(lines):
         line = line.strip()
 
@@ -208,7 +206,7 @@ def main(state):
     """Format or minify Lua text."""
     if not state.text or not state.text.strip():
         return
-    
+
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
@@ -222,30 +220,26 @@ def main(state):
 def is_minified(text):
     """Check if Lua code is minified."""
     text = text.strip()
-    return not '\n' in text and ('function' in text or 'local' in text or 'if' in text)
+    return not '\n' in text and ('function' in text or 'if' in text or 'local' in text)
 
 def minify_code(code):
     """Minify Lua code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
+    code = re.sub(r'--\[\[[\s\S]*?\]\]', '', code)
     code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
-    code = re.sub(r'\[\[.*?\]\]', '', code, flags=re.DOTALL)
     # 移除多余空格和换行
     code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
     return code.strip()
 
 def process_format_code(text):
     """Process Lua code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-

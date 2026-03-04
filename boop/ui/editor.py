@@ -203,12 +203,7 @@ class Editor:
         # Trigger the modified event to save the state
         self._text_widget.event_generate('<<Modified>>')
     
-    def get_selection(self) -> str:
-        """Get the selected text."""
-        try:
-            return self._text_widget.get(tk.SEL_FIRST, tk.SEL_LAST)
-        except tk.TclError:
-            return ""
+
     
     def get_cursor_position(self) -> tuple:
         """Get the cursor position (line, column)."""
@@ -228,17 +223,7 @@ class Editor:
         """Clear the editor."""
         self.set_content("")
     
-    def insert(self, text: str):
-        """Insert text at cursor position."""
-        self._text_widget.insert(tk.INSERT, text)
-    
-    def replace_selection(self, text: str):
-        """Replace selected text."""
-        try:
-            self._text_widget.delete(tk.SEL_FIRST, tk.SEL_LAST)
-        except tk.TclError:
-            pass
-        self._text_widget.insert(tk.INSERT, text)
+
     
     def record_script_execution(self, script_name: str):
         """Record script execution for history."""
@@ -269,36 +254,4 @@ class Editor:
         if self._script_history and self._current_script_history_index >= 0:
             self._script_history[self._current_script_history_index]['after'] = after_state
     
-    def navigate_history(self, direction: int):
-        """Navigate through script execution history.
-        
-        Args:
-            direction: 1 for next, -1 for previous
-        """
-        new_index = self._current_script_history_index + direction
-        
-        if 0 <= new_index < len(self._script_history):
-            history_entry = self._script_history[new_index]
-            # Use the 'after' state if available, otherwise 'before'
-            target_state = history_entry['after'] if history_entry['after'] else history_entry['before']
-            
-            # Update current state
-            self.set_content(target_state)
-            self._current_script_history_index = new_index
-            return True
-        
-        return False
-    
-    def get_history_size(self) -> int:
-        """Get the size of the script execution history."""
-        return len(self._script_history)
-    
-    def get_current_history_index(self) -> int:
-        """Get the current history index."""
-        return self._current_history_index
-    
-    def get_history_entry(self, index: int) -> dict:
-        """Get a specific history entry."""
-        if 0 <= index < len(self._script_history):
-            return self._script_history[index]
-        return None
+

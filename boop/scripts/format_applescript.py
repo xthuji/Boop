@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format AppleScript",
-  "description": "Professional AppleScript code formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["applescript", "format", "minify"],
-  "help": "Format or minify AppleScript code with proper indentation and spacing.\n\nExample:\nInput:\nif x=1 then display dialog \"Hello\"\n\nOutput:\nif x = 1 then\n    display dialog \"Hello\"\nend if\n\nIf the code is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 AppleScript 代码",
+  "icon": "📱",
+  "tags": ["applescript","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 AppleScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\non hello() say \"Hello\"\nend hello\n\n输出:\non hello()\n    say \"Hello\"\nend hello"
+}"""
 
 import re
 
@@ -168,51 +166,44 @@ def format_code(code: str) -> str:
     return formatter.format(code)
 
 
+def main(state):
+    """Format or minify AppleScript text."""
+    if not state.text or not state.text.strip():
+        return
+
+    try:
+        state.text = process_format_code(state.text)
+        if hasattr(state, 'post_info'):
+            state.post_info("AppleScript code formatted or minified")
+    except Exception as e:
+        if hasattr(state, 'post_error'):
+            state.post_error("Error formatting AppleScript: {}".format(str(e)))
+        else:
+            print("Error formatting AppleScript: {}".format(str(e)))
+
 def is_minified(text):
-    """Check if AppleScript is minified."""
+    """Check if AppleScript code is minified."""
     text = text.strip()
-    return not '\n' in text and ('if' in text or 'tell' in text or 'display dialog' in text)
+    return not '\n' in text and ('on ' in text or 'tell ' in text or 'if ' in text)
 
 def minify_code(code):
     """Minify AppleScript code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
-    code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
     code = re.sub(r'\(\*[\s\S]*?\*\)', '', code)
+    code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
     # 移除多余空格和换行
     code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
     return code.strip()
 
 def process_format_code(text):
-    """Process AppleScript text - format or minify based on input state."""
+    """Process AppleScript code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-def main(state):
-    """Format or minify AppleScript code."""
-    if not state.text or not state.text.strip():
-        return
-    
-    try:
-        state.text = process_format_code(state.text)
-        if hasattr(state, 'post_info'):
-            state.post_info("AppleScript formatted or minified")
-    except Exception as e:
-        if hasattr(state, 'post_error'):
-            state.post_error(str(e))
-
-def run(text, *args):
-    """Boop script entry point."""
-    try:
-        return process_format_code(text)
-    except Exception as e:
-        return f"Error formatting AppleScript: {str(e)}"

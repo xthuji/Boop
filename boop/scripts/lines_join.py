@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Join Lines",
-  "description": "Join lines with configurable separator, quote, and escape options",
-  "icon": "collapse",
-  "tags": ["join", "lines"],
-  "help": "Join lines with configurable options.\n\nUsage: First line specifies configuration (optional)\n  Format: separator:quote:escapeTabs\n\nParameters:\n  separator - Separator (default: empty, meaning direct concatenation)\n              Special value: \\n for newline\n  quote     - Quote type (optional)\n              \" or '  - Wrap each line with quotes\n  escapeTabs - Escape tabs (optional)\n              code/t/true - Escape tabs as \\t\n\nExamples:\n  ,\n  item1\n  item2\n\n  Output: item1,item2\n\n  ,:\" \n  item1\n  item2\n\n  Output: \"item1\",\"item2\""
-}
-"""
+  "description": "将多行文本合并为单行",
+  "icon": "🔗",
+  "tags": ["text","join","lines"],
+  "help": "将多行文本合并为单行\n\n示例:\n输入:\nhello\nworld\n\n输出:\nhello world"
+}"""
 
 
 def main(state):

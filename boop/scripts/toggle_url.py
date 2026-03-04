@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "URL编解码",
-    "description": "在URL编码和解码之间切换",
-    "icon": "link",
-    "tags": ["url", "encode", "decode"],
-    "help": "在URL编码和解码之间切换\n\n- 如果输入是编码后的URL，进行解码\n- 如果输入是未编码的URL，进行编码\n\nExample 1 (解码):\nInput:\nhttps%3A%2F%2Fwww.example.com%2F\n\nOutput:\nhttps://www.example.com/\n\nExample 2 (编码):\nInput:\nhttps://www.example.com/\n\nOutput:\nhttps%3A%2F%2Fwww.example.com%2F"
+  "name": "Toggle URL Encoding",
+  "description": "在 URL 编码和解码之间切换",
+  "icon": "🌐",
+  "tags": ["url","encode","decode"],
+  "help": "在 URL 编码和解码之间切换\n\n示例:\n输入:\nhello world\n\n输出:\nhello%20world"
 }
 '''
 

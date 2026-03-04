@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "HTML实体转换",
-    "description": "在HTML实体和字符之间切换",
-    "icon": "code",
-    "tags": ["html", "entity", "convert"],
-    "help": "在HTML实体和字符之间切换\n\n- 如果输入是HTML实体，转换为字符\n- 如果输入是字符，转换为HTML实体\n\nExample 1 (HTML实体转字符):\nInput:\n&amp;lt;hello&amp;gt;\n\nOutput:\n<hello>\n\nExample 2 (字符转HTML实体):\nInput:\n<hello>\n\nOutput:\n&amp;lt;hello&amp;gt;"
+  "name": "Toggle HTML Entities",
+  "description": "在 HTML 实体和文本之间转换",
+  "icon": "🌐",
+  "tags": ["html","entities","encode","decode"],
+  "help": "在 HTML 实体和文本之间转换\n\n示例:\n输入:\nhello & world\n\n输出:\nhello &amp; world"
 }
 '''
 

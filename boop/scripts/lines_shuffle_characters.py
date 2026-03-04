@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
-  "name": "Lines Shuffle Characters",
-  "description": "Shuffles characters randomly for each line",
-  "icon": "dice",
-  "tags": ["shuffle", "random", "character", "char"],
-  "help": "Shuffles characters randomly for each line.\n\nExample:\nInput:\nhello\nworld\n\nOutput:\nlehol (random)\nrowdl (random)"
-}
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
+  "name": "Shuffle Characters",
+  "description": "随机打乱字符顺序",
+  "icon": "🔀",
+  "tags": ["text","shuffle","random"],
+  "help": "随机打乱字符顺序\n\n示例:\n输入:\nhello\n\n输出:\n(随机结果)"
+}"""
 
 import random
 

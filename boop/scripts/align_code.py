@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "对齐代码",
-    "description": "对齐代码中的赋值语句",
-    "icon": "code",
-    "tags": ["format", "code", "align"],
-    "help": "对齐代码中的赋值语句\n\nExample:\nInput:\na = 1\nbb = 2\nccc = 3\n\nOutput:\na   = 1\nbb  = 2\nccc = 3"
+  "name": "Align Code",
+  "description": "对齐代码中的赋值语句",
+  "icon": "📏",
+  "tags": ["format","code","align"],
+  "help": "对齐代码中的赋值语句，使等号对齐整齐\n\n示例:\n输入:\na = 1\nbb = 2\nccc = 3\n\n输出:\na   = 1\nbb  = 2\nccc = 3"
 }
 '''
 

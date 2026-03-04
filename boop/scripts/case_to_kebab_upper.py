@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "转换为KEBAB-CASE",
-    "description": "将文本转换为KEBAB-CASE大写命名格式",
-    "icon": "type",
-    "tags": ["format", "case", "kebab", "upper"],
-    "help": "将文本转换为KEBAB-CASE大写命名格式\n\nExample:\nInput:\nhello world\n\nOutput:\nHELLO-WORLD"
+  "name": "To Kebab Upper Case",
+  "description": "将文本转换为大写短横线命名格式",
+  "icon": "🐪",
+  "tags": ["format","case","kebab","upper"],
+  "help": "将文本转换为大写短横线命名格式 (KEBAB-CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO-WORLD"
 }
 '''
 

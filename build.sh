@@ -13,6 +13,7 @@
 
 # Configuration
 readonly PROJECT_NAME="Boop"
+readonly APP_BUNDLE_ID="com.okatbest.boop"
 readonly VERSION="1.0.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly BUILD_DIR="${SCRIPT_DIR}/build"
@@ -22,10 +23,11 @@ readonly RESERVE_FILE_ARRAY=("-macos.dmg" "-windows.zip" "-linux.tar.gz")
 readonly RESERVE_DIR_ARRAY=(".app")
 
 # App files and directories to include in the build
-readonly APP_FILES=("${SCRIPT_DIR}/boop/config.json:boop"
-                   "${SCRIPT_DIR}/boop/scripts:boop/scripts"
-                   "${SCRIPT_DIR}/boop/ui/icons:boop/ui/icons"
-                   "${HOME}/miniconda3/envs/python39:python_env")
+# For macOS, the files will be placed in Contents/Resources
+readonly APP_FILES=("${SCRIPT_DIR}/boop/scripts:scripts"
+                   "${SCRIPT_DIR}/boop/core/script_wrapper.py:boop/core")
+
+# Configuration file is now in project root, no need to include in build
 
 PLATFORM="$(uname)"
 
@@ -68,7 +70,27 @@ pyinstaller_build() {
 
     local args=(--name "${PROJECT_NAME}" --windowed --onedir -y
                 --workpath "${BUILD_DIR}"
-                --distpath "${DIST_DIR}")
+                --distpath "${DIST_DIR}"
+                --upx-dir /usr/local/bin
+                --optimize=2
+                --strip
+                --noconfirm
+                --log-level=ERROR
+                --exclude-module=tkinter.test
+                --exclude-module=unittest
+                --exclude-module=doctest
+                --exclude-module=sqlite3
+                --exclude-module=email
+                --exclude-module=xml
+                --exclude-module=xmlrpc
+                --exclude-module=html
+                --exclude-module=http
+                --exclude-module=ssl
+                --exclude-module=bz2
+                --exclude-module=zlib
+                --exclude-module=ctypes
+                --exclude-module=distutils
+                --exclude-module=multiprocessing)
     
     # Add data files
     for file in "${APP_FILES[@]}"; do
@@ -163,7 +185,9 @@ build_macos() {
     check_deps
     pyinstaller_build "macOS" \
         "--icon ${SCRIPT_DIR}/icons/icon.icns" \
-        "--osx-bundle-identifier com.boop.app"
+        "" \
+        "--osx-bundle-identifier ${APP_BUNDLE_ID}" \
+        "--osx-bundle-version ${VERSION}"
     create_dmg
     final_cleanup
     success "${DIST_DIR}/${PROJECT_NAME}-${VERSION}-macos.dmg"

@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "YAML与JSON转换",
-    "description": "在YAML和JSON之间相互转换",
+    "name": "YAML to JSON",
+    "description": "在 YAML 和 JSON 之间相互转换",
     "icon": "code",
-    "tags": ["convert", "yaml", "json"],
-    "help": "在YAML和JSON之间相互转换\n\n- 如果输入是YAML，转换为JSON\n- 如果输入是JSON，转换为YAML\n\nExample 1 (YAML to JSON):\nInput:\nname: John\nage: 30\n\nOutput:\n{\n  \"name\": \"John\",\n  \"age\": 30\n}\n\nExample 2 (JSON to YAML):\nInput:\n{\"name\": \"John\", \"age\": 30}\n\nOutput:\nname: John\nage: 30"
+    "tags": ["convert","yaml","json"],
+    "help": "在 YAML 和 JSON 之间相互转换\n\n- 如果输入是 YAML，转换为 JSON\n- 如果输入是 JSON，转换为 YAML\n\n示例 1 (YAML to JSON):\n输入:\nname: John\nage: 30\n\n输出:\n{\n  \"name\": \"John\",\n  \"age\": 30\n}\n\n示例 2 (JSON to YAML):\n输入:\n{\"name\": \"John\", \"age\": 30}\n\n输出:\nname: John\nage: 30"
 }
 '''
 

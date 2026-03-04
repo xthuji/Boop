@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "转换为驼峰命名",
-    "description": "将文本转换为驼峰命名格式",
-    "icon": "type",
-    "tags": ["format", "case", "camel"],
-    "help": "将文本转换为驼峰命名格式\n\nExample:\nInput:\nhello world\n\nOutput:\nhelloWorld"
+  "name": "To Camel Case",
+  "description": "将文本转换为驼峰命名格式",
+  "icon": "🐪",
+  "tags": ["format","case","camel"],
+  "help": "将文本转换为驼峰命名格式 (首单词小写，后续单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nhelloWorld"
 }
 '''
 

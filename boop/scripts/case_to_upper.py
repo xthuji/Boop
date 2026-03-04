@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "转换为大写",
-    "description": "将文本转换为大写",
-    "icon": "type",
-    "tags": ["format", "case", "upper"],
-    "help": "将文本转换为大写\n\nExample:\nInput:\nhello world\n\nOutput:\nHELLO WORLD"
+  "name": "To Upper Case",
+  "description": "将文本转换为大写格式",
+  "icon": "🐪",
+  "tags": ["format","case","upper"],
+  "help": "将文本转换为全大写格式\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO WORLD"
 }
 '''
 

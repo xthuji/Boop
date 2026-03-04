@@ -8,8 +8,9 @@ Uses tk.Toplevel for proper window management.
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, List, Callable
-from boop.core.script import LoadedScript, ScriptManager
-from boop.core.utils import get_icon_path
+from boop.core.script import ScriptManager
+from boop.core.utils import center_window
+from boop.core.logging import logger
 
 
 class ScriptPickerPopup:
@@ -28,7 +29,7 @@ class ScriptPickerPopup:
         self,
         parent: tk.Tk,
         manager: ScriptManager,
-        on_script_selected: Callable[[Optional[LoadedScript]], None],
+        on_script_selected: Callable[[Optional[tuple]], None],
         editor_widget: tk.Text
     ):
         self.parent = parent
@@ -36,10 +37,10 @@ class ScriptPickerPopup:
         self.on_script_selected = on_script_selected
         self.editor = editor_widget
         self.dialog: Optional[tk.Toplevel] = None
-        self.scripts: List[LoadedScript] = []
+        self.scripts: List[tuple] = []  # List of (ScriptMetadata, Path)
         self._debounce_timer = None
         self._script_name_map = {}
-        self.result: Optional[LoadedScript] = None
+        self.result: Optional[tuple] = None
 
         self._create_dialog()
         # _refresh_scripts is called at the end of _create_dialog
@@ -53,12 +54,7 @@ class ScriptPickerPopup:
         self.dialog.resizable(False, False)
 
         # Center the dialog
-        self.dialog.geometry("800x500")
-        self.dialog.update_idletasks()
-
-        x = (self.dialog.winfo_screenwidth() // 2) - (800 // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (500 // 2)
-        self.dialog.geometry(f"800x500+{x}+{y}")
+        center_window(self.dialog, 800, 500)
 
         # Make dialog modal-like
         self.dialog.grab_set()
@@ -81,13 +77,6 @@ class ScriptPickerPopup:
         header = tk.Frame(main_frame, bg='white')
         header.pack(fill=tk.X, pady=(0, 10))
 
-        tk.Label(
-            header,
-            text="📜 Select Script",
-            bg='white',
-            font=('TkDefaultFont', 12, 'bold')
-        ).pack(side=tk.LEFT)
-
         # Search box
         search_frame = tk.Frame(main_frame, bg='white')
         search_frame.pack(fill=tk.X, pady=(0, 10))
@@ -107,14 +96,12 @@ class ScriptPickerPopup:
 
         self.search_var.trace('w', lambda *args: self._filter_scripts())
 
-
-
         # Main content area with two columns
         content_frame = tk.Frame(main_frame, bg='white')
         content_frame.pack(fill=tk.BOTH, expand=True)
 
         # Left column: Script list
-        list_frame = tk.Frame(content_frame, bg='white')
+        list_frame = tk.Frame(content_frame, bg='white', borderwidth=1, highlightbackground='#bdc3c7', highlightthickness=2)
         list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
         columns = ('name', 'description')
@@ -155,7 +142,7 @@ class ScriptPickerPopup:
             details_header,
             text="📋 Script Details",
             bg='#f5f5f5',
-            font=('TkDefaultFont', 10, 'bold')
+            font=('TkDefaultFont', 11, 'bold')
         ).pack(side=tk.LEFT)
 
         # Script name
@@ -166,7 +153,7 @@ class ScriptPickerPopup:
             name_frame,
             text="Name:",
             bg='white',
-            font=('TkDefaultFont', 9, 'bold')
+            font=('TkDefaultFont', 10, 'bold')
         ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_name_var = tk.StringVar(value="Select a script")
@@ -174,7 +161,28 @@ class ScriptPickerPopup:
             name_frame,
             textvariable=self.script_name_var,
             bg='white',
-            font=('TkDefaultFont', 9),
+            font=('TkDefaultFont', 10),
+            anchor=tk.W,
+            wraplength=250
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Script filename
+        filename_frame = tk.Frame(details_frame, bg='white')
+        filename_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+
+        tk.Label(
+            filename_frame,
+            text="Filename:",
+            bg='white',
+            font=('TkDefaultFont', 10, 'bold')
+        ).pack(side=tk.LEFT, padx=(0, 5))
+
+        self.script_filename_var = tk.StringVar(value="")
+        tk.Label(
+            filename_frame,
+            textvariable=self.script_filename_var,
+            bg='white',
+            font=('TkDefaultFont', 10),
             anchor=tk.W,
             wraplength=250
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
@@ -187,7 +195,7 @@ class ScriptPickerPopup:
             desc_frame,
             text="Description:",
             bg='white',
-            font=('TkDefaultFont', 9, 'bold')
+            font=('TkDefaultFont', 10, 'bold')
         ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_desc_var = tk.StringVar(value="")
@@ -195,7 +203,29 @@ class ScriptPickerPopup:
             desc_frame,
             textvariable=self.script_desc_var,
             bg='white',
-            font=('TkDefaultFont', 9),
+            font=('TkDefaultFont', 10),
+            anchor=tk.W,
+            wraplength=250,
+            justify=tk.LEFT
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Script tags
+        tags_frame = tk.Frame(details_frame, bg='white')
+        tags_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+
+        tk.Label(
+            tags_frame,
+            text="Tags:",
+            bg='white',
+            font=('TkDefaultFont', 10, 'bold')
+        ).pack(side=tk.LEFT, padx=(0, 5))
+
+        self.script_tags_var = tk.StringVar(value="")
+        tk.Label(
+            tags_frame,
+            textvariable=self.script_tags_var,
+            bg='white',
+            font=('TkDefaultFont', 10),
             anchor=tk.W,
             wraplength=250,
             justify=tk.LEFT
@@ -203,18 +233,18 @@ class ScriptPickerPopup:
 
         # Help information
         help_frame = tk.Frame(details_frame, bg='white')
-        help_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(10, 5))
+        help_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 5))
 
         tk.Label(
             help_frame,
             text="Help:",
             bg='white',
-            font=('TkDefaultFont', 9, 'bold')
+            font=('TkDefaultFont', 10, 'bold')
         ).pack(anchor=tk.NW, pady=(0, 5))
 
         self.help_text = tk.Text(
             help_frame,
-            font=('TkDefaultFont', 8),
+            font=('TkDefaultFont', 10),
             bg='#f9f9f9',
             borderwidth=1,
             relief=tk.SUNKEN,
@@ -294,22 +324,69 @@ class ScriptPickerPopup:
         # Esc key to cancel
         self.dialog.bind('<Escape>', lambda e: self._close())
 
+    def _process_metadata(self, all_cached_metadata, seen_files):
+        """Process metadata and add to scripts list.
+        
+        Args:
+            all_cached_metadata: Dictionary of cached metadata
+            seen_files: Set of seen file paths to avoid duplicates
+            
+        Returns:
+            List of (metadata, file_path) tuples
+        """
+        from pathlib import Path
+        
+        scripts_list = []
+        
+        if all_cached_metadata:
+            for file_path_str, metadata_dict in all_cached_metadata.items():
+                try:
+                    file_path = Path(file_path_str)
+                    if file_path.exists():
+                        # Create metadata from cached data using ScriptManager
+                        metadata = self.manager.create_metadata_from_dict(metadata_dict, file_path)
+                        if metadata:
+                            # Check if this file has already been added
+                            file_key = str(file_path.absolute())
+                            if file_key not in seen_files:
+                                # Add (metadata, file_path) tuple to scripts_list
+                                scripts_list.append((metadata, file_path))
+                                seen_files.add(file_key)
+                except Exception as e:
+                    logger.warning(f"Error processing cached metadata for {file_path_str}: {e}")
+        
+        return scripts_list
+    
     def _refresh_scripts(self):
         """Load and display scripts."""
         if not self.dialog or not self.dialog.winfo_exists():
             return
 
-        scripts_list = self.manager.list_scripts()
+        scripts_list = []
+        seen_files = set()  # To track seen file paths and avoid duplicates
+        
+        # First try to get all metadata from ScriptManager's cache
+        all_cached_metadata = self.manager.get_all_metadata()
+        
+        # Process cached metadata
+        scripts_list = self._process_metadata(all_cached_metadata, seen_files)
+        
+        # If no cached data or cache is empty, load from directories
+        if not scripts_list:
+            # Load metadata using ScriptManager
+            self.manager.load_metadata()
+            
+            # Try to get all metadata again after loading
+            all_cached_metadata = self.manager.get_all_metadata()
+            
+            # Process metadata again
+            scripts_list = self._process_metadata(all_cached_metadata, seen_files)
+        
         self.scripts = scripts_list
         self._populate_list(self.scripts)
         self.status_var.set(f"{len(self.scripts)} scripts available")
-        self._update_categories()
 
-    def _update_categories(self):
-        """Update categories (no-op since we removed category filtering)."""
-        pass
-
-    def _populate_list(self, scripts: List[LoadedScript]):
+    def _populate_list(self, scripts: List[tuple]):
         """Populate the tree with scripts."""
         if not hasattr(self, 'tree') or self.tree is None:
             return
@@ -319,18 +396,31 @@ class ScriptPickerPopup:
 
         self._script_name_map.clear()
 
-        for script in scripts:
-            icon = "📄"
+        # Sort scripts by name
+        sorted_scripts = sorted(scripts, key=lambda s: s[0].name.lower())
+
+        for script_tuple in sorted_scripts:
+            metadata, file_path = script_tuple
+            # Use icon from metadata if available
+            icon_name = metadata.icon
+            icon = "📄"  # Default icon
+            
+            # Check if it's an emoji or special symbol
+            if icon_name:
+                # Use any non-empty string as icon (emoji, Greek characters, etc.)
+                icon = icon_name
+            
             item_id = self.tree.insert(
                 '',
                 tk.END,
-                values=(f"{icon} {script.metadata.name}", script.metadata.description)
+                values=(f"{icon} {metadata.name}", metadata.description)
             )
-            self._script_name_map[item_id] = script.metadata.name
+            # Use file path as key to ensure uniqueness
+            self._script_name_map[item_id] = str(file_path.absolute())
 
         self.tree.update_idletasks()
 
-        if scripts:
+        if sorted_scripts:
             first = self.tree.get_children()[0]
             self.tree.selection_set(first)
             self.tree.focus(first)
@@ -348,9 +438,9 @@ class ScriptPickerPopup:
         query = self.search_var.get().lower()
 
         if query:
-            filtered_scripts = [script for script in self.scripts
-                              if query in script.metadata.name.lower() or
-                                 any(query in tag.lower() for tag in script.metadata.tags)]
+            filtered_scripts = [script_tuple for script_tuple in self.scripts
+                              if query in script_tuple[0].name.lower() or
+                                 any(query in tag.lower() for tag in script_tuple[0].tags)]
         else:
             filtered_scripts = self.scripts
 
@@ -374,24 +464,36 @@ class ScriptPickerPopup:
             return
 
         item = selection[0]
-        name = self._script_name_map.get(item)
-        if not name:
+        file_path_str = self._script_name_map.get(item)
+        if not file_path_str:
             return
             
-        script = self.manager.get_script(name)
+        # Find script in self.scripts
+        script_tuple = None
+        for s in self.scripts:
+            if str(s[1].absolute()) == file_path_str:
+                script_tuple = s
+                break
 
-        if script:
-            self.script_name_var.set(script.metadata.name)
-            self.script_desc_var.set(script.metadata.description)
+        if script_tuple:
+            metadata, file_path = script_tuple
+            self.script_name_var.set(metadata.name)
+            self.script_filename_var.set(metadata.filename)
+            self.script_desc_var.set(metadata.description)
+            # Update tags
+            if metadata.tags:
+                self.script_tags_var.set(", ".join(metadata.tags))
+            else:
+                self.script_tags_var.set("")
 
             self.help_text.configure(state=tk.NORMAL)
             self.help_text.delete('1.0', tk.END)
 
-            help_text = script.metadata.help
+            help_text = metadata.help
             if help_text:
                 self.help_text.insert(tk.END, help_text)
             else:
-                self.help_text.insert(tk.END, f"No help information available for {script.metadata.name}")
+                self.help_text.insert(tk.END, f"No help information available for {metadata.name}")
 
             self.help_text.configure(state=tk.DISABLED)
 
@@ -402,9 +504,13 @@ class ScriptPickerPopup:
 
         if selection:
             item = selection[0]
-            name = self._script_name_map.get(item)
-            if name:
-                script = self.manager.get_script(name)
+            file_path_str = self._script_name_map.get(item)
+            if file_path_str:
+                # Find script in self.scripts
+                for s in self.scripts:
+                    if str(s[1].absolute()) == file_path_str:
+                        script = s
+                        break
 
         self.result = script
         self._close()
@@ -412,17 +518,7 @@ class ScriptPickerPopup:
         if self.on_script_selected:
             self.parent.after(50, lambda: self.on_script_selected(script))
 
-    def _filter_by_category(self, category):
-        """Filter scripts by category."""
-        self.category_var.set(category)
 
-        for category_id, btn in self.category_buttons:
-            if category_id == category:
-                btn.configure(bg='#e0e0e0')
-            else:
-                btn.configure(bg='#f0f0f0')
-
-        self._do_filter()
 
     def _navigate(self, direction):
         """Navigate up or down in the script list with wrap-around."""

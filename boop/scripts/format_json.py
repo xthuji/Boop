@@ -1,54 +1,59 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format JSON",
-  "description": "Professional JSON code formatter and minifier",
-  "icon": "pineapple",
-  "tags": ["json", "format", "minify"],
-  "dependencies": ["json5"],
-  "help": "Format or minify JSON text using json5 for compatibility.\n\nExample:\nInput: {\"name\":\"John\",\"age\":30}\nOutput: {\n    \"name\": \"John\",\n    \"age\": 30\n}\n\nIf the JSON is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 JSON 数据",
+  "icon": "📄",
+  "tags": ["json","format"],
+  "dependencies": [
+    "json5"
+  ],
+  "help": "格式化或压缩 JSON 数据\n\n如果数据已格式化，将进行压缩。\n\n示例:\n输入:\n{\"name\":\"John\",\"age\":30}\n\n输出:\n{\n    \"name\": \"John\",\n    \"age\": 30\n}"
+}"""
 
 import json
 import json5
 
 def is_minified(text):
     """Check if JSON is minified."""
+    # 去除首尾空白后再判断
     text = text.strip()
-    return not ('\n' in text or '  ' in text) and ((text.startswith('{') and text.endswith('}')) or (text.startswith('[') and text.endswith(']')))
+    # 如果包含换行符，则认为已经格式化，需要压缩
+    if '\n' in text:
+        return False
+    # 如果不包含换行符，则认为是压缩的，需要格式化
+    return True
 
 def minify_code(text):
     """Minify JSON."""
     if not text or not text.strip():
         return text
-    
+
     try:
         parsed = json5.loads(text)
         return json.dumps(parsed, separators=(',', ':'), ensure_ascii=False) + '\n'
     except (json.JSONDecodeError, ValueError) as e:
         raise ValueError("Invalid JSON: {}".format(e))
 
-def format_code(text, indent=4):
+def format_code(text):
     """Format JSON text using json5 for compatibility."""
     if not text or not text.strip():
         return text
-    
+
     try:
+        # Use json5 for compatibility with various JSON formats
         parsed = json5.loads(text)
-        return json.dumps(parsed, indent=indent, ensure_ascii=False) + '\n'
+        return json.dumps(parsed, indent=4, ensure_ascii=False) + '\n'
     except (json.JSONDecodeError, ValueError) as e:
         raise ValueError("Invalid JSON: {}".format(e))
 
-def process_format_code(text, indent=4):
+def process_format_code(text):
     """Process JSON text - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
-        return format_code(text, indent)
+        return format_code(text)
     else:
         return minify_code(text)
 
@@ -56,7 +61,7 @@ def main(state):
     """Format or minify JSON text."""
     if not state.text or not state.text.strip():
         return
-    
+
     # 处理自定义参数
     indent = 4
     if hasattr(state, 'args') and state.args:
@@ -67,7 +72,7 @@ def main(state):
                     indent = int(arg.split('=')[1])
         except (ValueError, IndexError):
             pass
-    
+
     try:
         state.text = process_format_code(state.text, indent).strip() + '\n'
     except ValueError as e:
@@ -75,5 +80,3 @@ def main(state):
             state.post_error(str(e))
         else:
             print("Error formatting JSON: {}".format(str(e)))
-
-

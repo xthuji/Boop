@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Split Lines",
-  "description": "Split lines by delimiter with optional quote handling",
-  "icon": "scissors",
-  "tags": ["split", "lines", "delimiter"],
-  "help": "Split lines by delimiter.\n\nUsage: First line specifies configuration (optional)\n  Format: delimiter:quote:escape\n\nParameters:\n  delimiter - Delimiter (default: comma)\n              Special value: \\n for newline\n  quote     - Quote type (optional)\n              \" or '  - Split by quotes\n  escape    - Escape handling (optional)\n              code/t/true - Escape special characters\n\nExamples:\n  ,\n  item1,item2,item3\n\n  Output:\n  item1\n  item2\n  item3"
-}
-"""
+  "description": "将文本按分隔符分割成多行",
+  "icon": "✂️",
+  "tags": ["text","split","lines"],
+  "help": "将文本按分隔符分割成多行\n\n示例:\n输入:\napple,banana,cherry\n\n输出:\napple\nbanana\ncherry"
+}"""
 
 import re
 

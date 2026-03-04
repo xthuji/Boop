@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "Unicode转换",
-    "description": "在Unicode转义序列和字符之间切换",
-    "icon": "text",
-    "tags": ["unicode", "convert"],
-    "help": "在Unicode转义序列和字符之间切换\n\n- 如果输入包含Unicode转义序列，转换为字符\n- 如果输入包含非ASCII字符，转换为Unicode转义序列\n\nExample 1 (Unicode转义序列转字符):\nInput:\n\\u4f60\\u597d\n\nOutput:\n你好\n\nExample 2 (字符转Unicode转义序列):\nInput:\n你好\n\nOutput:\n\\u4f60\\u597d"
+  "name": "Toggle Unicode",
+  "description": "在 Unicode 转义和文本之间转换",
+  "icon": "🔤",
+  "tags": ["unicode","encode","decode"],
+  "help": "在 Unicode 转义和文本之间转换\n\n示例:\n输入:\nhello\n\n输出:\n\\u0068\\u0065\\u006c\\u006c\\u006f"
 }
 '''
 

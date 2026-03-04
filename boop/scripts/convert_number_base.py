@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "数字进制转换",
-    "description": "在不同进制之间转换数字",
-    "icon": "code",
-    "tags": ["convert", "number", "base"],
-    "help": "在不同进制之间转换数字\n\n支持的进制：2（二进制）、8（八进制）、10（十进制）、16（十六进制）\n输入格式：数字和当前进制，例如：\"1010 2\" 表示二进制的1010\n\nExample:\nInput:\n1010 2\n\nOutput:\n十进制: 10\n二进制: 1010\n八进制: 12\n十六进制: A"
+  "name": "Convert Number Base",
+  "description": "在不同进制之间转换数字",
+  "icon": "🔢",
+  "tags": ["convert","number","base"],
+  "help": "在不同进制之间转换数字\n\n支持的进制：2（二进制）、8（八进制）、10（十进制）、16（十六进制）\n输入格式：数字和当前进制，例如：\"1010 2\" 表示二进制的 1010\n\n示例:\n输入:\n1010 2\n\n输出:\n十进制：10\n二进制：1010\n八进制：12\n十六进制：A"
 }
 '''
 

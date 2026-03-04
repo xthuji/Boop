@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "执行JavaScript",
-    "description": "执行JavaScript代码",
-    "icon": "code",
-    "tags": ["javascript", "eval"],
-    "help": "执行JavaScript代码\n\nExample:\nInput:\n1 + 1\n\nOutput:\n2"
+  "name": "Eval JavaScript",
+  "description": "执行 JavaScript 代码",
+  "icon": "⚡",
+  "tags": ["javascript","eval"],
+  "help": "执行 JavaScript 代码并返回结果\n\n示例:\n输入:\n1 + 1\n\n输出:\n2"
 }
 '''
 

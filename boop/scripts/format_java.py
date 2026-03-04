@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format Java",
-  "description": "Professional Java code formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["java", "format", "minify"],
-  "help": "Format or minify Java code with proper indentation and spacing.\n\nExample:\nInput:\npublic class Hello{public static void main(String[] args){System.out.println(\"Hello\");}}\n\nOutput:\npublic class Hello {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}\n\nIf the code is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 Java 代码",
+  "icon": "☕",
+  "tags": ["java","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 Java 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\npublic class Test{public static void main(String[]args){System.out.println(\"Hello\")}}\n\n输出:\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}"
+}"""
 
 import re
 
@@ -32,7 +30,7 @@ class TokenManager:
         code = re.sub(r'/\*[\s\S]*?\*/', add_token, code)
         code = re.sub(r'//.*$', add_token, code)
         code = re.sub(r'"(\\.|[^"\\])*"', add_token, code)
-        code = re.sub(r'<[A-Za-z0-9_,\.\s\?<\>\[\]]+>', lambda m: add_token(m) if len(m.group(0)) > 3 else m.group(0), code)
+        code = re.sub(r'<[A-Za-z0-9_,\.\s\?<>\[\]]+>', lambda m: add_token(m) if len(m.group(0)) > 3 else m.group(0), code)
 
         return code
 
@@ -165,7 +163,7 @@ def main(state):
     """Format or minify Java text."""
     if not state.text or not state.text.strip():
         return
-    
+
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
@@ -185,7 +183,7 @@ def minify_code(code):
     """Minify Java code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
     code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
     code = re.sub(r'/\*[\s\S]*?\*/', '', code)
@@ -199,10 +197,8 @@ def process_format_code(text):
     """Process Java code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-

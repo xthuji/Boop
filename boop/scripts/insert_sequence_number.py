@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Insert Sequence Number",
-  "description": "Insert sequence numbers (arabic/chinese/upper/lower)",
-  "icon": "sort-numbers",
-  "tags": ["insert", "sequence", "number"],
-  "help": "Insert sequence numbers at the beginning of each line.\n\nUsage: First line specifies configuration (optional)\n  Format: start:step:type:sep:width\n\nParameters:\n  start  - Start value (number or letter)\n  step   - Step value (number)\n  type   - Sequence type:\n           1/n/num     - Arabic numbers (default)\n           2/c/zh      - Chinese numbers\n           a/u/upper   - Uppercase letters\n           b/l/lower   - Lowercase letters\n  sep    - Separator (default: space)\n  width  - Number width (zero-padded, e.g., 02 for 2 digits)\n\nExamples:\n  1:1:n: :02\n  item1\n  item2\n\n  Output:\n  01 item1\n  02 item2\n\n  A:1:upper:-\n  item1\n  item2\n\n  Output:\n  A-item1\n  B-item2"
-}
-"""
+  "description": "在每行前插入序列号",
+  "icon": "🔢",
+  "tags": ["text","sequence","number"],
+  "help": "在每行前插入序列号\n\n示例:\n输入:\napple\nbanana\ncherry\n\n输出:\n1. apple\n2. banana\n3. cherry"
+}"""
 
 
 def _number_to_chinese(num):

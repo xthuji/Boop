@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "ASCII转换",
-    "description": "在ASCII码和字符之间切换",
-    "icon": "text",
-    "tags": ["ascii", "convert"],
-    "help": "在ASCII码和字符之间切换\n\n- 如果输入是ASCII码，转换为字符\n- 如果输入是字符，转换为ASCII码\n\nExample 1 (ASCII码转字符):\nInput:\n104 101 108 108 111\n\nOutput:\nhello\n\nExample 2 (字符转ASCII码):\nInput:\nhello\n\nOutput:\n104 101 108 108 111"
+  "name": "Toggle ASCII",
+  "description": "在 ASCII 和可读文本之间转换",
+  "icon": "🔤",
+  "tags": ["ascii","encode","decode"],
+  "help": "在 ASCII 编码和可读文本之间转换\n\n示例:\n输入:\nhello\n\n输出:\n104 101 108 108 111"
 }
 '''
 

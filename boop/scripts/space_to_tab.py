@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "空格转制表符",
-    "description": "将空格转换为制表符",
-    "icon": "code",
-    "tags": ["format", "space", "tab"],
-    "help": "将空格转换为制表符\n\n默认将4个连续空格转换为1个制表符\n\nExample:\nInput:\n    hello world\n\nOutput:\n\thello world"
+  "name": "Space to Tab",
+  "description": "将空格转换为制表符",
+  "icon": "⏭️",
+  "tags": ["space","tab","convert"],
+  "help": "将空格转换为制表符 (默认 4 个空格=1 个制表符)\n\n示例:\n输入:\n    hello\n    world\n\n输出:\n\thello\n\tworld"
 }
 '''
 

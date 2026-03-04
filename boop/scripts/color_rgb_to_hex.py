@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "RGB转HEX",
-    "description": "将RGB颜色值转换为HEX格式",
-    "icon": "color",
-    "tags": ["color", "convert", "rgb", "hex"],
-    "help": "将RGB颜色值转换为HEX格式\n\n支持的输入格式：\n- rgb(255, 255, 255)\n- 255, 255, 255\n- 255 255 255\n\nExample:\nInput:\n255, 255, 255\n\nOutput:\n#FFFFFF"
+  "name": "RGB to Hex Color",
+  "description": "将 RGB 颜色值转换为十六进制格式",
+  "icon": "🎨",
+  "tags": ["color","rgb","hex","convert"],
+  "help": "将 RGB 颜色值转换为十六进制颜色格式\n\n支持的输入格式:\n- rgb(255, 255, 255)\n- 255, 255, 255\n- 255 255 255\n\n示例:\n输入:\n255, 255, 255\n\n输出:\n#FFFFFF"
 }
 '''
 

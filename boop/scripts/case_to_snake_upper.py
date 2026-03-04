@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "转换为SNAKE_CASE",
-    "description": "将文本转换为SNAKE_CASE大写命名格式",
-    "icon": "type",
-    "tags": ["format", "case", "snake", "upper"],
-    "help": "将文本转换为SNAKE_CASE大写命名格式\n\nExample:\nInput:\nhello world\n\nOutput:\nHELLO_WORLD"
+  "name": "To Snake Upper Case",
+  "description": "将文本转换为大写蛇形命名格式",
+  "icon": "🐍",
+  "tags": ["format","case","snake","upper"],
+  "help": "将文本转换为大写蛇形命名格式 (SNAKE_CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO_WORLD"
 }
 '''
 

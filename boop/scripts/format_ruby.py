@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-{
-  "api": 1,
+"""{
   "name": "Format Ruby",
-  "description": "Professional Ruby code formatter and minifier.",
-  "icon": "pineapple",
-  "tags": ["ruby", "format", "minify"],
-  "help": "Format or minify Ruby code with proper indentation and spacing.\n\nExample:\nInput:\ndef hello() puts \"Hello\" end\n\nOutput:\ndef hello()\n  puts \"Hello\"\nend\n\nIf the code is already formatted, it will be minified."
-}
-"""
+  "description": "格式化 Ruby 代码",
+  "icon": "💎",
+  "tags": ["ruby","format"],
+  "dependencies": [],
+  "help": "格式化或压缩 Ruby 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\ndef hello;puts\"Hello\";end\n\n输出:\ndef hello\n    puts \"Hello\"\nend"
+}"""
 
 import re
 
@@ -175,16 +173,16 @@ def main(state):
     """Format or minify Ruby text."""
     if not state.text or not state.text.strip():
         return
-    
+
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
             state.post_info("Ruby code formatted or minified")
     except Exception as e:
         if hasattr(state, 'post_error'):
-            state.post_error(f"Error formatting Ruby: {str(e)}")
+            state.post_error("Error formatting Ruby: {}".format(str(e)))
         else:
-            print(f"Error formatting Ruby: {str(e)}")
+            print("Error formatting Ruby: {}".format(str(e)))
 
 def is_minified(text):
     """Check if Ruby code is minified."""
@@ -195,24 +193,20 @@ def minify_code(code):
     """Minify Ruby code."""
     if not code or not code.strip():
         return code
-    
+
     # 移除注释
+    code = re.sub(r'=begin[\s\S]*?=end', '', code)
     code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
-    code = re.sub(r'=begin[\s\S]*?=end', '', code, flags=re.DOTALL)
     # 移除多余空格和换行
     code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
     return code.strip()
 
 def process_format_code(text):
     """Process Ruby code - format or minify based on input state."""
     if not text or not text.strip():
         return text
-    
+
     if is_minified(text):
         return format_code(text)
     else:
         return minify_code(text)
-
-

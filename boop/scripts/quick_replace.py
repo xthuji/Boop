@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "快速替换",
-    "description": "快速替换文本中的内容",
-    "icon": "text",
-    "tags": ["text", "replace"],
-    "help": "快速替换文本中的内容\n\nExample:\nInput:\nhello world\nold: hello\nnew: hi\n\nOutput:\nhi world"
+  "name": "Quick Replace",
+  "description": "快速替换文本",
+  "icon": "🔄",
+  "tags": ["text","replace"],
+  "help": "快速替换文本\n\n用法:\n第一行：查找内容\n第二行：替换内容\n其余行：待处理文本\n\n示例:\n输入:\nhello\nhi\nhello world\nhello there\n\n输出:\nhi world\nhi there"
 }
 '''
 

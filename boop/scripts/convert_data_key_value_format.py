@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "键值对格式转换",
-    "description": "在不同键值对格式之间转换",
-    "icon": "code",
-    "tags": ["convert", "data", "key-value"],
-    "help": "在不同键值对格式之间转换\n\nExample:\nInput:\nkey1=value1\nkey2=value2\n\nOutput:\nkey1: value1\nkey2: value2"
+  "name": "Convert Key-Value Format",
+  "description": "在不同键值对格式之间转换",
+  "icon": "📊",
+  "tags": ["convert","data","key-value"],
+  "help": "在不同键值对格式之间转换 (等号格式和冒号格式)\n\n示例:\n输入:\nkey1=value1\nkey2=value2\n\n输出:\nkey1: value1\nkey2: value2"
 }
 '''
 

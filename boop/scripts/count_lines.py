@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "Count Lines",
-    "description": "Count the number of lines in your text",
-    "icon": "counter",
-    "tags": ["count", "lines", "stats"],
-    "help": "Count the number of lines in your text.\n\nExample:\nInput:\nHello\nWorld\n\nOutput:\n2"
+  "name": "Count Lines",
+  "description": "计算文本的行数",
+  "icon": "📏",
+  "tags": ["count","lines"],
+  "help": "计算文本的行数\n\n示例:\n输入:\nHello\nWorld\n\n输出:\n2"
 }
 '''
 

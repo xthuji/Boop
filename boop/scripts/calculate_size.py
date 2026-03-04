@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 {
-    "api": 1,
-    "name": "计算文件大小",
-    "description": "计算文本的字节大小",
-    "icon": "counter",
-    "tags": ["size", "calculate"],
-    "help": "计算文本的字节大小\n\nExample:\nInput:\nhello world\n\nOutput:\n11 bytes\n0.01 KB"
+  "name": "Calculate Size",
+  "description": "计算文本的字节大小",
+  "icon": "🧮",
+  "tags": ["size","calculate"],
+  "help": "计算文本的字节大小和 KB 大小\n\n示例:\n输入:\nhello world\n\n输出:\n11 bytes\n0.01 KB"
 }
 '''
 

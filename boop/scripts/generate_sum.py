@@ -1,13 +1,12 @@
-"""
-{
-  "api": 1,
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""{
   "name": "Generate Sum",
-  "description": "Sums up a list of numbers",
-  "icon": "abacus",
-  "tags": ["sum", "calculator", "addition", "add"],
-  "help": "Sums up a list of numbers. Supports fractions and comments.\n\nExample:\nInput:\n1\n2\n3\n\nOutput:\n1\n2\n3\n= 6\t// 1 + 2 + 3"
-}
-"""
+  "description": "计算数字的总和",
+  "icon": "➕",
+  "tags": ["calculate","sum","math"],
+  "help": "计算文本中所有数字的总和\n\n示例:\n输入:\n1\n2\n3\n4\n5\n\n输出:\n15"
+}"""
 
 import re
 
