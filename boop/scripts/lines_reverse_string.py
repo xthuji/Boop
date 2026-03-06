@@ -3,8 +3,8 @@
 """{
   "name": "Reverse String",
   "description": "反转字符串",
-  "icon": "🔄",
-  "tags": ["text","reverse","string"],
+  "icon": "🔁",
+  "tags": ["reverse","string"],
   "help": "反转字符串\n\n示例:\n输入:\nhello\n\n输出:\nolleh"
 }"""
 

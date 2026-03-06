@@ -4,7 +4,7 @@
 {
   "name": "Count Lines",
   "description": "计算文本的行数",
-  "icon": "📏",
+  "icon": "🤖",
   "tags": ["count","lines"],
   "help": "计算文本的行数\n\n示例:\n输入:\nHello\nWorld\n\n输出:\n2"
 }

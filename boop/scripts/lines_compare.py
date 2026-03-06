@@ -3,8 +3,8 @@
 """{
   "name": "Compare Lines",
   "description": "比较两行文本的差异",
-  "icon": "📊",
-  "tags": ["text","compare","lines"],
+  "icon": "⚖️",
+  "tags": ["compare","lines"],
   "help": "比较两行文本的差异\n\n示例:\n输入:\nhello world\nhello word\n\n输出:\n差异位置：7\n行 1: w\n行 2: d"
 }"""
 

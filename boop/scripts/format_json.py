@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """{
-  "name": "Format JSON",
-  "description": "格式化 JSON 数据",
-  "icon": "📄",
-  "tags": ["json","format"],
-  "dependencies": [
-    "json5"
-  ],
+  "name": "Format/Minify JSON",
+  "description": "格式化或压缩 JSON 数据",
+  "icon": "✨",
+  "tags": ["json","format","minify","fmt","code"],
+  "dependencies": ["json5"],
   "help": "格式化或压缩 JSON 数据\n\n如果数据已格式化，将进行压缩。\n\n示例:\n输入:\n{\"name\":\"John\",\"age\":30}\n\n输出:\n{\n    \"name\": \"John\",\n    \"age\": 30\n}"
 }"""
 

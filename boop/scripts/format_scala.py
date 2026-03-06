@@ -3,10 +3,10 @@
 """{
   "name": "Format Scala",
   "description": "格式化 Scala 代码",
-  "icon": "📈",
-  "tags": ["scala","format"],
+  "icon": "✨",
+  "tags": ["scala","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Scala 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nobject Test{def main(args:Array[String]){println(\"Hello\")}}\n\n输出:\nobject Test {\n    def main(args: Array[String]) {\n        println(\"Hello\")\n    }\n}"
+  "help": "格式化 Scala 代码\n\n示例:\n输入:\nobject Test{def main(args:Array[String]){println(\"Hello\")}}\n\n输出:\nobject Test {\n    def main(args: Array[String]) {\n        println(\"Hello\")\n    }\n}"
 }"""
 
 import re
@@ -197,43 +197,16 @@ def format_code(code: str) -> str:
 
 
 def main(state):
-    """Format or minify Scala text."""
+    """Format Scala text."""
     if not state.text or not state.text.strip():
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Scala code formatted or minified")
+            state.post_info("Scala code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting Scala: {}".format(str(e)))
         else:
             print("Error formatting Scala: {}".format(str(e)))
-
-def is_minified(text):
-    """Check if Scala code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('def' in text or 'class' in text or 'object' in text)
-
-def minify_code(code):
-    """Minify Scala code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
-    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Scala code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

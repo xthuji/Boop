@@ -274,6 +274,14 @@ class PreferencesPanel:
         timeout_entry = ttk.Entry(timeout_frame, textvariable=self.timeout_var)
         timeout_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
+        # Filter delay
+        filter_delay_frame = ttk.Frame(python_frame)
+        filter_delay_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(filter_delay_frame, text="Filter Delay (ms):", width=15).pack(side=tk.LEFT, padx=(0, 10))
+        self.filter_delay_var = tk.StringVar(value=str(getattr(self.config, 'filter_delay', 200)))
+        filter_delay_entry = ttk.Entry(filter_delay_frame, textvariable=self.filter_delay_var)
+        filter_delay_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
         # Dependencies management with minimalist styling
         dependencies_frame = ttk.LabelFrame(parent, text="Dependencies", padding=(10, 5))
         dependencies_frame.pack(fill=tk.X, padx=10, pady=5)
@@ -309,8 +317,8 @@ class PreferencesPanel:
         ttk.Label(cache_frame, text="Metadata Cache:", width=15).pack(side=tk.LEFT, padx=(0, 10))
         clear_cache_button = ttk.Button(
             cache_frame,
-            text="Clear Script Metadata Cache",
-            command=self._clear_metadata_cache,
+            text="Refresh Script Metadata Cache",
+            command=self._refresh_metadata_cache,
             style='Cancel.TButton'
         )
         clear_cache_button.pack(side=tk.LEFT, padx=0)
@@ -531,6 +539,7 @@ class PreferencesPanel:
             self.config.script_directories = list(self.dirs_listbox.get(0, tk.END))
             self.config.python_path = self.python_var.get()
             self.config.script_timeout = int(self.timeout_var.get())
+            self.config.filter_delay = int(self.filter_delay_var.get())
 
             # Save to file - use user data directory
             # Get user data directory
@@ -665,20 +674,19 @@ class PreferencesPanel:
             close_button = tk.Button(progress_window, text="Close", command=progress_window.destroy)
             close_button.pack(pady=10)
     
-    def _clear_metadata_cache(self):
-        """Clear metadata cache."""
-        logger.info("Clearing metadata cache")
+    def _refresh_metadata_cache(self):
+        """Refresh metadata cache."""
+        logger.info("Refreshing metadata cache")
         from boop.core.script import ScriptManager
         
         try:
-            # Create a script manager and clear cache
+            # Create a script manager and use the new refresh_metadata_cache method
             script_manager = ScriptManager(self.config)
-            script_manager.clear_metadata_cache()
-            messagebox.showinfo("Success", "Metadata cache cleared successfully.")
-            logger.info("Metadata cache cleared successfully")
+            script_count = script_manager.refresh_metadata_cache()
+            messagebox.showinfo("Success", f"Metadata cache refreshed successfully.\nLoaded {script_count} scripts.")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to clear metadata cache: {e}")
-            logger.error(f"Failed to clear metadata cache: {e}")
+            messagebox.showerror("Error", f"Failed to refresh metadata cache: {e}")
+            logger.error(f"Failed to refresh metadata cache: {e}")
 
     def _close(self):
         """Close the preferences panel."""

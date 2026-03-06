@@ -3,8 +3,8 @@
 """{
   "name": "Format Lua",
   "description": "格式化 Lua 代码",
-  "icon": "📱",
-  "tags": ["lua","format"],
+  "icon": "✨",
+  "tags": ["lua","format","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 Lua 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello()print(\"Hello\")end\n\n输出:\nfunction hello()\n    print(\"Hello\")\nend"
 }"""

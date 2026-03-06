@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """{
-  "name": "Format HTML",
-  "description": "格式化 HTML 代码",
-  "icon": "🌐",
-  "tags": ["html","format"],
-  "dependencies": [
-    "beautifulsoup4",
-    "lxml"
-  ],
+  "name": "Format/Minify HTML",
+  "description": "格式化或压缩 HTML 代码",
+  "icon": "✨",
+  "tags": ["html","format","minify","fmt","code"],
+  "dependencies": ["beautifulsoup4","lxml"],
   "help": "格式化或压缩 HTML 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\n<html><body><p>Hello</p></body></html>\n\n输出:\n<html>\n    <body>\n        <p>Hello</p>\n    </body>\n</html>"
 }"""
 

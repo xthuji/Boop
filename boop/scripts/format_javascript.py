@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """{
-  "name": "Format JavaScript",
-  "description": "格式化 JavaScript 代码",
-  "icon": "⚡",
-  "tags": ["javascript","format"],
+  "name": "Format/Minify JavaScript",
+  "description": "格式化或压缩 JavaScript 代码",
+  "icon": "✨",
+  "tags": ["javascript","format","minify","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 JavaScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello(){console.log(\"Hello\")}\n\n输出:\nfunction hello() {\n    console.log(\"Hello\");\n}"
 }"""

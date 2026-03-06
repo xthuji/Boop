@@ -3,8 +3,8 @@
 """{
   "name": "Format AppleScript",
   "description": "格式化 AppleScript 代码",
-  "icon": "📱",
-  "tags": ["applescript","format"],
+  "icon": "✨",
+  "tags": ["applescript","format","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 AppleScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\non hello() say \"Hello\"\nend hello\n\n输出:\non hello()\n    say \"Hello\"\nend hello"
 }"""

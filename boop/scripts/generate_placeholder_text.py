@@ -3,8 +3,8 @@
 """{
   "name": "Generate Placeholder Text",
   "description": "生成占位符文本",
-  "icon": "📝",
-  "tags": ["text","placeholder","generate"],
+  "icon": "📄",
+  "tags": ["placeholder","text","zhanwei"],
   "help": "生成占位符文本 (Lorem Ipsum)\n\n示例:\n输入:\n5\n\n输出:\nLorem ipsum dolor sit amet, consectetur adipiscing elit."
 }"""
 

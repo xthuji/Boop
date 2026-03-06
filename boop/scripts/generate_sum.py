@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """{
   "name": "Generate Sum",
-  "description": "计算数字的总和",
-  "icon": "➕",
-  "tags": ["calculate","sum","math"],
+  "description": "计算文本数字的总和",
+  "icon": "📄",
+  "tags": ["calculate","sum","math","code"],
   "help": "计算文本中所有数字的总和\n\n示例:\n输入:\n1\n2\n3\n4\n5\n\n输出:\n15"
 }"""
 

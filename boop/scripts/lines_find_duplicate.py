@@ -4,7 +4,7 @@
   "name": "Find Duplicate Lines",
   "description": "查找文本中的重复行",
   "icon": "🔍",
-  "tags": ["text","duplicate","lines"],
+  "tags": ["duplicate","lines"],
   "help": "查找文本中的重复行\n\n示例:\n输入:\napple\nbanana\napple\ncherry\nbanana\n\n输出:\n重复行:\napple (2 次)\nbanana (2 次)"
 }"""
 

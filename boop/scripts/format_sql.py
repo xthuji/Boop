@@ -3,10 +3,10 @@
 """{
   "name": "Format SQL",
   "description": "格式化 SQL 查询语句",
-  "icon": "🗃️",
-  "tags": ["sql","format","database"],
+  "icon": "✨",
+  "tags": ["sql","format","fmt","code"],
   "dependencies": ["sqlparse"],
-  "help": "格式化或压缩 SQL 查询语句\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nSELECT * FROM users WHERE id=1\n\n输出:\nSELECT *\nFROM users\nWHERE id = 1"
+  "help": "格式化 SQL 查询语句\n\n示例:\n输入:\nSELECT * FROM users WHERE id=1\n\n输出:\nSELECT *\nFROM users\nWHERE id = 1"
 }"""
 
 import sqlparse
@@ -137,45 +137,16 @@ def format_select(code):
 
 
 def main(state):
-    """Format or minify SQL text."""
+    """Format SQL text."""
     if not state.text or not state.text.strip():
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("SQL code formatted or minified")
+            state.post_info("SQL code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error(f"Error formatting SQL: {str(e)}")
         else:
             print(f"Error formatting SQL: {str(e)}")
-
-def is_minified(text):
-    """Check if SQL code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('SELECT' in text or 'INSERT' in text or 'UPDATE' in text or 'DELETE' in text)
-
-def minify_code(code):
-    """Minify SQL code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
-    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process SQL code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

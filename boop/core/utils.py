@@ -109,3 +109,26 @@ def center_window(window, width: int, height: int):
     x = (window.winfo_screenwidth() // 2) - (width // 2)
     y = (window.winfo_screenheight() // 2) - (height // 2)
     window.geometry(f"{width}x{height}+{x}+{y}")
+
+
+def binding_hotkey_action(widget, shortcuts, action):
+    """Bind hotkey action to multiple shortcuts.
+    
+    Args:
+        widget: Tkinter widget to bind the shortcuts to
+        shortcuts: List of shortcut strings (e.g., ['Ctrl+z', 'Command+z'])
+        action: Function to call when the shortcut is pressed
+    """
+    for shortcut in shortcuts:
+        # Convert shortcut strings to Tkinter binding format
+        widget.bind(f'<{shortcut.replace("+", "-")}>', action)
+        # Bind reverse order for three-part shortcuts (e.g. Ctrl+Shift+z)
+        parts = shortcut.split('+')
+        if parts and len(parts) == 3:
+            widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}>', action)
+        elif parts and len(parts) == 4:
+            widget.bind(f'<{parts[0]}-{parts[2]}-{parts[1]}-{parts[3]}>', action)
+            widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}-{parts[3]}>', action)
+            widget.bind(f'<{parts[1]}-{parts[2]}-{parts[0]}-{parts[3]}>', action)
+            widget.bind(f'<{parts[2]}-{parts[1]}-{parts[0]}-{parts[3]}>', action)
+            widget.bind(f'<{parts[2]}-{parts[0]}-{parts[1]}-{parts[3]}>', action)

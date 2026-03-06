@@ -4,8 +4,8 @@
 {
   "name": "Remove Empty Lines",
   "description": "移除文本中的空行",
-  "icon": "🗑️",
-  "tags": ["text","remove","empty","lines"],
+  "icon": "🧹",
+  "tags": ["remove","empty","lines"],
   "help": "移除文本中的空行\n\n示例:\n输入:\nhello\n\nworld\n\n输出:\nhello\nworld"
 }
 '''

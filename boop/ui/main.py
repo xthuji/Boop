@@ -9,7 +9,7 @@ from typing import Optional
 
 from boop.config.settings import BoopConfig
 from boop.core.script import ScriptManager
-from boop.core.utils import run_script_in_subprocess, center_window
+from boop.core.utils import run_script_in_subprocess, center_window, binding_hotkey_action
 from boop.core.event import event_system
 from boop.core.logging import logger
 from boop.ui.editor import Editor
@@ -70,7 +70,6 @@ class MainWindow:
         self.script_manager = ScriptManager(config)
         logger.info(f"ScriptManager created in {time.time() - self.init_start_time:.3f}s")
         
-        self.editor: Optional[Editor] = None
         self.status_var = tk.StringVar(value="Ready")
         
         self._create_ui()
@@ -92,19 +91,27 @@ class MainWindow:
         
         # Edit menu
         edit_menu = tk.Menu(menubar, tearoff=0)
-        edit_menu.add_command(label="Undo", command=self._undo, accelerator=self._get_accelerator("undo"))
-        edit_menu.add_command(label="Redo", command=self._redo, accelerator=self._get_accelerator("redo"))
+        edit_menu.add_command(label="Undo", command=lambda: self.editor._undo(None), accelerator=self._get_accelerator("undo"))
+        edit_menu.add_command(label="Redo", command=lambda: self.editor._redo(None), accelerator=self._get_accelerator("redo"))
         edit_menu.add_separator()
-        edit_menu.add_command(label="Cut", command=self._cut, accelerator=self._get_accelerator("cut"))
-        edit_menu.add_command(label="Copy", command=self._copy, accelerator=self._get_accelerator("copy"))
-        edit_menu.add_command(label="Paste", command=self._paste, accelerator=self._get_accelerator("paste"))
+        edit_menu.add_command(label="Cut", command=lambda: self.editor._cut(None), accelerator=self._get_accelerator("cut"))
+        edit_menu.add_command(label="Copy", command=lambda: self.editor._copy(None), accelerator=self._get_accelerator("copy"))
+        edit_menu.add_command(label="Paste", command=lambda: self.editor._paste(None), accelerator=self._get_accelerator("paste"))
         edit_menu.add_separator()
-        edit_menu.add_command(label="Select All", command=self._select_all, accelerator=self._get_accelerator("select_all"))
+        edit_menu.add_command(label="Move to Start", command=lambda: self.editor._move_to_start(None), accelerator=self._get_accelerator("move_to_start"))
+        edit_menu.add_command(label="Move to End", command=lambda: self.editor._move_to_end(None), accelerator=self._get_accelerator("move_to_end"))
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Select All", command=lambda: self.editor._select_all(None), accelerator=self._get_accelerator("select_all"))
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Select Next Occurrence For MultiEdit", command=lambda: self.editor.select_next_occurrence(None), accelerator=self._get_accelerator("select_next_occurrence"))
+        edit_menu.add_command(label="Stop MultiEdit", command=lambda: self.editor.extensions._clear_multi_cursor_state(), accelerator=self._get_accelerator("stop_multi_edit"))
         menubar.add_cascade(label="Edit", menu=edit_menu)
 
         # Script menu
         script_menu = tk.Menu(menubar, tearoff=0)
         script_menu.add_command(label="Run Script", command=self._open_script_picker, accelerator=self._get_accelerator("run_script"))
+        script_menu.add_separator()
+        script_menu.add_command(label="Refresh Script Metadata Cache", command=self._refresh_script_metadata_cache)
         menubar.add_cascade(label="Script", menu=script_menu)
 
         # Help menu
@@ -163,22 +170,20 @@ class MainWindow:
     
     def _bind_events(self):
         """Bind keyboard and mouse events."""
-
-        def binding_hotkey_action(shortcuts, action):
-            """Bind hotkey action to multiple shortcuts."""
-            for shortcut in shortcuts:
-                # Convert shortcut strings to Tkinter binding format
-                self.root.bind(f'<{shortcut.replace("+", "-")}>', action)
         
         # Bind shortcuts
-        binding_hotkey_action(self.config.shortcuts.get('quit', ['Ctrl+q']), lambda e: self._quit())
-        binding_hotkey_action(self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
-        binding_hotkey_action(self.config.shortcuts.get('preferences', ['Ctrl+,']), lambda e: self._open_preferences())
+        binding_hotkey_action(self.root, self.config.shortcuts.get('quit', ['Ctrl+q']), lambda e: self._quit())
+        binding_hotkey_action(self.root, self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
+        binding_hotkey_action(self.root, self.config.shortcuts.get('preferences', ['Ctrl+,']), lambda e: self._open_preferences())
+        binding_hotkey_action(self.root, self.config.shortcuts.get('move_to_start', ['Ctrl+Home']), lambda e: self.editor._move_to_start(None))
+        binding_hotkey_action(self.root, self.config.shortcuts.get('move_to_end', ['Ctrl+End']), lambda e: self.editor._move_to_end(None))
+        binding_hotkey_action(self.root, self.config.shortcuts.get('undo', ['Ctrl+z']), lambda e: self.editor._undo(None))
+        binding_hotkey_action(self.root, self.config.shortcuts.get('redo', ['Ctrl+Shift+Z']), lambda e: self.editor._redo(None))
+        # 系统自带的复制/粘贴/剪切等快捷键不用绑定，可能会冲突导致不可预期的行为
         
         # Editor events
-        if self.editor:
-            self.editor._text_widget.bind('<KeyRelease>', self._update_status)
-            self.editor._text_widget.bind('<ButtonRelease>', self._update_status)
+        self.editor._text_widget.bind('<KeyRelease>', self._update_status)
+        self.editor._text_widget.bind('<ButtonRelease>', self._update_status)
         
         # Event system subscriptions
         event_system.subscribe('script_execution_started', self._on_script_execution_started)
@@ -186,10 +191,9 @@ class MainWindow:
     
     def _update_status(self, event=None):
         """Update status bar information."""
-        if self.editor:
-            line, col = self.editor.get_cursor_position()
-            self.cursor_var.set(f"Ln {line}, Col {col}")
-            self.char_count_var.set(f"{self.editor.get_char_count()} chars")
+        line, col = self.editor.get_cursor_position()
+        self.cursor_var.set(f"Ln {line}, Col {col}")
+        self.char_count_var.set(f"{self.editor.get_char_count()} chars")
     
 
     
@@ -211,14 +215,14 @@ class MainWindow:
     
     def _open_script_picker(self):
         """Open script picker popup."""
-        if self.editor:
-            # Open script picker directly - no need to load scripts
-            ScriptPickerPopup(
-                self.root,
-                self.script_manager,
-                self._execute_script,
-                self.editor._text_widget
-            )
+        # Open script picker directly - no need to load scripts
+        ScriptPickerPopup(
+            self.root,
+            self.script_manager,
+            self._execute_script,
+            self.editor._text_widget,
+            self.config
+        )
     
     def _execute_script(self, script_tuple: Optional[tuple]):
         """Execute a script on the current text.
@@ -227,9 +231,6 @@ class MainWindow:
             script_tuple: Tuple of (ScriptMetadata, Path) to execute
         """
         if not script_tuple:
-            return
-        
-        if not self.editor:
             return
         
         metadata, file_path = script_tuple
@@ -285,9 +286,6 @@ class MainWindow:
             metadata: Script metadata
             file_path: Path to the script file
         """
-        if not self.editor:
-            return
-        
         content = self.editor.get_content()
         lines = content.split('\n')
         
@@ -302,45 +300,35 @@ class MainWindow:
         self.editor.set_content(help_content)
         self.status_var.set(f"Showing help for: {metadata.name}")
     
-
-    
-    def _undo(self):
-        """Undo last action."""
-        if self.editor:
-            self.editor._text_widget.event_generate('<<Undo>>')
-    
-    def _redo(self):
-        """Redo last action."""
-        if self.editor:
-            self.editor._text_widget.event_generate('<<Redo>>')
-    
-    def _cut(self):
-        """Cut selected text."""
-        if self.editor:
-            self.editor._text_widget.event_generate('<<Cut>>')
-    
-    def _copy(self):
-        """Copy selected text."""
-        if self.editor:
-            self.editor._text_widget.event_generate('<<Copy>>')
-    
-    def _paste(self):
-        """Paste text from clipboard."""
-        if self.editor:
-            self.editor._text_widget.event_generate('<<Paste>>')
-    
-    def _select_all(self):
-        """Select all text."""
-        if self.editor:
-            self.editor._text_widget.tag_add(tk.SEL, '1.0', tk.END)
-    
-
     
     def _show_about(self):
         """Show about dialog."""
+        # Read version from version.txt file
+        import re
+        import sys
+        version = "1.0.0"  # Default version
+        
+        # Try to find version.txt file in different locations
+        # 1. In PyInstaller packaged app
+        if hasattr(sys, '_MEIPASS'):
+            version_file = Path(sys._MEIPASS) / "version.txt"
+        # 2. In development environment
+        else:
+            version_file = Path(__file__).parent.parent.parent / "version.txt"
+        
+        if version_file.exists():
+            try:
+                with open(version_file, 'r') as f:
+                    content = f.read()
+                    version_match = re.search(r'VERSION = ([\d.]+)', content)
+                    if version_match:
+                        version = version_match.group(1)
+            except Exception:
+                pass
+        
         messagebox.showinfo(
             "About Boop Python",
-            "Boop Python\nVersion 1.0.0\n\nA text processing tool inspired by Boop macOS app."
+            f"Boop Python\nVersion {version}\n\nA text processing tool inspired by Boop macOS app."
         )
     
     def _open_preferences(self):
@@ -348,6 +336,19 @@ class MainWindow:
         logger.info("Opening preferences panel")
         from boop.ui.preferences import PreferencesPanel
         PreferencesPanel(self.root, self.config)
+
+    def _refresh_script_metadata_cache(self):
+        """Refresh script metadata cache."""
+        logger.info("Refreshing script metadata cache")
+        
+        try:
+            # Use the new refresh_metadata_cache method
+            script_count = self.script_manager.refresh_metadata_cache()
+            messagebox.showinfo("Success", f"Metadata cache refreshed successfully.\nLoaded {script_count} scripts.")
+            self.status_var.set(f"Loaded metadata for {script_count} scripts")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to refresh metadata cache: {e}")
+            logger.error(f"Failed to refresh metadata cache: {e}")
     
     def _quit(self):
         """Quit the application."""

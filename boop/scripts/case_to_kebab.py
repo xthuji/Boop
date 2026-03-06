@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Kebab Case",
-  "description": "将文本转换为短横线命名格式",
-  "icon": "🐪",
-  "tags": ["format","case","kebab"],
+  "description": "转为短横线命名格式",
+  "icon": "🍡",
+  "tags": ["format","case","kebab","var"],
   "help": "将文本转换为短横线命名格式 (kebab-case)\n\n示例:\n输入:\nhello world\n\n输出:\nhello-world"
 }
 '''

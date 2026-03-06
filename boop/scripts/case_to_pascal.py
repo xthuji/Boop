@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Pascal Case",
-  "description": "将文本转换为帕斯卡命名格式",
-  "icon": "🐫",
-  "tags": ["format","case","pascal"],
+  "description": "转为帕斯卡命名格式",
+  "icon": "🏰",
+  "tags": ["format","case","pascal","var"],
   "help": "将文本转换为帕斯卡命名格式 (每个单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nHelloWorld"
 }
 '''

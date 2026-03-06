@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Snake Upper Case",
-  "description": "将文本转换为大写蛇形命名格式",
+  "description": "转为大写蛇形命名格式",
   "icon": "🐍",
-  "tags": ["format","case","snake","upper"],
+  "tags": ["format","case","snake","upper","var"],
   "help": "将文本转换为大写蛇形命名格式 (SNAKE_CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO_WORLD"
 }
 '''

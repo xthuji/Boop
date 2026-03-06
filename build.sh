@@ -14,18 +14,20 @@
 # Configuration
 readonly PROJECT_NAME="Boop"
 readonly APP_BUNDLE_ID="com.okatbest.boop"
-readonly VERSION="1.0.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Read version from version.txt file
+readonly VERSION=$(grep -E '^VERSION = ' "${SCRIPT_DIR}/version.txt" | cut -d ' ' -f 3)
 readonly BUILD_DIR="${SCRIPT_DIR}/build"
 readonly DIST_DIR="${SCRIPT_DIR}/dist"
 readonly PYTHON="$HOME/miniconda3/envs/python39/bin/python3"
-readonly RESERVE_FILE_ARRAY=("-macos.dmg" "-windows.zip" "-linux.tar.gz")
+readonly RESERVE_FILE_ARRAY=(-macos.dmg -windows.zip -linux.tar.gz)
 readonly RESERVE_DIR_ARRAY=(".app")
 
 # App files and directories to include in the build
 # For macOS, the files will be placed in Contents/Resources
 readonly APP_FILES=("${SCRIPT_DIR}/boop/scripts:scripts"
-                   "${SCRIPT_DIR}/boop/core/script_wrapper.py:boop/core")
+                   "${SCRIPT_DIR}/boop/core/script_wrapper.py:boop/core"
+                   "${SCRIPT_DIR}/version.txt:.")
 
 # Configuration file is now in project root, no need to include in build
 
@@ -65,7 +67,9 @@ check_deps() {
 }
 
 pyinstaller_build() {
-    local name="$1" icon="$2" extra="$4"
+    local name="$1" icon="$2"
+    shift 2
+    local extra_args=($@)
     log "Building ${name}..."
 
     local args=(--name "${PROJECT_NAME}" --windowed --onedir -y
@@ -90,7 +94,8 @@ pyinstaller_build() {
                 --exclude-module=zlib
                 --exclude-module=ctypes
                 --exclude-module=distutils
-                --exclude-module=multiprocessing)
+                --exclude-module=multiprocessing
+                --version-file "${SCRIPT_DIR}/version.txt")
     
     # Add data files
     for file in "${APP_FILES[@]}"; do
@@ -108,7 +113,7 @@ pyinstaller_build() {
            --hidden-import boop.core.script
            --hidden-import boop.config.settings)
     [[ -n "$icon" ]] && args+=($icon)
-    [[ -n "$extra" ]] && args+=($extra)
+    [[ ${#extra_args[@]} -gt 0 ]] && args+=(${extra_args[@]})
     args+=("${SCRIPT_DIR}/boop/__main__.py")
 
     $PYTHON -m PyInstaller "${args[@]}" || { error "Build failed for ${name}"; exit 1; }
@@ -185,9 +190,19 @@ build_macos() {
     check_deps
     pyinstaller_build "macOS" \
         "--icon ${SCRIPT_DIR}/icons/icon.icns" \
-        "" \
-        "--osx-bundle-identifier ${APP_BUNDLE_ID}" \
-        "--osx-bundle-version ${VERSION}"
+        "--osx-bundle-identifier ${APP_BUNDLE_ID}"
+    
+    # Update version in plist file for macOS
+    if [[ -f "${DIST_DIR}/${PROJECT_NAME}.app/Contents/Info.plist" ]]; then
+        log "Updating version in Info.plist"
+        # Use PlistBuddy to update version keys
+        /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" "${DIST_DIR}/${PROJECT_NAME}.app/Contents/Info.plist"
+        /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "${DIST_DIR}/${PROJECT_NAME}.app/Contents/Info.plist"
+        success "Updated version in Info.plist to ${VERSION}"
+    else
+        error "Info.plist file not found"
+    fi
+    
     create_dmg
     final_cleanup
     success "${DIST_DIR}/${PROJECT_NAME}-${VERSION}-macos.dmg"

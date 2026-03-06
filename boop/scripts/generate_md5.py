@@ -3,8 +3,8 @@
 """{
   "name": "Generate MD5",
   "description": "计算文本的 MD5 哈希值",
-  "icon": "🔒",
-  "tags": ["hash","md5"],
+  "icon": "📄",
+  "tags": ["hash","md5","code"],
   "help": "计算文本的 MD5 哈希值\n\n示例:\n输入:\nhello world\n\n输出:\n5eb63bbbe01eeed093cb22bb8f5acdc3"
 }"""
 

@@ -20,6 +20,22 @@ class ScriptManager:
         """Clear metadata cache."""
         self._metadata_cache.clear()
         logger.info("Metadata cache cleared successfully")
+
+    def refresh_metadata_cache(self) -> int:
+        """Refresh metadata cache by clearing and reloading.
+
+        Returns:
+            Number of scripts loaded
+            
+        Raises:
+            Exception: If any error occurs during the refresh process
+        """
+        # Clear existing cache
+        self.clear_metadata_cache()
+        # Reload metadata
+        total_scripts = self.load_metadata()
+        logger.info(f"Metadata cache refreshed successfully. Loaded {total_scripts} scripts.")
+        return total_scripts
     
     def load_metadata(self) -> int:
         """Load metadata for all scripts in configured directories.

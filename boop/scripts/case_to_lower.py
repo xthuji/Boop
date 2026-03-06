@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Lower Case",
-  "description": "将文本转换为小写格式",
-  "icon": "🐪",
-  "tags": ["format","case","lower"],
+  "description": "转为小写格式",
+  "icon": "⤵️",
+  "tags": ["format","case","lower","all","var"],
   "help": "将文本转换为全小写格式\n\n示例:\n输入:\nHELLO WORLD\n\n输出:\nhello world"
 }
 '''

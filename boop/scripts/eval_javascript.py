@@ -5,7 +5,7 @@
   "name": "Eval JavaScript",
   "description": "执行 JavaScript 代码",
   "icon": "⚡",
-  "tags": ["javascript","eval"],
+  "tags": ["javascript","eval","code","execute","cmd","command"],
   "help": "执行 JavaScript 代码并返回结果\n\n示例:\n输入:\n1 + 1\n\n输出:\n2"
 }
 '''

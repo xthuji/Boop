@@ -4,9 +4,9 @@
 {
   "name": "Quick Replace",
   "description": "快速替换文本",
-  "icon": "🔄",
-  "tags": ["text","replace"],
-  "help": "快速替换文本\n\n用法:\n第一行：查找内容\n第二行：替换内容\n其余行：待处理文本\n\n示例:\n输入:\nhello\nhi\nhello world\nhello there\n\n输出:\nhi world\nhi there"
+  "icon": "💫",
+  "tags": ["replace","string"],
+  "help": "快速替换文本中的内容\n\n首行参数格式:\nsource:target\n\n参数说明:\n- source: 要查找的内容\n- target: 要替换的内容\n\n示例:\n输入:\nhello:hi\nhello world\nhello there\n\n输出:\nhi world\nhi there"
 }
 '''
 
@@ -15,23 +15,24 @@ def run(text):
     快速替换文本中的内容
     """
     lines = text.split('\n')
-    if len(lines) < 3:
+    if len(lines) < 2:
         return text
     
-    content = '\n'.join(lines[:-2])
-    old = ''
-    new = ''
+    first_line = lines[0].strip()
+    if not first_line or ':' not in first_line:
+        return text
     
-    for line in lines[-2:]:
-        if line.startswith('old: '):
-            old = line[5:]
-        elif line.startswith('new: '):
-            new = line[5:]
+    parts = first_line.split(':', 1)
+    if len(parts) < 2:
+        return text
     
-    if old:
-        content = content.replace(old, new)
+    source = parts[0]
+    target = parts[1]
     
-    return content
+    text_to_replace = '\n'.join(lines[1:])
+    result = text_to_replace.replace(source, target)
+    
+    return result
 
 def main(state):
     """

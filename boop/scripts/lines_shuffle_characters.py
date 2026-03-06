@@ -4,7 +4,7 @@
   "name": "Shuffle Characters",
   "description": "随机打乱字符顺序",
   "icon": "🔀",
-  "tags": ["text","shuffle","random"],
+  "tags": ["shuffle","random","string"],
   "help": "随机打乱字符顺序\n\n示例:\n输入:\nhello\n\n输出:\n(随机结果)"
 }"""
 

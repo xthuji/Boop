@@ -5,47 +5,86 @@
   "name": "Convert Number Base",
   "description": "在不同进制之间转换数字",
   "icon": "🔢",
-  "tags": ["convert","number","base"],
-  "help": "在不同进制之间转换数字\n\n支持的进制：2（二进制）、8（八进制）、10（十进制）、16（十六进制）\n输入格式：数字和当前进制，例如：\"1010 2\" 表示二进制的 1010\n\n示例:\n输入:\n1010 2\n\n输出:\n十进制：10\n二进制：1010\n八进制：12\n十六进制：A"
+  "tags": ["convert","number","2","8","10","16"],
+  "help": "在不同进制之间转换数字，支持2-36进制\n\n首行参数格式:\nfrom_base:to_base:uppercase\n\n参数说明:\n- from_base: 输入数字的进制 (2-36)\n- to_base: 输出数字的进制 (2-36)\n- uppercase: 是否使用大写字母 (true/false，默认true)\n\n示例:\n1. 默认转换（十进制转十六进制）:\n输入:\n10\n输出:\nA\n\n2. 自定义转换（二进制转八进制）:\n输入:\n2:8\n1010\n输出:\n12\n\n3. 自定义转换（十进制转十六进制，小写）:\n输入:\n10:16:false\n255\n输出:\nff"
 }
 '''
-
-import re
 
 def run(text):
     """
     数字进制转换
     """
-    # 匹配输入格式：数字 进制
-    match = re.search(r'\b(\w+)\s+(\d+)\b', text)
-    if not match:
-        return "输入格式错误，请使用：数字 进制（例如：1010 2）"
+    lines = text.split('\n')
+    from_base = 10
+    to_base = 16
+    uppercase = True
+    text_to_convert = text
     
-    number_str = match.group(1)
-    base = int(match.group(2))
+    # 处理首行自定义参数
+    if lines:
+        first_line = lines[0].strip()
+        config_parts = first_line.split(':')
+        
+        if len(config_parts) >= 1 and config_parts[0]:
+            try:
+                from_base = int(config_parts[0].strip())
+                if from_base < 2 or from_base > 36:
+                    from_base = 10
+            except ValueError:
+                pass
+        
+        if len(config_parts) >= 2 and config_parts[1]:
+            try:
+                to_base = int(config_parts[1].strip())
+                if to_base < 2 or to_base > 36:
+                    to_base = 16
+            except ValueError:
+                pass
+        
+        if len(config_parts) >= 3 and config_parts[2]:
+            uppercase = config_parts[2].strip().lower() == 'true'
+        
+        # 跳过配置行
+        if config_parts and config_parts[0]:
+            text_to_convert = '\n'.join(lines[1:]).strip() or text
     
-    # 验证进制
-    if base not in [2, 8, 10, 16]:
-        return "不支持的进制，仅支持 2、8、10、16"
+    # 处理多行输入
+    result = []
+    for line in text_to_convert.split('\n'):
+        line = line.strip()
+        if not line:
+            result.append('')
+            continue
+        
+        try:
+            # 转换为十进制
+            decimal = int(line, from_base)
+            
+            # 转换为目标进制
+            if to_base == 10:
+                converted = str(decimal)
+            else:
+                # 处理 16 进制以上的字母
+                digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+                converted = ""
+                temp = decimal
+                while temp > 0:
+                    converted = digits[temp % to_base] + converted
+                    temp = temp // to_base
+                if not converted:
+                    converted = "0"
+            
+            # 处理大小写
+            if uppercase:
+                converted = converted.upper()
+            else:
+                converted = converted.lower()
+            
+            result.append(converted)
+        except ValueError:
+            result.append(line)
     
-    try:
-        # 转换为十进制
-        decimal = int(number_str, base)
-        
-        # 转换为其他进制
-        binary = bin(decimal)[2:]
-        octal = oct(decimal)[2:]
-        hexadecimal = hex(decimal)[2:].upper()
-        
-        # 格式化结果
-        result = f"十进制: {decimal}\n"
-        result += f"二进制: {binary}\n"
-        result += f"八进制: {octal}\n"
-        result += f"十六进制: {hexadecimal}"
-        
-        return result
-    except ValueError:
-        return "无效的数字格式"
+    return '\n'.join(result)
 
 def main(state):
     """

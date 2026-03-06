@@ -4,7 +4,7 @@
 {
   "name": "Count Words",
   "description": "计算文本中的单词数量",
-  "icon": "📝",
+  "icon": "🤖",
   "tags": ["count","words"],
   "help": "计算文本中的单词数量\n\n示例:\n输入:\nhello world\n\n输出:\n单词数：2"
 }

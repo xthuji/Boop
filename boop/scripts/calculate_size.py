@@ -17,12 +17,15 @@ def run(text):
     # 计算字节大小
     byte_size = len(text.encode('utf-8'))
     
-    # 转换为KB
-    kb_size = byte_size / 1024
-    
     # 格式化结果
-    result = f"{byte_size} bytes\n"
-    result += f"{kb_size:.2f} KB"
+    if byte_size > 1000000:
+        mb_size = byte_size / 1000000
+        result = f"{mb_size:.2f} Mb"
+    elif byte_size > 1000:
+        kb_size = byte_size / 1000
+        result = f"{kb_size:.2f} Kb"
+    else:
+        result = f"{byte_size} bytes"
     
     return result
 

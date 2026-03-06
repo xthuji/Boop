@@ -5,7 +5,7 @@
   "name": "Fix Smart Quotes",
   "description": "修复智能引号为普通引号",
   "icon": "📝",
-  "tags": ["quotes","fix","text"],
+  "tags": ["quotes","fix"],
   "help": "修复智能引号为普通引号\n\n示例:\n输入:\n\"hello\" 'world'\n\n输出:\n\"hello\" 'world'"
 }
 '''

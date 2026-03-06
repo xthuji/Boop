@@ -3,10 +3,10 @@
 """{
   "name": "Format Ruby",
   "description": "格式化 Ruby 代码",
-  "icon": "💎",
-  "tags": ["ruby","format"],
+  "icon": "✨",
+  "tags": ["ruby","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Ruby 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\ndef hello;puts\"Hello\";end\n\n输出:\ndef hello\n    puts \"Hello\"\nend"
+  "help": "格式化 Ruby 代码\n\n示例:\n输入:\ndef hello;puts\"Hello\";end\n\n输出:\ndef hello\n    puts \"Hello\"\nend"
 }"""
 
 import re
@@ -170,43 +170,16 @@ def format_code(code: str) -> str:
 
 
 def main(state):
-    """Format or minify Ruby text."""
+    """Format Ruby text."""
     if not state.text or not state.text.strip():
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Ruby code formatted or minified")
+            state.post_info("Ruby code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting Ruby: {}".format(str(e)))
         else:
             print("Error formatting Ruby: {}".format(str(e)))
-
-def is_minified(text):
-    """Check if Ruby code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('def' in text or 'class' in text or 'module' in text)
-
-def minify_code(code):
-    """Minify Ruby code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'=begin[\s\S]*?=end', '', code)
-    code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Ruby code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

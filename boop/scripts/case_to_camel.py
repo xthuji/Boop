@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Camel Case",
-  "description": "将文本转换为驼峰命名格式",
+  "description": "转为驼峰命名格式",
   "icon": "🐪",
-  "tags": ["format","case","camel"],
+  "tags": ["format","case","camel","var"],
   "help": "将文本转换为驼峰命名格式 (首单词小写，后续单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nhelloWorld"
 }
 '''

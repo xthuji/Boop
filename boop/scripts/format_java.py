@@ -3,8 +3,8 @@
 """{
   "name": "Format Java",
   "description": "格式化 Java 代码",
-  "icon": "☕",
-  "tags": ["java","format"],
+  "icon": "✨",
+  "tags": ["java","format","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 Java 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\npublic class Test{public static void main(String[]args){System.out.println(\"Hello\")}}\n\n输出:\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}"
 }"""

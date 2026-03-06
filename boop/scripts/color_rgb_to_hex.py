@@ -16,17 +16,21 @@ def run(text):
     """
     将RGB颜色值转换为HEX格式
     """
-    # 匹配RGB格式
-    rgb_match = re.search(r'\b(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})\b', text)
-    if not rgb_match:
+    # 移除 rgb() 包装器
+    if text.strip().startswith('rgb('):
+        text = text.strip().replace('rgb(', '').replace(')', '')
+    
+    # 按逗号或空格分割
+    rgb_array = [c.trim() for c in re.split(r'[,\s]+', text) if c.trim()]
+    
+    if len(rgb_array) != 3:
         return text
     
     try:
-        r, g, b = map(int, rgb_match.groups())
+        r, g, b = map(int, rgb_array)
         # 确保值在0-255范围内
-        r = max(0, min(255, r))
-        g = max(0, min(255, g))
-        b = max(0, min(255, b))
+        if any(value < 0 or value > 255 for value in [r, g, b]):
+            return text
         # 转换为HEX格式
         hex_color = f'#{r:02x}{g:02x}{b:02x}'.upper()
         return hex_color

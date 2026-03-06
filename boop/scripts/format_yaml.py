@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """{
   "name": "Format YAML",
   "description": "格式化 YAML 文档",
-  "icon": "📝",
-  "tags": ["yaml","format"],
+  "icon": "✨",
+  "tags": ["yaml","format","fmt","code"],
   "dependencies": ["pyyaml"],
-  "help": "格式化或压缩 YAML 文档\n\n如果文档已格式化，将进行压缩。\n\n示例:\n输入:\nname: John\nage: 30\n\n输出:\nname: John\nage: 30"
+  "help": "格式化 YAML 文档\n\n示例:\n输入:\nname: John\nage: 30\n\n输出:\nname: John\nage: 30"
 }"""
 
 import yaml

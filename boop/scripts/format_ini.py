@@ -3,8 +3,8 @@
 """{
   "name": "Format INI",
   "description": "格式化 INI 配置文件",
-  "icon": "⚙️",
-  "tags": ["ini","format","config"],
+  "icon": "✨",
+  "tags": ["ini","format","fmt","config","code"],
   "dependencies": [],
   "help": "格式化 INI 配置文件\n\n示例:\n输入:\n[section]\nkey=value\n\n输出:\n[section]\nkey = value"
 }"""

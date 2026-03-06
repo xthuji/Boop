@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """{
-  "name": "Format CSS",
-  "description": "格式化 CSS 样式代码",
-  "icon": "🎨",
-  "tags": ["css","format"],
+  "name": "Format/Minify CSS",
+  "description": "格式化或压缩 CSS 样式代码",
+  "icon": "✨",
+  "tags": ["css","format","minify","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 CSS 样式代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nbody{color:red}\n\n输出:\nbody {\n    color: red;\n}"
 }"""

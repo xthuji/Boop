@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 """{
   "name": "Format Properties",
-  "description": "格式化 Java Properties 文件",
-  "icon": "📝",
-  "tags": ["properties","format","java"],
+  "description": "格式化 Properties 文件",
+  "icon": "✨",
+  "tags": ["properties","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化 Java Properties 配置文件\n\n示例:\n输入:\nkey=value\n\n输出:\nkey = value"
+  "help": "格式化 Properties 配置文件\n\n示例:\n输入:\nkey=value\n\n输出:\nkey = value"
 }"""
 
 import re

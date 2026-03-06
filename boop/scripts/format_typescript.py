@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """{
-  "name": "Format TypeScript",
-  "description": "格式化 TypeScript 代码",
-  "icon": "⚡",
-  "tags": ["typescript","format"],
+  "name": "Format/Minify TypeScript",
+  "description": "格式化或压缩 TypeScript 代码",
+  "icon": "✨",
+  "tags": ["typescript","format","minify","fmt","code"],
   "dependencies": ["jsbeautifier"],
   "help": "格式化或压缩 TypeScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello(name:string):void{console.log(`Hello ${name}`)}\n\n输出:\nfunction hello(name: string): void {\n    console.log(`Hello ${name}`);\n}"
 }"""

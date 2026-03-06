@@ -30,12 +30,14 @@ class ScriptPickerPopup:
         parent: tk.Tk,
         manager: ScriptManager,
         on_script_selected: Callable[[Optional[tuple]], None],
-        editor_widget: tk.Text
+        editor_widget: tk.Text,
+        config=None
     ):
         self.parent = parent
         self.manager = manager
         self.on_script_selected = on_script_selected
         self.editor = editor_widget
+        self.config = config
         self.dialog: Optional[tk.Toplevel] = None
         self.scripts: List[tuple] = []  # List of (ScriptMetadata, Path)
         self._debounce_timer = None
@@ -431,16 +433,40 @@ class ScriptPickerPopup:
         if self._debounce_timer:
             self.parent.after_cancel(self._debounce_timer)
 
-        self._debounce_timer = self.parent.after(150, self._do_filter)
+        # Get filter delay from config or use default
+        delay = 200  # Default delay
+        if self.config and hasattr(self.config, 'filter_delay'):
+            delay = self.config.filter_delay
+
+        self._debounce_timer = self.parent.after(delay, self._do_filter)
 
     def _do_filter(self):
         """Perform the search."""
         query = self.search_var.get().lower()
 
         if query:
-            filtered_scripts = [script_tuple for script_tuple in self.scripts
-                              if query in script_tuple[0].name.lower() or
-                                 any(query in tag.lower() for tag in script_tuple[0].tags)]
+            # Split query into multiple keywords by spaces
+            keywords = [keyword.strip() for keyword in query.split() if keyword.strip()]
+            
+            if keywords:
+                filtered_scripts = []
+                for script_tuple in self.scripts:
+                    metadata = script_tuple[0]
+                    # Check if all keywords are present in name or tags
+                    all_keywords_present = True
+                    for keyword in keywords:
+                        # Check if keyword is in name
+                        in_name = keyword in metadata.name.lower()
+                        # Check if keyword is in any tag
+                        in_tags = any(keyword in tag.lower() for tag in metadata.tags)
+                        # If either name or tags contains the keyword, it's a match for this keyword
+                        if not (in_name or in_tags):
+                            all_keywords_present = False
+                            break
+                    if all_keywords_present:
+                        filtered_scripts.append(script_tuple)
+            else:
+                filtered_scripts = self.scripts
         else:
             filtered_scripts = self.scripts
 

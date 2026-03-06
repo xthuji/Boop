@@ -4,8 +4,8 @@
   "name": "Insert Sequence Number",
   "description": "在每行前插入序列号",
   "icon": "🔢",
-  "tags": ["text","sequence","number"],
-  "help": "在每行前插入序列号\n\n示例:\n输入:\napple\nbanana\ncherry\n\n输出:\n1. apple\n2. banana\n3. cherry"
+  "tags": ["sequence","number"],
+  "help": "在每行前插入序列号\n\n首行参数格式:\nstart:step:type:separator:width\n\n参数说明:\n- start: 起始值 (数字或字母)\n- step: 步长 (默认 1)\n- type: 类型 (1/num/n: 阿拉伯数字, 2/zh/c: 中文数字, a/u/upper: 大写字母, b/l/lower: 小写字母)\n- separator: 分隔符 (默认空格)\n- width: 数字宽度 (仅阿拉伯数字有效)\n\n示例 1 (默认设置):\n输入:\napple\nbanana\ncherry\n\n输出:\n1 apple\n2 banana\n3 cherry\n\n示例 2 (自定义设置):\n输入:\n5:2:upper:.\napple\nbanana\ncherry\n\n输出:\nE. apple\nG. banana\nI. cherry"
 }"""
 
 
@@ -57,62 +57,6 @@ def main(state):
     """Insert sequence numbers at the beginning of each line."""
     lines = state.text.split('\n')
     first_line = lines[0]
-
-    # Check for help request
-    if first_line.strip() in ('-h', '--help'):
-        help_text = """
-Insert Sequence - 插入序列
-
-用法：在第一行指定配置（可选）
-  格式：start:step:type:sep:width
-
-参数说明：
-  start  - 起始值（数字或字母）
-  step   - 步长（数字）
-  type   - 序列类型：
-           1/n/num     - 阿拉伯数字（默认）
-           2/c/zh      - 中文数字
-           a/u/upper   - 大写字母
-           b/l/lower   - 小写字母
-  sep    - 分隔符（默认为空格）
-  width  - 数字宽度（自动补零，如 02 表示 2 位）
-
-示例：
-  1:1:n: :02
-  item1
-  item2
-
-  将输出：
-  01 item1
-  02 item2
-
-  A:1:upper:-
-  item1
-  item2
-
-  将输出：
-  A-item1
-  B-item2
-
-  1:2:c: :3
-  item1
-  item2
-  item3
-
-  将输出：
-  一 item1
-  三 item2
-  五 item3
-
-  item1
-  item2
-
-  将输出（默认配置）：
-  1 item1
-  2 item2
-"""
-        state.text = help_text + '\n' + '\n'.join(lines[1:])
-        return
 
     start = 1
     step = 1

@@ -3,9 +3,9 @@
 """{
   "name": "Join Lines",
   "description": "将多行文本合并为单行",
-  "icon": "🔗",
-  "tags": ["text","join","lines"],
-  "help": "将多行文本合并为单行\n\n示例:\n输入:\nhello\nworld\n\n输出:\nhello world"
+  "icon": "🧩",
+  "tags": ["join","lines","separator","delimiter"],
+  "help": "将多行文本合并为单行\n\n首行参数格式:\nseparator[:quote[:escape]]\n\n参数说明:\n- separator: 分隔符 (默认空字符串)\n- quote: 引号字符 (可选，如 '"' 或 "'")\n- escape: 是否转义制表符 (code/true/t)\n\n示例 1 (默认设置):\n输入:\nhello\nworld\n\n输出:\nhelloworld\n\n示例 2 (自定义分隔符):\n输入:\n, \napple\nbanana\ncherry\n\n输出:\napple, banana, cherry\n\n示例 3 (带引号):\n输入:\n, :"\napple\nbanana\n\n输出:\n"apple", "banana"
 }"""
 
 
@@ -13,60 +13,6 @@ def main(state):
     """Join lines with configurable separator, quote, and escape options."""
     lines = state.text.split('\n')
     first_line = lines[0]
-
-    # Check for help request
-    if first_line.strip() in ('-h', '--help'):
-        help_text = """
-Join Lines - 合并行
-
-用法：在第一行指定配置（可选）
-  格式：separator:quote:escapeTabs
-
-参数说明：
-  separator - 分隔符（默认为空，表示直接合并）
-            特殊值：\\n 表示换行符
-  quote     - 引号类型（可选）
-            " 或 '  - 用引号包裹每行
-  escapeTabs - 转义制表符（可选）
-            code/t/true - 将制表符转义为\\t
-
-示例：
-  ,
-  item1
-  item2
-
-  将输出：
-  item1,item2
-
-  ,:"
-  item1
-  item2
-
-  将输出：
-  "item1","item2"
-
-  \\n:code
-  item1
-  item2
-
-  将输出：
-  item1\\nitem2
-
-  ;:'
-  item1
-  item2
-
-  将输出：
-  'item1';'item2'
-
-  item1
-  item2
-
-  将输出（默认配置）：
-  item1item2
-"""
-        state.text = help_text + '\n' + '\n'.join(lines[1:])
-        return
 
     separator = ''
     quote = ''

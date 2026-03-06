@@ -25,7 +25,11 @@ def _get_default_shortcuts():
             'cut': ['Command+x'],
             'copy': ['Command+c'],
             'paste': ['Command+v'],
-            'select_all': ['Command+a']
+            'select_all': ['Command+a'],
+            'select_next_occurrence': ['Command+d'],
+            'stop_multi_edit': ['Escape'],
+            'move_to_start': ['Command+Up'],
+            'move_to_end': ['Command+Down']
         }
     else:
         return {
@@ -37,7 +41,11 @@ def _get_default_shortcuts():
             'cut': ['Control+x'],
             'copy': ['Control+c'],
             'paste': ['Control+v'],
-            'select_all': ['Control+a']
+            'select_all': ['Control+a'],
+            'select_next_occurrence': ['Control+d'],
+            'stop_multi_edit': ['Escape'],
+            'move_to_start': ['Control+Home'],
+            'move_to_end': ['Control+End']
         }
 
 @dataclass
@@ -54,6 +62,7 @@ class BoopConfig:
     font_size: int = 14
     theme: str = "system"
     script_timeout: int = 30
+    filter_delay: int = 200
     shortcuts: dict = field(default_factory=_get_default_shortcuts)
     
     @classmethod

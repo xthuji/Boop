@@ -3,9 +3,9 @@
 """{
   "name": "Split Lines",
   "description": "将文本按分隔符分割成多行",
-  "icon": "✂️",
-  "tags": ["text","split","lines"],
-  "help": "将文本按分隔符分割成多行\n\n示例:\n输入:\napple,banana,cherry\n\n输出:\napple\nbanana\ncherry"
+  "icon": "🧩",
+  "tags": ["split","lines","separator","delimiter"],
+  "help": "将文本按分隔符分割成多行\n\n首行参数格式:\ndelimiter[:quote[:escape]]\n\n参数说明:\n- delimiter: 分隔符 (默认 ',')\n- quote: 引号字符 (可选，如 '"' 或 "'")\n- escape: 是否启用转义 (code/true/t)\n\n示例 1 (默认分隔符):\n输入:\napple,banana,cherry\n\n输出:\napple\nbanana\ncherry\n\n示例 2 (自定义分隔符和引号):\n输入:\n;:":code\n"apple;pie","banana;bread"\n\n输出:\napple;pie\nbanana;bread"
 }"""
 
 import re
@@ -15,57 +15,6 @@ def main(state):
     """Split lines by delimiter with optional quote handling."""
     lines = state.text.split('\n')
     first_line = lines[0]
-
-    # Check for help request
-    if first_line.strip() in ('-h', '--help'):
-        help_text = """
-Split Lines - 拆分行
-
-用法：在第一行指定配置（可选）
-  格式：delimiter:quote:escape
-
-参数说明：
-  delimiter - 分隔符（默认为逗号）
-            特殊值：\\n 表示换行符
-  quote     - 引号类型（可选）
-            " 或 '  - 按引号拆分
-  escape    - 转义处理（可选）
-            code/t/true - 转义特殊字符
-
-示例：
-  ,
-  item1,item2,item3
-
-  将输出：
-  item1
-  item2
-  item3
-
-  ,:"
-  "item1","item2","item3"
-
-  将输出：
-  item1
-  item2
-  item3
-
-  ;
-  item1;item2;item3
-
-  将输出：
-  item1
-  item2
-  item3
-
-  item1,item2,item3
-
-  将输出（默认配置）：
-  item1
-  item2
-  item3
-"""
-        state.text = help_text + '\n' + '\n'.join(lines[1:])
-        return
 
     delimiter = ','
     quote = ''
@@ -78,7 +27,7 @@ Split Lines - 拆分行
             return True
         if trimmed in ('"', "'"):
             return True
-        if all(c in ',;\\s' for c in trimmed):
+        if all(c in ',; \s' for c in trimmed):
             return True
         if trimmed.startswith(':') and ('"' in trimmed or "'" in trimmed or 'code' in trimmed.lower()):
             return True

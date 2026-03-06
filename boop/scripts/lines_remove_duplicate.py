@@ -3,8 +3,8 @@
 """{
   "name": "Remove Duplicate Lines",
   "description": "移除文本中的重复行",
-  "icon": "🗑️",
-  "tags": ["text","remove","duplicate","lines"],
+  "icon": "🧹",
+  "tags": ["remove","duplicate","lines"],
   "help": "移除文本中的重复行\n\n示例:\n输入:\napple\nbanana\napple\ncherry\n\n输出:\napple\nbanana\ncherry"
 }"""
 

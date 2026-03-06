@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Kebab Upper Case",
-  "description": "将文本转换为大写短横线命名格式",
-  "icon": "🐪",
-  "tags": ["format","case","kebab","upper"],
+  "description": "转为大写短横线命名格式",
+  "icon": "🍡",
+  "tags": ["format","case","kebab","upper","first","var"],
   "help": "将文本转换为大写短横线命名格式 (KEBAB-CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO-WORLD"
 }
 '''

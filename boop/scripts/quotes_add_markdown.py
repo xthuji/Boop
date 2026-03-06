@@ -5,7 +5,7 @@
   "name": "Add Markdown Quotes",
   "description": "为文本添加 Markdown 引用格式",
   "icon": "📝",
-  "tags": ["markdown","quotes","format"],
+  "tags": ["markdown","quotes","add"],
   "help": "为文本添加 Markdown 引用格式\n\n示例:\n输入:\nhello\nworld\n\n输出:\n> hello\n> world"
 }
 '''

@@ -4,7 +4,7 @@
 {
   "name": "Count Characters",
   "description": "计算文本中的字符数量",
-  "icon": "🔤",
+  "icon": "🤖",
   "tags": ["count","characters"],
   "help": "计算文本中的字符数量\n\n示例:\n输入:\nhello world\n\n输出:\n总字符数：11\n非空白字符数：11\n单词数：2"
 }

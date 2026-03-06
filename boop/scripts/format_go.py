@@ -3,8 +3,8 @@
 """{
   "name": "Format Go",
   "description": "格式化 Go 代码",
-  "icon": "🐹",
-  "tags": ["go","format"],
+  "icon": "✨",
+  "tags": ["go","format","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 Go 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunc main(){fmt.Println(\"Hello\")}\n\n输出:\nfunc main() {\n    fmt.Println(\"Hello\")\n}"
 }"""

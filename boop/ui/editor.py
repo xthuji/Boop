@@ -5,6 +5,8 @@ Editor Component - Text editor with line numbers and syntax highlighting
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, Callable
+from boop.core.utils import binding_hotkey_action
+from boop.ui.editor_extensions import EditorExtensions
 
 
 class Editor:
@@ -32,6 +34,8 @@ class Editor:
         self._current_script_history_index = -1
         
         self._create_ui()
+        # Initialize editor extensions
+        self.extensions = EditorExtensions(self._text_widget, self.config)
         self._bind_events()
         # Initialize history with empty state
         self._save_state()
@@ -81,28 +85,11 @@ class Editor:
         # Text change events
         self._text_widget.bind('<<Modified>>', self._on_modified)
         
-        def binding_hotkey_action(shortcuts, action):
-            for shortcut in shortcuts:
-                # Convert shortcut strings to Tkinter binding format
-                self._text_widget.bind(f'<{shortcut.replace("+", "-")}>', action)
-                # Bind reverse order for three-part shortcuts (e.g. Ctrl+Shift+z)
-                parts = shortcut.split('+')
-                if parts and len(parts) == 3:
-                    self._text_widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}>', action)
-                elif parts and len(parts) == 4:
-                    self._text_widget.bind(f'<{parts[0]}-{parts[2]}-{parts[1]}-{parts[3]}>', action)
-                    self._text_widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}-{parts[3]}>', action)
-                    self._text_widget.bind(f'<{parts[1]}-{parts[2]}-{parts[0]}-{parts[3]}>', action)
-                    self._text_widget.bind(f'<{parts[2]}-{parts[1]}-{parts[0]}-{parts[3]}>', action)
-                    self._text_widget.bind(f'<{parts[2]}-{parts[0]}-{parts[1]}-{parts[3]}>', action)
-            
+        # Bind shortcuts that are only relevant in the editor
+        binding_hotkey_action(self._text_widget, self.config.shortcuts.get('select_next_occurrence', ['Ctrl+d']), self.extensions.select_next_occurrence)
         
-        # Bind shortcuts
-        binding_hotkey_action(self.config.shortcuts.get('undo', ['Ctrl+z']), self._undo)
-        binding_hotkey_action(self.config.shortcuts.get('redo', ['Ctrl+Shift+z']), self._redo)
-        binding_hotkey_action(self.config.shortcuts.get('cut', ['Ctrl+x']), self._cut)
-        binding_hotkey_action(self.config.shortcuts.get('copy', ['Ctrl+c']), self._copy)
-        binding_hotkey_action(self.config.shortcuts.get('paste', ['Ctrl+v']), self._paste)
+        # Bind key press event for multi-cursor editing
+        self._text_widget.bind('<Key>', self.extensions.on_key_press)
         
         # Mouse wheel
         self._text_widget.bind('<MouseWheel>', self._on_mousewheel)
@@ -188,6 +175,23 @@ class Editor:
     def _paste(self, event):
         """Handle paste operation."""
         self._text_widget.event_generate('<<Paste>>')
+        return 'break'
+    
+    def _select_all(self, event):
+        """Select all text."""
+        self._text_widget.tag_add(tk.SEL, '1.0', tk.END)
+        return 'break'
+    
+    def _move_to_start(self, event):
+        """Move cursor to the start of the editor."""
+        self._text_widget.mark_set(tk.INSERT, '1.0')
+        self._text_widget.see(tk.INSERT)
+        return 'break'
+    
+    def _move_to_end(self, event):
+        """Move cursor to the end of the editor."""
+        self._text_widget.mark_set(tk.INSERT, 'end-1c')
+        self._text_widget.see(tk.INSERT)
         return 'break'
     
     def get_content(self) -> str:

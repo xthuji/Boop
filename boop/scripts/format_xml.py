@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """{
-  "name": "Format XML",
-  "description": "格式化 XML 文档",
-  "icon": "📄",
-  "tags": ["xml","format"],
+  "name": "Format/Minify XML",
+  "description": "格式化或压缩 XML 文档",
+  "icon": "✨",
+  "tags": ["xml","format","minify","fmt","code"],
   "dependencies": [],
   "help": "格式化或压缩 XML 文档\n\n如果文档已格式化，将进行压缩。\n\n示例:\n输入:\n<root><child>text</child></root>\n\n输出:\n<root>\n    <child>text</child>\n</root>"
 }"""
@@ -112,7 +110,7 @@ def main(state):
     try:
         state.text = process_format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("XML formatted")
+            state.post_info("XML code formatted or minified")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting XML: {}".format(str(e)))

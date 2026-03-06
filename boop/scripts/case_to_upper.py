@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Upper Case",
-  "description": "将文本转换为大写格式",
-  "icon": "🐪",
-  "tags": ["format","case","upper"],
+  "description": "转为大写格式",
+  "icon": "⤴️",
+  "tags": ["format","case","upper","all","var"],
   "help": "将文本转换为全大写格式\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO WORLD"
 }
 '''

@@ -3,9 +3,9 @@
 '''
 {
   "name": "To Snake Case",
-  "description": "将文本转换为蛇形命名格式",
+  "description": "转为蛇形命名格式",
   "icon": "🐍",
-  "tags": ["format","case","snake"],
+  "tags": ["format","case","snake","var"],
   "help": "将文本转换为蛇形命名格式 (snake_case)\n\n示例:\n输入:\nhello world\n\n输出:\nhello_world"
 }
 '''

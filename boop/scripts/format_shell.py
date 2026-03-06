@@ -3,10 +3,10 @@
 """{
   "name": "Format Shell",
   "description": "格式化 Shell 脚本",
-  "icon": "🐚",
-  "tags": ["shell","bash","format"],
+  "icon": "✨",
+  "tags": ["shell","bash","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Shell 脚本\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nif [ true ];then echo \"Hello\";fi\n\n输出:\nif [ true ]; then\n    echo \"Hello\"\nfi"
+  "help": "格式化 Shell 脚本\n\n示例:\n输入:\nif [ true ];then echo \"Hello\";fi\n\n输出:\nif [ true ]; then\n    echo \"Hello\"\nfi"
 }"""
 
 import re
@@ -129,44 +129,16 @@ def post_process(code):
 
 
 def main(state):
-    """Format or minify Shell text."""
+    """Format Shell text."""
     if not state.text or not state.text.strip():
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Shell code formatted or minified")
+            state.post_info("Shell code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error(f"Error formatting Shell: {str(e)}")
         else:
             print(f"Error formatting Shell: {str(e)}")
-
-def is_minified(text):
-    """Check if Shell code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('function' in text or 'if' in text or 'for' in text)
-
-def minify_code(code):
-    """Minify Shell code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Shell code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)
