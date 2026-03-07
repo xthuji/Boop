@@ -1,0 +1,90 @@
+{
+  "testCases": [
+    {
+      "category": "Variable Case Conversion",
+      "scripts": [
+        {
+          "name": "case_to_camel",
+          "tests": [
+            {
+              "input": "hello_world",
+              "expected": "helloWorld"
+            }
+          ]
+        },
+        {
+          "name": "case_to_camel_upper",
+          "tests": [
+            {
+              "input": "hello_world",
+              "expected": "HelloWorld"
+            }
+          ]
+        },
+        {
+          "name": "case_to_snake",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "hello_world"
+            }
+          ]
+        },
+        {
+          "name": "case_to_pascal",
+          "tests": [
+            {
+              "input": "hello_world",
+              "expected": "HelloWorld"
+            }
+          ]
+        },
+        {
+          "name": "case_to_snake_upper",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "HELLO_WORLD"
+            }
+          ]
+        },
+        {
+          "name": "case_to_kebab",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "hello-world"
+            }
+          ]
+        },
+        {
+          "name": "case_to_kebab_upper",
+          "tests": [
+            {
+              "input": "helloWorld",
+              "expected": "HELLO-WORLD"
+            }
+          ]
+        },
+        {
+          "name": "case_to_lower",
+          "tests": [
+            {
+              "input": "HELLO WORLD",
+              "expected": "hello world"
+            }
+          ]
+        },
+        {
+          "name": "case_to_upper",
+          "tests": [
+            {
+              "input": "hello world",
+              "expected": "HELLO WORLD"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

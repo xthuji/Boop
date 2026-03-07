@@ -52,26 +52,18 @@ class Editor:
         
         # Line numbers
         self._line_numbers = tk.Text(
-            frame,
-            width=4,
-            padx=5,
-            pady=2,
-            bg='#f0f0f0',
-            fg='#666666',
+            frame, width=4, padx=5, pady=2,
+            bg='#f0f0f0', fg='#666666',
             font=(self.config.font_family, self.config.font_size),
-            state=tk.DISABLED,
-            relief=tk.FLAT
+            state=tk.DISABLED, relief=tk.FLAT
         )
         self._line_numbers.pack(side=tk.LEFT, fill=tk.Y)
         
         # Text widget
         self._text_widget = tk.Text(
-            frame,
-            font=(self.config.font_family, self.config.font_size),
-            wrap=tk.WORD,
-            relief=tk.FLAT,
-            borderwidth=0,
-            highlightthickness=0
+            frame, font=(self.config.font_family, self.config.font_size),
+            wrap=tk.WORD, relief=tk.FLAT,
+            borderwidth=0, highlightthickness=0
         )
         self._text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
@@ -222,11 +214,21 @@ class Editor:
     def focus(self):
         """Focus the editor."""
         self._text_widget.focus_set()
-    
+
     def clear(self):
         """Clear the editor."""
         self.set_content("")
-    
+
+    def update_font(self, font_family: str, font_size: int):
+        """Update the editor font.
+
+        Args:
+            font_family: Font family name
+            font_size: Font size in points
+        """
+        self._text_widget.config(font=(font_family, font_size))
+        self._line_numbers.config(font=(font_family, font_size))
+        self._update_line_numbers()
 
     
     def record_script_execution(self, script_name: str):

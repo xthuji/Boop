@@ -12,18 +12,65 @@
 
 import re
 
+def case_preprocess(string):
+    """
+    预处理文本，将各种格式转换为空格分隔的单词
+    """
+    string = string.strip().replace('-', ' ')
+    if string == '_' * len(string):
+        return []
+    
+    # 处理开头的下划线
+    underscore_at_start = ''
+    if string.startswith('_'):
+        j = 1
+        for i in range(len(string)):
+            if i + 1 < len(string) and string[i + 1] == string[i]:
+                j += 1
+            else:
+                break
+        underscore_at_start = '_' * j
+    
+    # 处理结尾的下划线
+    underscore_at_end = ''
+    if string.endswith('_'):
+        j = 1
+        for i in range(len(string) - 1, 0, -1):
+            if string[i - 1] == string[i]:
+                j += 1
+            else:
+                break
+        underscore_at_end = '_' * j
+    
+    string = string.replace('_', ' ')
+    string = underscore_at_start + string + underscore_at_end
+    
+    # 处理驼峰命名
+    string = re.sub(r'(.)([A-Z][a-z]+)', r'\1 \2', string)
+    string = re.sub(r'([a-z0-9])([A-Z])', r'\1 \2', string).lower()
+    
+    # 分割单词并过滤空字符串
+    words = string.split()
+    return [word for word in words if word]
+
 def run(text):
     """
     将文本转换为snake_case命名格式
     """
-    # 移除所有非字母数字字符，将所有单词转为小写并以下划线连接
-    words = re.findall(r'[a-zA-Z0-9]+', text)
-    if not words:
-        return text
+    # 按行处理
+    lines = text.split('\n')
+    converted_lines = []
     
-    # 所有单词小写，以下划线连接
-    snake_case = '_'.join(word.lower() for word in words)
-    return snake_case
+    for line in lines:
+        words = case_preprocess(line)
+        if words:
+            # 所有单词小写，以下划线连接
+            snake_case = '_'.join(words)
+            converted_lines.append(snake_case)
+        else:
+            converted_lines.append(line)
+    
+    return '\n'.join(converted_lines)
 
 def main(state):
     """

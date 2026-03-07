@@ -73,18 +73,18 @@ def _format_result(original_text, comparison_result, lines1, lines2):
 
     result = original_text + '\n\n'
     result += '=== 对比结果 ===\n'
-    result += f'状态：{status}\n'
-    result += f'文本 1 行数：{stats["lines1"]}\n'
-    result += f'文本 2 行数：{stats["lines2"]}\n'
-    result += f'差异行数：{stats["diff_count"]}\n\n'
+    result += f'状态: {status}\n'
+    result += f'文本1行数: {stats["lines1"]}\n'
+    result += f'文本2行数: {stats["lines2"]}\n'
+    result += f'差异行数: {stats["diff_count"]}\n\n'
 
     result += '=== 详细差异 ===\n'
 
     if not diffs:
         result += '无差异\n'
     else:
-        result += '格式：[行号 1]:[行号 2] 内容\n'
-        result += '符号：- 移除，+ 添加，~ 变更\n\n'
+        result += '格式: [行号1]:[行号2] 内容\n'
+        result += '符号: - 移除, + 添加, ~ 变更\n\n'
 
         for diff in diffs:
             if diff['type'] == 'remove':

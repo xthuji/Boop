@@ -6,7 +6,7 @@
   "icon": "✨",
   "tags": ["applescript","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 AppleScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\non hello() say \"Hello\"\nend hello\n\n输出:\non hello()\n    say \"Hello\"\nend hello"
+  "help": "格式化 AppleScript 代码\n\n示例:\n输入:\non hello() say \"Hello\"\nend hello\n\n输出:\non hello()\n    say \"Hello\"\nend hello"
 }"""
 
 import re
@@ -82,20 +82,13 @@ class AppleScriptFormatter:
     def _preprocess(self, code: str) -> str:
         """预处理代码"""
         # 处理 if...then 结构
-        def handle_if_then(match):
-            condition = match.group(1)
-            body = match.group(2)
-            return 'if {} then\n{}\nend if'.format(condition, body)
-
-        code = re.sub(r'\bif\s+(.+?)\s+then\s+(.+)', handle_if_then, code)
+        code = re.sub(r'\bif\s+(.+?)\s+then\s+(.+)', r'if \1 then\n\2\nend if', code)
 
         # 处理 tell 结构
-        def handle_tell_to(match):
-            target = match.group(1)
-            body = match.group(2)
-            return 'tell {}\n{}\nend tell'.format(target, body)
+        code = re.sub(r'\btell\s+(.+?)\s+to\s+(.+)', r'tell \1\n\2\nend tell', code)
 
-        code = re.sub(r'\btell\s+(.+?)\s+to\s+(.+)', handle_tell_to, code)
+        # 处理多行语句，确保每个语句都在单独的行上
+        code = re.sub(r';\s*', '\n', code)
 
         return code
 
@@ -157,7 +150,7 @@ class AppleScriptFormatter:
     def _post_process(self, code: str) -> str:
         """后处理"""
         code = re.sub(r'\n{3,}', '\n\n', code)
-        return code.strip() + '\n'
+        return code.strip()
 
 
 def format_code(code: str) -> str:
@@ -172,38 +165,11 @@ def main(state):
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("AppleScript code formatted or minified")
+            state.post_info("AppleScript code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting AppleScript: {}".format(str(e)))
         else:
             print("Error formatting AppleScript: {}".format(str(e)))
-
-def is_minified(text):
-    """Check if AppleScript code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('on ' in text or 'tell ' in text or 'if ' in text)
-
-def minify_code(code):
-    """Minify AppleScript code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'\(\*[\s\S]*?\*\)', '', code)
-    code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process AppleScript code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

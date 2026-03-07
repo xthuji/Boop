@@ -1,0 +1,188 @@
+{
+  "testCases": [
+    {
+      "category": "Advanced Line Processing",
+      "scripts": [
+        {
+          "name": "lines_sort",
+          "tests": [
+            {
+              "input": "zebra\napple",
+              "expected": "apple\nzebra"
+            },
+            {
+              "input": "asc\nzebra\napple",
+              "expected": "apple\nzebra"
+            },
+            {
+              "input": "desc\nzebra\napple",
+              "expected": "zebra\napple"
+            },
+            {
+              "input": "reverse\nfirst line\nsecond line",
+              "expected": "second line\nfirst line"
+            },
+            {
+              "input": "3,orange\n1,apple\n2,banana",
+              "expected": "1,apple\n2,banana\n3,orange"
+            },
+            {
+              "input": "1:desc:string\n3,orange\n1,apple\n2,banana",
+              "expected": "3,orange\n2,banana\n1,apple"
+            },
+            {
+              "input": "0:asc:string\n3,orange\n1,apple\n2,banana",
+              "expected": "1,apple\n2,banana\n3,orange"
+            },
+            {
+              "input": "1:desc:string:|\n3|orange\n1|apple\n2|banana",
+              "expected": "3|orange\n2|banana\n1|apple"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Line Processing",
+      "scripts": [
+        {
+          "name": "lines_join",
+          "tests": [
+            {
+              "input": "first\nsecond",
+              "expected": "firstsecond"
+            },
+            {
+              "input": ",\nfirst\nsecond",
+              "expected": "first,second"
+            },
+            {
+              "input": ", \nfirst\nsecond",
+              "expected": "first, second"
+            },
+            {
+              "input": "; \nfirst\nsecond",
+              "expected": "first; second"
+            },
+            {
+              "input": " \nfirst\nsecond",
+              "expected": "first second"
+            },
+            {
+              "input": ":\"\nfirst\nsecond",
+              "expected": "\"first\", \"second\""
+            },
+            {
+              "input": ":'\nfirst\nsecond",
+              "expected": "'first', 'second'"
+            },
+            {
+              "input": ":code\nfirst\nsecond",
+              "expected": "first\\nsecond"
+            }
+          ]
+        },
+        {
+          "name": "lines_split",
+          "tests": [
+            {
+              "input": "\"first\", \"second\"",
+              "expected": "first\nsecond"
+            }
+          ]
+        },
+        {
+          "name": "lines_remove_empty",
+          "tests": [
+            {
+              "input": "first line\n\nsecond line",
+              "expected": "first line\nsecond line"
+            }
+          ]
+        },
+        {
+          "name": "lines_remove_duplicate",
+          "tests": [
+            {
+              "input": "apple\nbanana\napple",
+              "expected": "apple\nbanana"
+            }
+          ]
+        },
+        {
+          "name": "lines_find_duplicate",
+          "tests": [
+            {
+              "input": "apple\nbanana\napple",
+              "expected": "apple (2 occurrences)"
+            }
+          ]
+        },
+        {
+          "name": "lines_reverse_string",
+          "tests": [
+            {
+              "input": "hello",
+              "expected": "olleh"
+            }
+          ]
+        },
+        {
+          "name": "lines_trim",
+          "tests": [
+            {
+              "input": "  hello  ",
+              "expected": "hello"
+            },
+            {
+              "input": "start\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "s\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "left\n  hello  ",
+              "expected": "hello  "
+            },
+            {
+              "input": "end\n  hello  ",
+              "expected": "  hello"
+            },
+            {
+              "input": "e\n  hello  ",
+              "expected": "  hello"
+            },
+            {
+              "input": "right\n  hello  ",
+              "expected": "  hello"
+            }
+          ]
+        },
+        {
+          "name": "lines_compare",
+          "tests": [
+            {
+              "input": "hello\n---\nhello",
+              "expected": "hello\n---\nhello\n\n=== 对比结果 ===\n状态: 完全一致\n文本1行数: 1\n文本2行数: 1\n差异行数: 0\n\n=== 详细差异 ===\n无差异\n"
+            },
+            {
+              "input": "first\nsecond\n---\nsecond\nfirst",
+              "expected": "first\nsecond\n---\nsecond\nfirst\n\n=== 对比结果 ===\n状态: 数据一致但顺序有差异\n文本1行数: 2\n文本2行数: 2\n差异行数: 2\n\n=== 详细差异 ===\n格式: [行号1]:[行号2] 内容\n符号: - 移除, + 添加, ~ 变更\n\n~ 1:1 first -> second\n~ 2:2 second -> first\n"
+            }
+          ]
+        },
+        {
+          "name": "lines_shuffle_characters",
+          "tests": [
+            {
+              "input": "a",
+              "expected": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

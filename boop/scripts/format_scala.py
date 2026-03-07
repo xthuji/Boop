@@ -187,7 +187,7 @@ class ScalaFormatter:
         body_content = re.sub(r'\n{3,}', '\n\n', body_content)
         output.append(body_content)
 
-        return '\n'.join(output).strip() + '\n'
+        return '\n'.join(output).strip()
 
 
 def format_code(code: str) -> str:

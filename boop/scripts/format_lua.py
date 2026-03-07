@@ -6,7 +6,7 @@
   "icon": "✨",
   "tags": ["lua","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Lua 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello()print(\"Hello\")end\n\n输出:\nfunction hello()\n    print(\"Hello\")\nend"
+  "help": "格式化 Lua 代码\n\n示例:\n输入:\nfunction hello()print(\"Hello\")end\n\n输出:\nfunction hello()\n    print(\"Hello\")\nend"
 }"""
 
 import re
@@ -199,7 +199,7 @@ def format_code(code):
     result = re.sub(r'\n{3,}', '\n\n', result)
     # Restore protected strings and comments
     result = tokens.restore(result)
-    return result.strip() + CONFIG['NEWLINE']
+    return result.strip()
 
 
 def main(state):
@@ -208,38 +208,11 @@ def main(state):
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Lua code formatted or minified")
+            state.post_info("Lua code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting Lua: {}".format(str(e)))
         else:
             print("Error formatting Lua: {}".format(str(e)))
-
-def is_minified(text):
-    """Check if Lua code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('function' in text or 'if' in text or 'local' in text)
-
-def minify_code(code):
-    """Minify Lua code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'--\[\[[\s\S]*?\]\]', '', code)
-    code = re.sub(r'--.*$', '', code, flags=re.MULTILINE)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Lua code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

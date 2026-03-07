@@ -92,6 +92,9 @@ def custom_tweaks(code):
     code = re.sub(r'\bTRUE\b', 'true', code)
     code = re.sub(r'\bFALSE\b', 'false', code)
 
+    # 移除行尾的空格
+    code = '\n'.join(line.rstrip() for line in code.split('\n'))
+
     return code
 
 def format_create_table(code):

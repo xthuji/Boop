@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 {
-  "name": "Convert JSON Code",
+  "name": "Convert JSON Code String",
   "description": "在 JSON/JS/Python/Lua/Php 代码之间转换",
   "icon": "💊",
   "tags": ["convert","json","code","js","javascript","py","python","lua","php"],
@@ -49,7 +49,7 @@ def run(text):
         
         # 根据目标格式转换
         if output_format == 'json':
-            return json.dumps(data, ensure_ascii=False, indent=2)
+            return json.dumps(data, ensure_ascii=False, indent=4)
         elif output_format == 'javascript':
             return format_to_javascript(data)
         elif output_format == 'python':
@@ -73,9 +73,18 @@ def parse_input(text):
     except json.JSONDecodeError:
         pass
     
-    # 尝试解析为JavaScript对象
+    # 尝试解析为JavaScript对象或列表
     try:
-        # 简单处理：查找大括号包围的内容
+        # 检查是否是列表
+        if text.strip().startswith('[') and text.strip().endswith(']'):
+            # 修复JavaScript列表格式
+            json_str = text.strip()
+            # 替换单引号为双引号
+            json_str = re.sub(r"'(\w+)'\s*:", r'"\1":', json_str)
+            # 替换没有引号的键
+            json_str = re.sub(r"(\w+)\s*:", r'"\1":', json_str)
+            return json.loads(json_str)
+        # 尝试解析为对象
         start = text.find('{')
         end = text.rfind('}')
         if start != -1 and end != -1:
@@ -149,21 +158,21 @@ def format_to_javascript(data):
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, str):
-            return f'"{value.replace("\\", "\\\\").replace("\"", "\\\"")}"'
+            return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
         elif isinstance(value, list):
             if not value:
                 return '[]'
-            items = [f'{next_indent}{format_value(item, level + 1)}' for item in value]
-            return f'[\n{(",\n").join(items)}\n{indent}]'
+            items = [next_indent + format_value(item, level + 1) for item in value]
+            return '[' + '\n' + ',\n'.join(items) + '\n' + indent + ']'
         elif isinstance(value, dict):
             if not value:
                 return '{}'
-            items = [f'{next_indent}{k}: {format_value(v, level + 1)}' for k, v in value.items()]
-            return f'{{\n{(",\n").join(items)}\n{indent}}}'
+            items = [next_indent + k + ': ' + format_value(v, level + 1) for k, v in value.items()]
+            return '{' + '\n' + ',\n'.join(items) + '\n' + indent + '}'
         else:
             return str(value)
     
-    return format_value(data) + ';'
+    return format_value(data)
 
 def format_to_python(data):
     """
@@ -180,17 +189,17 @@ def format_to_python(data):
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, str):
-            return f"'{value.replace("'", "\\'")}'"
+            return "'" + value.replace("'", "\\'") + "'"
         elif isinstance(value, list):
             if not value:
                 return '[]'
-            items = [f'{next_indent}{format_value(item, level + 1)}' for item in value]
-            return f'[\n{(",\n").join(items)}\n{indent}]'
+            items = [next_indent + format_value(item, level + 1) for item in value]
+            return '[' + '\n' + ',\n'.join(items) + '\n' + indent + ']'
         elif isinstance(value, dict):
             if not value:
                 return '{}'
-            items = [f'{next_indent}{format_value(k)}: {format_value(v, level + 1)}' for k, v in value.items()]
-            return f'{{\n{(",\n").join(items)}\n{indent}}}'
+            items = [next_indent + format_value(k) + ': ' + format_value(v, level + 1) for k, v in value.items()]
+            return '{' + '\n' + ',\n'.join(items) + '\n' + indent + '}'
         else:
             return str(value)
     
@@ -211,17 +220,17 @@ def format_to_lua(data):
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, str):
-            return f'"{value.replace("\"", "\\\"")}"'
+            return '"' + value.replace('"', '\\"') + '"'
         elif isinstance(value, list):
             if not value:
                 return '{}'
-            items = [f'{next_indent}{i+1} = {format_value(item, level + 1)}' for i, item in enumerate(value)]
-            return f'{{\n{(",\n").join(items)}\n{indent}}}'
+            items = [next_indent + format_value(item, level + 1) for item in value]
+            return '{' + '\n' + ',\n'.join(items) + '\n' + indent + '}'
         elif isinstance(value, dict):
             if not value:
                 return '{}'
-            items = [f'{next_indent}{k} = {format_value(v, level + 1)}' for k, v in value.items()]
-            return f'{{\n{(",\n").join(items)}\n{indent}}}'
+            items = [next_indent + k + ' = ' + format_value(v, level + 1) for k, v in value.items()]
+            return '{' + '\n' + ',\n'.join(items) + '\n' + indent + '}'
         else:
             return str(value)
     
@@ -242,20 +251,36 @@ def format_to_php(data):
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, str):
-            return f"'{value.replace("'", "\\'")}'"
+            return "'" + value.replace("'", "\\'") + "'"
         elif isinstance(value, list):
             if not value:
                 return '[]'
-            items = [f'{next_indent}{format_value(item, level + 1)}' for item in value]
-            return f'[\n{(",\n").join(items)}\n{indent}]'
+            items = [next_indent + format_value(item, level + 1) for item in value]
+            return '[' + '\n' + ',\n'.join(items) + '\n' + indent + ']'
         elif isinstance(value, dict):
             if not value:
                 return '[]'
-            items = [f'{next_indent}{format_value(k)} => {format_value(v, level + 1)}' for k, v in value.items()]
-            return f'[\n{(",\n").join(items)}\n{indent}]'
+            items = [next_indent + format_value(k) + ' => ' + format_value(v, level + 1) for k, v in value.items()]
+            return '[' + '\n' + ',\n'.join(items) + '\n' + indent + ']'
         else:
             return str(value)
     
+    # 对于列表数据，确保输出嵌套数组格式
+    if isinstance(data, list):
+        # 检查列表中的元素是否都是字典
+        all_dicts = all(isinstance(item, dict) for item in data)
+        if all_dicts:
+            # 对于包含字典的列表，每个字典都包装在数组中
+            items = []
+            indent = '    '
+            next_indent = '        '
+            for item in data:
+                dict_items = [next_indent + format_value(k) + ' => ' + format_value(v, 2) for k, v in item.items()]
+                dict_str = '[' + '\n' + ',\n'.join(dict_items) + '\n' + indent + ']'
+                items.append(indent + dict_str)
+            return '[' + '\n' + ',\n'.join(items) + '\n' + '];'
+    
+    # 对于非列表数据，直接返回
     return format_value(data) + ';'
 
 def main(state):

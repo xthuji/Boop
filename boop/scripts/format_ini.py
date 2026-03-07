@@ -13,28 +13,39 @@ import configparser
 import io
 
 def format_code(text):
-    """Format INI file using configparser."""
+    """Format INI file."""
     if not text or not text.strip():
         return text
 
-    # Use configparser for INI formatting
-    try:
-        cfg = configparser.ConfigParser()
-        cfg.read_string(text)
+    import re
+    lines = text.split('\n')
+    formatted = []
+    in_section = False
 
-        # Format the output
-        output = io.StringIO()
-        cfg.write(output)
-        result = output.getvalue()
+    for line in lines:
+        stripped = line.strip()
 
-        # Remove default section header if it was not in the original
-        import re
-        if not re.search(r'^\s*\[DEFAULT\]', text, re.IGNORECASE | re.MULTILINE):
-            result = re.sub(r'^\[DEFAULT\]\s*\n', '', result, flags=re.IGNORECASE)
+        # Skip empty lines
+        if not stripped:
+            continue
 
-        return result
-    except Exception as e:
-        raise Exception("Error formatting INI: {}".format(e))
+        # Handle section headers
+        if stripped.startswith('[') and stripped.endswith(']'):
+            formatted.append(stripped)
+            in_section = True
+        # Handle comments
+        elif stripped.startswith('#') or stripped.startswith(';'):
+            formatted.append(stripped)
+        # Handle key-value pairs
+        elif '=' in stripped and in_section:
+            key, value = stripped.split('=', 1)
+            key = key.strip()
+            value = value.strip()
+            formatted.append('{} = {}'.format(key, value))
+        else:
+            formatted.append(stripped)
+
+    return '\n'.join(formatted).strip()
 
 def main(state):
     """Format INI text."""

@@ -19,15 +19,17 @@ from boop.core.path import get_log_path, get_user_data_dir
 class PreferencesPanel:
     """Preferences configuration panel using Toplevel window."""
 
-    def __init__(self, parent: tk.Tk, config: BoopConfig):
+    def __init__(self, parent: tk.Tk, config: BoopConfig, editor=None):
         """Initialize the preferences panel.
 
         Args:
             parent: Parent window
             config: Application configuration
+            editor: Editor instance for font updates (optional)
         """
         self.parent = parent
         self.config = config
+        self.editor = editor
         self.dialog: Optional[tk.Toplevel] = None
 
         self._create_dialog()
@@ -39,58 +41,43 @@ class PreferencesPanel:
         self.dialog.title("Preferences")
         self.dialog.transient(self.parent)
         self.dialog.resizable(True, True)
-        
+
         # Set modern minimalist style
         style = ttk.Style()
-        
+
         # Base colors for minimalist design
         bg_color = '#ffffff'
         fg_color = '#333333'
         accent_color = '#007aff'  # macOS blue for primary buttons
         cancel_color = '#f0f0f0'  # Light gray for cancel buttons
         hover_color = '#f5f5f5'
-        
+
         # Configure styles
         style.configure('TNotebook', padding=0, background=bg_color)
-        style.configure('TNotebook.Tab', 
-                       padding=(16, 8), 
-                       font=('SF Pro Text', 12),
-                       background=bg_color,
-                       foreground=fg_color)
-        style.map('TNotebook.Tab', 
+        style.configure('TNotebook.Tab', padding=(16, 8), font=('SF Pro Text', 12),
+                       background=bg_color, foreground=fg_color)
+        style.map('TNotebook.Tab',
                   background=[('selected', bg_color), ('!selected', bg_color), ('active', hover_color)],
                   foreground=[('selected', accent_color), ('!selected', fg_color)])
         style.configure('TFrame', background=bg_color)
         style.configure('TLabel', background=bg_color, font=('SF Pro Text', 12), foreground=fg_color)
-        
+
         # Cancel button style (gray)
-        style.configure('Cancel.TButton', 
-                       padding=(12, 6), 
-                       font=('SF Pro Text', 12))
-        # For macOS, we need to use map to set colors properly
-        style.map('Cancel.TButton', 
+        style.configure('Cancel.TButton', padding=(12, 6), font=('SF Pro Text', 12))
+        style.map('Cancel.TButton',
                   background=[('!disabled', cancel_color), ('active', '#e0e0e0')],
                   foreground=[('!disabled', fg_color)])
-        
-        # Save button style (blue)
-        style.configure('Save.TButton', 
-                       padding=(12, 6), 
-                       font=('SF Pro Text', 12))
-        # For macOS, we need to use map to set colors properly
-        style.map('Save.TButton', 
-                  background=[('!disabled', accent_color), ('active', '#0066cc')],
-                  foreground=[('!disabled', '#ffffff')])
-        
+
+        # Save button style - blue text, bold to highlight
+        style.configure('Save.TButton', padding=(12, 6), font=('SF Pro Text', 12, 'bold'))
+        style.map('Save.TButton',
+                  foreground=[('!disabled', accent_color)])
+
         style.configure('TLabelframe', background=bg_color)
-        style.configure('TLabelframe.Label', 
-                       font=('SF Pro Text', 12, 'semibold'),
-                       background=bg_color,
-                       foreground=fg_color)
-        style.configure('TEntry', 
-                       padding=(8, 6), 
-                       font=('SF Pro Text', 12),
-                       fieldbackground=bg_color,
-                       foreground=fg_color)
+        style.configure('TLabelframe.Label', font=('SF Pro Text', 12, 'semibold'),
+                       background=bg_color, foreground=fg_color)
+        style.configure('TEntry', padding=(8, 6), font=('SF Pro Text', 12),
+                       fieldbackground=bg_color, foreground=fg_color)
         
         # Center the dialog
         center_window(self.dialog, 700, 580)
@@ -131,22 +118,12 @@ class PreferencesPanel:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, pady=(0, 0))
 
-        # Cancel button
-        cancel_btn = ttk.Button(
-            button_frame,
-            text="Cancel",
-            command=self._close,
-            style='Cancel.TButton'
-        )
+        # Cancel button (Esc key)
+        cancel_btn = ttk.Button(button_frame, text="Cancel (Esc)", command=self._close, style='Cancel.TButton')
         cancel_btn.pack(side=tk.LEFT, padx=(0, 10))
 
-        # Save button
-        save_btn = ttk.Button(
-            button_frame,
-            text="Save",
-            command=self._save,
-            style='Save.TButton'
-        )
+        # Save button (Enter key) - same style as Cancel but with blue text
+        save_btn = ttk.Button(button_frame, text="Save (Enter)", command=self._save, style='Save.TButton')
         save_btn.pack(side=tk.RIGHT, padx=(10, 0))
 
     def _create_general_tab(self, parent):
@@ -160,10 +137,8 @@ class PreferencesPanel:
         maximize_frame.pack(fill=tk.X, pady=5)
         self.maximize_var = tk.BooleanVar(value=getattr(self.config, 'maximize_window', False))
         maximize_checkbox = ttk.Checkbutton(
-            maximize_frame,
-            text="Maximize Window",
-            variable=self.maximize_var,
-            command=self._toggle_maximize
+            maximize_frame, text="Maximize Window",
+            variable=self.maximize_var, command=self._toggle_maximize
         )
         maximize_checkbox.pack(side=tk.LEFT, padx=(0, 10))
 
@@ -233,18 +208,10 @@ class PreferencesPanel:
         button_frame = ttk.Frame(dirs_frame)
         button_frame.pack(side=tk.RIGHT, fill=tk.Y)
 
-        add_button = ttk.Button(
-            button_frame,
-            text="Add",
-            command=self._add_directory
-        )
+        add_button = ttk.Button( button_frame, text="Add", command=self._add_directory )
         add_button.pack(fill=tk.X, pady=3)
 
-        remove_button = ttk.Button(
-            button_frame,
-            text="Remove",
-            command=self._remove_directory
-        )
+        remove_button = ttk.Button( button_frame, text="Remove", command=self._remove_directory )
         remove_button.pack(fill=tk.X, pady=3)
 
         # Python interpreter with minimalist styling
@@ -259,11 +226,7 @@ class PreferencesPanel:
         python_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
 
         # Add browse button for Python interpreter
-        browse_button = ttk.Button(
-            python_frame_row,
-            text="Browse",
-            command=self._browse_python
-        )
+        browse_button = ttk.Button( python_frame_row, text="Browse", command=self._browse_python )
         browse_button.pack(side=tk.LEFT, padx=0)
 
         # Script timeout
@@ -293,19 +256,11 @@ class PreferencesPanel:
         
         # Create a dropdown list for dependencies
         self.dep_var = tk.StringVar(value="Click to view dependencies")
-        dep_dropdown = ttk.Combobox(
-            dep_list_frame,
-            textvariable=self.dep_var,
-            state="readonly"
-        )
+        dep_dropdown = ttk.Combobox( dep_list_frame, textvariable=self.dep_var, state="readonly" )
         dep_dropdown.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
         
         # Install dependencies button
-        install_button = ttk.Button(
-            dep_list_frame,
-            text="Install",
-            command=self._install_dependencies
-        )
+        install_button = ttk.Button( dep_list_frame, text="Install", command=self._install_dependencies )
         install_button.pack(side=tk.LEFT, padx=0)
         
         # Load dependencies into dropdown
@@ -316,10 +271,8 @@ class PreferencesPanel:
         cache_frame.pack(fill=tk.X, pady=5)
         ttk.Label(cache_frame, text="Metadata Cache:", width=15).pack(side=tk.LEFT, padx=(0, 10))
         clear_cache_button = ttk.Button(
-            cache_frame,
-            text="Refresh Script Metadata Cache",
-            command=self._refresh_metadata_cache,
-            style='Cancel.TButton'
+            cache_frame, text="Refresh Script Metadata Cache",
+            command=self._refresh_metadata_cache, style='Cancel.TButton'
         )
         clear_cache_button.pack(side=tk.LEFT, padx=0)
 
@@ -329,27 +282,30 @@ class PreferencesPanel:
         log_frame = ttk.LabelFrame(parent, text="Recent Logs", padding=(10, 5))
         log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
-        # Log file path
+        # Log file path with clear button
         log_path_frame = ttk.Frame(log_frame)
         log_path_frame.pack(fill=tk.X, pady=(0, 5))
         ttk.Label(log_path_frame, text="Log File Path:", width=15).pack(side=tk.LEFT, padx=(0, 10))
-        
+
         # Use centralized log path
         log_dir = get_log_path()
         log_file = log_dir / "boop.log"
         self.log_path_var = tk.StringVar(value=str(log_file))
         log_path_entry = ttk.Entry(log_path_frame, textvariable=self.log_path_var)
-        log_path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        log_path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
+
+        # Clear button
+        clear_button = ttk.Button(
+            log_path_frame, text="Clear Logs",
+            command=self._clear_logs, style='Cancel.TButton'
+        )
+        clear_button.pack(side=tk.LEFT, padx=0)
 
         self.log_text = tk.Text(
-            log_frame,
-            font=('SF Pro Text', 11),
-            bg='#f9f9f9',
-            borderwidth=1,
-            relief=tk.SUNKEN,
-            wrap=tk.WORD
+            log_frame, font=('SF Pro Text', 11), bg='#f9f9f9', borderwidth=1,
+            relief=tk.SUNKEN, wrap=tk.WORD
         )
-        
+
         # Add scrollbar for log text
         scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -360,38 +316,10 @@ class PreferencesPanel:
         # Load logs
         self._load_logs()
 
-        # Buttons
-        button_frame = ttk.Frame(parent)
-        button_frame.pack(fill=tk.X, padx=10, pady=5)
-
-        # Clear button
-        clear_button = ttk.Button(
-            button_frame,
-            text="Clear Logs",
-            command=self._clear_logs
-        )
-        clear_button.pack(side=tk.RIGHT, padx=(0, 8))
-
-        # Refresh button
-        refresh_button = ttk.Button(
-            button_frame,
-            text="Refresh",
-            command=self._load_logs
-        )
-        refresh_button.pack(side=tk.RIGHT, padx=(0, 8))
-
-        # Open button
-        open_button = ttk.Button(
-            button_frame,
-            text="Open Log",
-            command=self._open_log_in_editor
-        )
-        open_button.pack(side=tk.RIGHT, padx=(0, 8))
-
     def _bind_events(self):
         """Bind keyboard events."""
-        # Bind Enter key to save button
-        self.dialog.bind('<Return>', lambda e: self._save())
+        # Bind Enter key to save button (without confirmation dialog)
+        self.dialog.bind('<Return>', lambda e: self._save(show_message=False))
         # Bind Esc key to cancel button
         self.dialog.bind('<Escape>', lambda e: self._close())
 
@@ -494,7 +422,6 @@ class PreferencesPanel:
                 try:
                     log_file.unlink()
                     self._load_logs()
-                    messagebox.showinfo("Success", "Logs cleared successfully.")
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to clear logs: {e}")
 
@@ -521,8 +448,12 @@ class PreferencesPanel:
         else:
             messagebox.showinfo("Info", "Log file does not exist.")
 
-    def _save(self):
-        """Save preferences."""
+    def _save(self, show_message=False):
+        """Save preferences.
+        
+        Args:
+            show_message: Whether to show success messages
+        """
         logger.info("Saving preferences")
         try:
             # Check if Python path has changed
@@ -544,19 +475,27 @@ class PreferencesPanel:
             # Save to file - use user data directory
             # Get user data directory
             user_data_dir = get_user_data_dir()
-            
+
             # Config path in user data directory
             config_path = user_data_dir / "config.json"
             self.config.save(config_path)
             logger.info(f"Preferences saved to: {config_path}")
 
-            # Show restart prompt if Python path changed
+            # Update editor font if editor is available
+            if self.editor:
+                self.editor.update_font(
+                    self.config.font_family,
+                    self.config.font_size
+                )
+                logger.info(f"Editor font updated: {self.config.font_family}, {self.config.font_size}")
+
+            # Show restart prompt if Python path changed and show_message is True
             if old_python_path != self.config.python_path:
                 logger.info(f"Python path changed from {old_python_path} to {self.config.python_path}")
                 messagebox.showinfo("Restart Required", "Python path has been changed. Please restart the application for changes to take effect.")
-            else:
+            elif show_message:
                 messagebox.showinfo("Success", "Preferences saved successfully.")
-            
+
             self._close()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save preferences: {e}")
@@ -639,9 +578,7 @@ class PreferencesPanel:
                 logger.info(f"Installing dependency: {dep}")
                 result = subprocess.run(
                     [python_exe, "-m", "pip", "install", dep],
-                    capture_output=True,
-                    text=True,
-                    timeout=60
+                    capture_output=True, text=True, timeout=60
                 )
                 
                 if result.returncode == 0:

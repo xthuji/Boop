@@ -16,22 +16,12 @@ def run(text):
     """
     # 计算总字符数
     total_chars = len(text)
-    # 计算非空白字符数
-    non_whitespace_chars = len(text.strip())
-    # 计算单词数（简单分割）
-    words = text.split()
-    word_count = len(words)
-    
-    # 格式化结果
-    result = f"总字符数: {total_chars}\n"
-    result += f"非空白字符数: {non_whitespace_chars}\n"
-    result += f"单词数: {word_count}"
-    
-    return result
+    return total_chars
 
 def main(state):
     """
     主函数，调用run函数处理输入文本
     """
-    state.text = run(state.text)
-    state.post_info("字符计数")
+    count = run(state.text)
+    state.post_info(f"{count} characters")
+    state.text = str(count)

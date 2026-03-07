@@ -72,7 +72,7 @@ def format_code(code: str) -> str:
             result.append(line)
             prev_empty = False
 
-    return '\n'.join(result).strip() + '\n'
+    return '\n'.join(result).strip()
 
 
 def main(state):

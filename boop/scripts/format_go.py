@@ -6,7 +6,7 @@
   "icon": "✨",
   "tags": ["go","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Go 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunc main(){fmt.Println(\"Hello\")}\n\n输出:\nfunc main() {\n    fmt.Println(\"Hello\")\n}"
+  "help": "格式化 Go 代码\n\n示例:\n输入:\nfunc main(){fmt.Println(\"Hello\")}\n\n输出:\nfunc main() {\n    fmt.Println(\"Hello\")\n}"
 }"""
 
 import re
@@ -317,7 +317,7 @@ def format_code(code):
     # Restore tokens first, then preprocess placeholders
     final_result = tokens.restore('\n'.join(result))
     final_result = restore_preprocess(final_result, preprocess_replacements)
-    return post_process(final_result).strip() + CONFIG['NEWLINE']
+    return post_process(final_result).strip()
 
 
 def main(state):
@@ -326,38 +326,9 @@ def main(state):
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Go code formatted or minified")
+            state.post_info("Go code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error(str(e))
-
-def is_minified(text):
-    """Check if Go code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('func' in text or 'package' in text or 'import' in text)
-
-def minify_code(code):
-    """Minify Go code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
-    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Go code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

@@ -9,6 +9,11 @@ from logging.handlers import RotatingFileHandler
 from boop.core.path import get_log_path
 
 
+def is_packaged_app():
+    """Check if running in a packaged (PyInstaller) app."""
+    return getattr(sys, 'frozen', False) or hasattr(sys, '_MEIPASS')
+
+
 def setup_logging():
     """Set up logging configuration with rotating file handler."""
     # Use centralized log path
@@ -17,7 +22,7 @@ def setup_logging():
     # Log file path
     log_file = log_dir / "boop.log"
 
-    # Configure logging with abbreviated package paths
+    # Create formatter
     class AbbreviatedPathFormatter(logging.Formatter):
         def format(self, record):
             # Abbreviate package path: boop.core.logging -> b.c.logging
@@ -28,12 +33,6 @@ def setup_logging():
                     record.name = abbreviated
             return super().format(record)
 
-    # Create formatter
-    formatter = AbbreviatedPathFormatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-
     # Create rotating file handler (5MB per file, keep 3 backups)
     file_handler = RotatingFileHandler(
         log_file,
@@ -42,8 +41,17 @@ def setup_logging():
         encoding='utf-8',
         delay=True  # Delay file creation until first log message
     )
+    formatter = AbbreviatedPathFormatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.DEBUG)
+    
+    # Set log level based on environment
+    # In packaged app, use INFO level to reduce debug noise
+    # In development, use DEBUG level for detailed logging
+    log_level = logging.INFO if is_packaged_app() else logging.DEBUG
+    file_handler.setLevel(log_level)
 
     # Create stream handler (only for errors in production)
     stream_handler = logging.StreamHandler(sys.stdout)
@@ -52,7 +60,7 @@ def setup_logging():
 
     # Configure root logging
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         handlers=[
             file_handler,
             stream_handler

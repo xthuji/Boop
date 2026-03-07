@@ -1,637 +1,305 @@
-# Boop Python 详细设计文档
+# Boop Python 技术设计文档
 
 ## 1. 设计原则
 
-- **保持简洁**：避免过度设计，使用简单直接的代码实现功能
-- **模块化**：将功能拆分为独立的模块，提高代码可维护性
-- **性能优先**：优化关键路径，确保应用响应迅速
-- **可读性**：使用清晰的命名和结构，便于理解和维护
+- **保持简洁**：避免过度设计
+- **模块化**：独立模块，易于维护
+- **性能优先**：优化关键路径
+- **可读性**：清晰命名和结构
 
-## 2. 项目概述
+## 2. 系统架构
 
-Boop Python 是一个文本处理工具，灵感来自 Boop macOS 应用。它允许用户通过执行脚本对文本进行各种操作，如格式化、转换、分析等。
-
-### 2.1 核心功能
-
-- 单窗口文本编辑器，支持行号显示和语法高亮
-- 脚本执行系统，在隔离的子进程中运行脚本
-- 脚本选择器，支持脚本分类和搜索
-- 撤销/重做功能
-- 状态栏显示（行号、列号、字符数）
-- 主题支持（浅色/深色）
-- 配置管理
-
-### 2.2 技术栈
-
-- **语言**: Python 3
-- **GUI 库**: Tkinter
-- **并发**: ProcessPoolExecutor（用于脚本执行）
-- **事件系统**: 自定义发布-订阅模式
-- **脚本执行**: 子进程隔离执行
-
-## 3. 系统架构
-
-### 3.1 目录结构
+### 2.1 目录结构
 
 ```
 boop/
-├── __init__.py
-├── __main__.py         # 应用入口
-├── config/             # 配置相关
-│   ├── __init__.py
-│   └── settings.py
-├── core/               # 核心功能
-│   ├── __init__.py
-│   ├── event.py        # 事件系统
-│   ├── script.py       # 脚本管理
-│   ├── script_metadata.py # 脚本元数据
-│   ├── script_wrapper.py # 脚本执行包装器
-│   ├── cache.py        # 元数据缓存
-│   ├── path.py         # 路径管理
-│   ├── logging.py      # 日志管理
-│   └── utils.py        # 通用工具
-├── scripts/            # 内置脚本
-├── tests/              # 测试文件
-├── ui/                 # 用户界面
-│   ├── __init__.py
-│   ├── editor.py       # 编辑器组件
-│   ├── main.py         # 主窗口
-│   ├── preferences.py  # 偏好设置
-│   └── script_picker.py # 脚本选择器
-└── config.json         # 配置文件
+├── __main__.py          # 应用入口
+├── config/
+│   └── settings.py      # 配置管理 (BoopConfig)
+├── core/
+│   ├── script.py        # 脚本管理器
+│   ├── script_metadata.py # 元数据解析
+│   ├── script_wrapper.py # 执行包装器
+│   ├── cache.py         # 元数据缓存
+│   ├── event.py         # 事件系统
+│   ├── logging.py       # 日志管理
+│   ├── path.py          # 路径管理
+│   └── utils.py         # 工具函数
+├── ui/
+│   ├── main.py          # 主窗口
+│   ├── editor.py        # 编辑器组件
+│   ├── script_picker.py # 脚本选择器
+│   └── preferences.py   # 首选项窗口
+└── scripts/             # 内置脚本
 ```
 
-### 3.2 模块职责
-
-| 模块 | 主要职责 | 文件位置 |
-|------|---------|----------|
-| main | 应用入口 | boop/__main__.py |
-| config | 配置管理 | boop/config/settings.py |
-| event | 事件系统 | boop/core/event.py |
-| script | 脚本管理和元数据加载 | boop/core/script.py |
-| script_metadata | 脚本元数据处理 | boop/core/script_metadata.py |
-| script_wrapper | 脚本执行包装器 | boop/core/script_wrapper.py |
-| cache | 元数据缓存管理 | boop/core/cache.py |
-| path | 路径管理 | boop/core/path.py |
-| logging | 日志管理 | boop/core/logging.py |
-| utils | 通用工具 | boop/core/utils.py |
-| editor | 编辑器组件 | boop/ui/editor.py |
-| main_window | 主窗口 | boop/ui/main.py |
-| script_picker | 脚本选择器 | boop/ui/script_picker.py |
-| preferences | 偏好设置 | boop/ui/preferences.py |
-
-### 3.3 架构图
+### 2.2 模块关系
 
 ```mermaid
 flowchart TD
-    subgraph 用户界面层
-        MainWindow[主窗口]
-        Editor[编辑器组件]
-        ScriptPicker[脚本选择器]
-        Preferences[偏好设置]
+    subgraph UI["用户界面层"]
+        MW[MainWindow<br/>主窗口]
+        ED[Editor<br/>编辑器]
+        SP[ScriptPicker<br/>脚本选择器]
+        PF[Preferences<br/>首选项]
     end
 
-    subgraph 核心功能层
-        ScriptManager[脚本管理器]
-        EventSystem[事件系统]
+    subgraph Core["核心功能层"]
+        SM[ScriptManager<br/>脚本管理器]
+        ES[EventSystem<br/>事件系统]
+        MC[MetadataCache<br/>元数据缓存]
     end
 
-    subgraph 配置层
-        ConfigManager[配置管理器]
-        BoopConfig[配置数据类]
-    end
-
-    subgraph 脚本层
-        BuiltinScripts[内置脚本]
-        UserScripts[用户脚本]
-    end
-
-    MainWindow -->|包含| Editor
-    MainWindow -->|创建| ScriptPicker
-    MainWindow -->|创建| Preferences
-    MainWindow -->|使用| ScriptManager
-    MainWindow -->|订阅| EventSystem
-    MainWindow -->|使用| ConfigManager
-
-    ScriptPicker -->|使用| ScriptManager
-
-    ScriptManager -->|发布事件| EventSystem
-
-    ScriptManager -->|执行| BuiltinScripts
-    ScriptManager -->|执行| UserScripts
-
-    ConfigManager -->|管理| BoopConfig
-```
-
-## 4. 核心功能设计
-
-### 4.1 事件系统
-
-事件系统采用发布-订阅模式，用于组件间通信：
-
-```python
-# 核心事件系统结构
-class EventSystem:
-    def subscribe(self, event_name, callback):
-        # 订阅事件
-        pass
+    MW -->|包含 | ED
+    MW -->|创建 | SP
+    MW -->|创建 | PF
+    MW -->|使用 | SM
+    MW -->|订阅 | ES
     
-    def publish(self, event_name, *args, **kwargs):
-        # 发布事件给所有订阅者
-        pass
-
-# 全局事件系统实例
-event_system = EventSystem()
+    SP -->|使用 | SM
+    SM -->|发布事件 | ES
+    SM -->|读写 | MC
 ```
 
-#### 4.1.1 事件类型
+## 3. 核心组件
 
-| 事件名称 | 触发时机 | 携带数据 |
-|---------|---------|----------|
-| scripts_loaded | 脚本加载完成 | count: 加载数量 |
-| script_load_error | 脚本加载失败 | script_path: 脚本路径, error: 错误信息 |
-| script_execution_started | 脚本执行开始 | script_name: 脚本名称 |
-| script_execution_completed | 脚本执行完成 | script_name: 脚本名称, success: 是否成功, error: 错误信息 |
+### 3.1 事件系统
 
-### 4.2 脚本系统
-
-脚本系统负责脚本元数据的加载、缓存和执行，支持在隔离的子进程中运行脚本：
+发布 - 订阅模式，组件间通信：
 
 ```python
-# 脚本管理器核心结构
+# 事件类型
+scripts_loaded           # 脚本加载完成
+script_load_error        # 脚本加载失败
+script_execution_started # 脚本执行开始
+script_execution_completed # 脚本执行完成
+```
+
+### 3.2 脚本管理器
+
+```python
 class ScriptManager:
-    def __init__(self, config=None):
-        # 初始化脚本管理器
-        self._metadata_cache = MetadataCache()
-    
-    def load_metadata(self):
-        # 加载所有脚本的元数据
-        pass
-    
-    def get_all_metadata(self):
-        # 获取所有缓存的元数据
-        pass
-    
-    def get_metadata(self, file_path):
-        # 获取特定脚本的元数据
-        pass
-    
-    def create_metadata_from_dict(self, metadata_dict, file_path):
-        # 从字典创建 ScriptMetadata 对象
-        pass
-    
-    def clear_metadata_cache(self):
-        # 清除元数据缓存
-        pass
+    def load_metadata(self) -> int      # 加载元数据
+    def get_all_metadata(self) -> dict  # 获取所有元数据
+    def refresh_metadata_cache(self)    # 刷新缓存
 ```
 
-#### 4.2.1 执行流程
+### 3.3 元数据缓存
 
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant MainWindow as 主窗口
-    participant ScriptPicker as 脚本选择器
-    participant ScriptManager as 脚本管理器
-    participant Editor as 编辑器
-    participant Subprocess as 子进程
-    participant EventSystem as 事件系统
+- 缓存位置：`~/Library/Caches/boop/metadata.json` (macOS)
+- 缓存内容：脚本元数据字典
+- 缓存更新：脚本文件修改时自动更新
 
-    User->>MainWindow: 打开脚本选择器 (Cmd+B)
-    MainWindow->>ScriptPicker: 创建并显示
-    User->>ScriptPicker: 选择脚本
-    ScriptPicker->>MainWindow: 返回选中脚本 (ScriptMetadata, Path)
-    MainWindow->>Editor: 记录脚本执行开始
-    Editor->>Editor: 保存当前状态到历史
-    MainWindow->>EventSystem: 发布 script_execution_started 事件
-    MainWindow->>Subprocess: 在子进程中执行脚本
-    Subprocess-->>MainWindow: 返回执行结果
-    MainWindow->>Editor: 更新编辑器内容
-    Editor->>Editor: 保存新状态到历史
-    Editor->>Editor: 更新脚本执行历史结果
-    MainWindow->>EventSystem: 发布 script_execution_completed 事件
-    EventSystem-->>MainWindow: 通知状态更新
-```
-
-#### 4.2.2 加载流程
-
-```mermaid
-flowchart TD
-    A[开始加载脚本元数据] --> B[遍历脚本目录]
-    B --> C{文件是否存在?}
-    C -->|是| D[解析脚本元数据]
-    C -->|否| E[跳过]
-    D --> F[添加到元数据缓存]
-    F --> G{还有文件?}
-    E --> G
-    G -->|是| B
-    G -->|否| H[结束]
-```
-
-### 4.3 编辑器组件
-
-编辑器组件提供文本编辑功能，支持行号显示和基于历史的 undo/redo 功能：
+### 3.4 脚本执行
 
 ```python
-# 编辑器核心结构
-class Editor:
-    def __init__(self, parent, config):
-        # 初始化编辑器
-        # 历史记录初始化
-        self._history = []
-        self._history_index = -1
-        # 脚本执行历史
-        self._script_history = []
-        self._current_script_history_index = -1
-    
-    def get_content(self):
-        # 获取编辑器内容
-        pass
-    
-    def set_content(self, text):
-        # 设置编辑器内容
-        pass
-    
-    def get_cursor_position(self):
-        # 获取光标位置
-        pass
-    
-    def get_char_count(self):
-        # 获取字符计数
-        pass
-    
-    def _save_state(self):
-        # 保存当前状态到历史
-        pass
-    
-    def _undo(self, event):
-        # 撤销操作
-        pass
-    
-    def _redo(self, event):
-        # 重做操作
-        pass
-    
-    def record_script_execution(self, script_name):
-        # 记录脚本执行
-        pass
-    
-    def update_script_execution_result(self, after_state):
-        # 更新脚本执行结果
-        pass
+# script_wrapper.py
+class ScriptExecution:
+    def __init__(self, text, full_text, selection)
+    def insert(self, text)
+    def post_info(self, msg)
+    def post_error(self, msg)
 ```
 
-### 4.4 主窗口
+**执行流程：**
 
-主窗口是应用的入口点，负责协调各个组件：
+1. 用户选择脚本
+2. 主窗口发布 `script_execution_started` 事件
+3. 在子进程中执行脚本
+4. 脚本完成后更新编辑器内容
+5. 发布 `script_execution_completed` 事件
+
+## 4. UI 组件
+
+### 4.1 主窗口 (MainWindow)
+
+- 创建菜单栏（Boop/Edit/Script/Help）
+- 初始化 Editor、ScriptManager
+- 绑定全局快捷键
+- 订阅系统事件
+
+### 4.2 编辑器 (Editor)
+
+- `tk.Text` 组件 + 行号显示
+- 撤销/重做历史管理
+- 多光标编辑支持
+- 字体动态更新
+
+### 4.3 脚本选择器 (ScriptPicker)
+
+- 搜索框（支持名称和标签搜索）
+- 脚本列表（Treeview）
+- 详细信息面板
+- 防抖搜索（可配置延迟）
+
+### 4.4 首选项 (PreferencesPanel)
+
+- **General**：窗口大小、字体
+- **Scripts**：脚本目录、Python 解释器、依赖管理
+- **Logs**：日志查看和清除
+
+## 5. 配置系统
+
+### 5.1 BoopConfig 数据类
 
 ```python
-# 主窗口核心结构
-class MainWindow:
-    def __init__(self, config_manager):
-        # 初始化主窗口
-        pass
-    
-    def _create_ui(self):
-        # 创建用户界面
-        pass
-    
-    def _load_scripts(self):
-        # 加载脚本
-        pass
-    
-    def _execute_script(self, script):
-        # 执行脚本
-        pass
-    
-    def _open_script_picker(self):
-        # 打开脚本选择器
-        pass
-    
-    def run(self):
-        # 运行应用
-        pass
+@dataclass
+class BoopConfig:
+    script_directories: List[str]
+    python_path: str
+    font_family: str
+    font_size: int
+    window_width: int
+    window_height: int
+    maximize_window: bool
+    shortcuts: Dict[str, List[str]]
+    script_timeout: int
+    filter_delay: int
 ```
 
-### 4.5 脚本选择器
+### 5.2 配置存储
 
-脚本选择器允许用户浏览和选择脚本：
+- 文件位置：`~/Library/Application Support/boop/config.json` (macOS)
+- 加载方式：启动时自动加载
+- 保存方式：首选项窗口保存时写入
+
+## 6. 脚本系统
+
+### 6.1 脚本结构
 
 ```python
-# 脚本选择器核心结构
-class ScriptPicker:
-    def __init__(self, parent, script_manager, on_select):
-        # 初始化脚本选择器
-        pass
-    
-    def _create_popup(self):
-        # 创建弹出窗口
-        pass
-    
-    def _filter_scripts(self):
-        # 过滤脚本
-        pass
-    
-    def _on_select(self):
-        # 处理脚本选择
-        pass
-```
-
-### 4.6 偏好设置
-
-偏好设置允许用户配置应用的各种参数：
-
-```python
-# 偏好设置核心结构
-class Preferences:
-    def __init__(self, parent, config_manager):
-        # 初始化偏好设置
-        pass
-    
-    def _create_popup(self):
-        # 创建弹出窗口
-        pass
-    
-    def _save(self):
-        # 保存配置
-        pass
-```
-
-## 5. 界面设计
-
-### 5.1 主窗口布局
-
-```
-+-----------------------------------------------+
-| File   Edit   Scripts   Help                  |
-+-----------------------------------------------+
-|  1 |                                          |
-|  2 |                                          |
-|  3 |               编辑器区域                |
-|  4 |                                          |
-|  5 |                                          |
-+-----------------------------------------------+
-| Ready                          Ln 1, Col 1 | 0 chars |
-+-----------------------------------------------+
-```
-
-### 5.2 脚本选择器
-
-- 两栏布局：左侧脚本列表，右侧脚本详情
-- 搜索功能：实时过滤脚本，搜索元数据中的 name 和 tags 信息
-- 分类标签：按分类筛选脚本
-- 脚本列表：显示每个脚本的名称、描述和对应的图标
-- 脚本详情：右侧显示脚本的说明信息和自定义操作帮助文档（元数据中的 help 字段内容）
-- 键盘导航：支持方向键、PageUp/PageDown、Home/End
-
-### 5.3 偏好设置
-
-- 字体设置：字体家族和大小
-- 主题设置：浅色/深色
-- 脚本目录：自定义脚本目录
-- Python 解释器：指定脚本执行的 Python 解释器
-
-## 6. 配置系统
-
-### 6.1 配置项
-
-| 配置项 | 类型 | 默认值 | 描述 |
-|--------|------|--------|------|
-| script_directories | List[str] | [默认脚本目录] | 脚本目录列表 |
-| python_path | str | "" | Python 解释器路径 |
-| window_width | int | 800 | 窗口宽度 |
-| window_height | int | 600 | 窗口高度 |
-| font_family | str | "Menlo" | 编辑器字体 |
-| font_size | int | 14 | 字体大小 |
-| maximize_window | bool | false | 是否最大化窗口 |
-| shortcuts | Dict[str, List[str]] | 内置快捷键 | 快捷键配置 |
-
-### 6.2 配置加载和保存
-
-- 配置存储在 `config.json` 文件中
-- 首次运行时使用默认配置
-- 配置更改后自动保存
-
-## 7. 脚本系统
-
-### 7.1 脚本结构
-
-脚本元数据配置参考原Boop的方式，在脚本的注释中使用JSON格式组织：
-
-```python
-"""
+'''
 {
-  "api": 1,
-  "name": "Script Name",
-  "description": "Script description",
-  "tags": ["category1", "category2"],
-  "icon": "help",
-  "help": "Script help documentation"
+    "name": "脚本名称",
+    "description": "功能描述",
+    "tags": ["标签"],
+    "icon": "★",
+    "help": "使用说明",
+    "dependencies": ["requests"]
 }
-"""
-
+'''
 
 def main(state):
-    """
-    Main function for script execution
-    
-    Args:
-        state: ScriptExecution object with text manipulation methods
-    """
-    # 脚本逻辑
     text = state.text
-    # 处理文本
-    state.text = processed_text
+    state.text = text.upper()
 ```
 
-**参考示例**：
+### 6.2 元数据字段
 
-```javascript
-/**
-{
-  "api": 1,
-  "name": "Align Code",
-  "description": "Align code (arg: 1st line 'symbol:spaceMode:alignAll', e.g., '=:both:true')",
-  "author": "xthuji",
-  "icon": "table",
-  "tags": "align,code,format"
-}
-**/
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 脚本名称 |
+| `description` | string | 功能描述 |
+| `tags` | list | 搜索标签 |
+| `icon` | string | 图标 |
+| `help` | string | 帮助说明 |
+| `dependencies` | list | 依赖包列表 |
 
-function main(input) {
-  // 脚本逻辑
-}
-```
+### 6.3 state API
 
-### 7.2 ScriptExecution API
-
-| 方法/属性 | 描述 |
+| 属性/方法 | 说明 |
 |-----------|------|
-| text | 获取/设置当前文本（选中部分或全部） |
-| full_text | 获取/设置全部文本 |
-| selection | 获取/设置选中文本 |
-| insert(text) | 插入文本 |
-| post_info(message) | 发布信息消息 |
-| post_error(message) | 发布错误消息 |
+| `state.text` | 获取/设置当前文本 |
+| `state.full_text` | 获取/设置全部内容 |
+| `state.selection` | 获取/设置选中文本 |
+| `state.insert(text)` | 在光标处插入 |
+| `state.post_info(msg)` | 显示提示 |
+| `state.post_error(msg)` | 显示错误 |
 
-### 7.3 脚本帮助信息查看功能
+### 6.4 依赖管理
 
-所有脚本都需要支持帮助信息查看功能，具体实现如下：
+1. 脚本元数据中定义 `dependencies`
+2. 首选项 → Scripts → Install All Dependencies
+3. 使用 pip 安装到应用内部环境
 
-1. **检查参数**：在执行脚本之前，检查编辑器第一行内容是否为 `-h`
-2. **显示帮助**：如果第一行是 `-h`，则在编辑器的 `-h` 和正文内容之间（从第二行开始）插入脚本元数据的 `help` 字段内容
-3. **执行流程**：
-   - 检查编辑器第一行是否为 `-h`
-   - 如果是，提取脚本元数据中的 `help` 字段内容
-   - 在编辑器第二行插入帮助信息
-   - 保持原有的正文内容不变
-   - 不执行脚本的主要逻辑
-   - 如果不是，正常执行脚本逻辑
+## 7. 日志系统
 
-**示例**：
+### 7.1 日志配置
 
 ```python
-# 编辑器内容
--h
+# 日志级别
+开发环境：DEBUG
+打包应用：INFO
 
-# 脚本执行后
--h
-# 帮助信息内容（从脚本元数据的help字段提取）
+# 日志文件
+macOS: ~/Library/Logs/boop/boop.log
+Windows: %APPDATA%/boop/logs/boop.log
+Linux: ~/.config/boop/logs/boop.log
 
-# 原有正文内容
+# 轮转设置
+单文件大小：5MB
+备份数量：3
 ```
 
-### 7.4 脚本元数据字段
+### 7.2 日志格式
 
-| 字段 | 类型 | 描述 |
-|------|------|------|
-| api | number | API版本号 |
-| name | string | 脚本名称 |
-| description | string | 脚本描述 |
-| tags | array/string | 脚本分类标签 |
-| help | string | 脚本帮助文档 |
-| author | string | 脚本作者（可选） |
-| icon | string | 脚本图标（可选） |
-
-### 7.5 内置脚本
-
-| 脚本名称 | 功能 | 分类 |
-|---------|------|------|
-| Reverse String | 反转字符串 | Text Transformation |
-| To Uppercase | 转换为大写 | Text Transformation |
-| To Lowercase | 转换为小写 | Text Transformation |
-| Trim Whitespace | 去除空白字符 | Text Transformation |
-| Remove Empty Lines | 移除空行 | Text Transformation |
-| Sort Lines | 排序行 | Text Transformation |
-| Count Lines | 计算行数 | Text Analysis |
-| Base64 Encode | Base64 编码 | Encoding |
-| Base64 Decode | Base64 解码 | Encoding |
-| JSON Format | JSON 格式化 | Formatting |
-
-## 8. 性能优化
-
-### 8.1 脚本执行优化
-
-- 使用 ProcessPoolExecutor 管理子进程，避免频繁创建进程
-- 设置合理的超时时间，防止脚本执行过长
-- 异步执行脚本，避免阻塞主线程
-
-### 8.2 脚本加载优化
-
-- 缓存脚本模块，避免重复加载
-- 只加载修改的脚本，减少加载时间
-- 构建分类索引，提高脚本检索效率
-
-### 8.3 界面响应优化
-
-- 使用 `after` 方法异步更新界面，避免卡顿
-- 线程化处理耗时操作，如脚本加载
-- 合理绑定事件，避免频繁更新
-
-## 9. 测试系统
-
-### 9.1 测试框架
-
-- 基于 JSON 的测试用例配置
-- 自动执行测试并生成报告
-- 支持验证脚本执行结果
-
-### 9.2 测试用例结构
-
-```json
-{
-  "testCases": [
-    {
-      "category": "Text Transformation",
-      "scripts": [
-        {
-          "name": "Reverse String",
-          "tests": [
-            {
-              "input": "hello",
-              "expected": "olleh"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+```
+2026-03-07 19:42:51 - b.u.main - INFO - 消息内容
 ```
 
-## 10. 部署与打包
+路径缩写：`boop.ui.main` → `b.u.main`
 
-### 10.1 打包流程
+## 8. 打包部署
 
-- 使用 PyInstaller 打包应用
-- 生成 macOS .app 文件和 .dmg 安装包
-- 包含所有依赖项
-
-### 10.2 构建命令
+### 8.1 PyInstaller 配置
 
 ```bash
-# 构建应用
 ./build.sh
-
-# 构建结果
-- dist/Boop.app
-- dist/Boop-1.0.0-macos.dmg
 ```
 
-## 11. 未来规划
+**输出：**
+- macOS: `dist/Boop-*.dmg`
+- Linux: `dist/Boop-*.tar.gz`
+- Windows: `dist/Boop-*.zip`
 
-### 11.1 功能增强
+### 8.2 打包内容
 
-- 支持更多脚本分类
-- 添加脚本市场，允许用户分享和下载脚本
-- 实现脚本参数配置界面
-- 支持更多文件格式的导入/导出
+- 应用主程序
+- Python 运行时
+- 依赖库
+- 内置脚本
+- 用户文档 (USER_GUIDE.md)
 
-### 11.2 待处理需求
+### 8.3 环境检测
 
-| 需求 | 描述 | 优先级 | 技术建议 |
-|------|------|--------|----------|
-| **Esc 键关闭窗口** | 在脚本选择器和首选项窗口中支持 Esc 键关闭，行为：第一次按 Esc 清除焦点/选中状态，第二次按 Esc 关闭窗口 | 高 | 使用 `bind_class` 为 Toplevel 窗口绑定 Esc 键，为 Entry、Treeview、Listbox、Text 等组件分别绑定处理逻辑 |
+```python
+# 检测打包环境
+def is_packaged_app():
+    return getattr(sys, 'frozen', False) or hasattr(sys, '_MEIPASS')
+```
 
-### 11.3 性能优化
+## 9. 性能优化
 
-- 进一步优化脚本执行速度
-- 实现脚本编译缓存
-- 优化大文件处理能力
+### 9.1 脚本加载
 
-### 11.4 跨平台支持
+- 元数据缓存（JSON 文件）
+- 后台异步加载
+- 增量更新
 
-- 完善 Windows 和 Linux 平台支持
-- 统一跨平台用户体验
+### 9.2 界面响应
 
-## 12. 总结
+- 使用 `after` 异步更新
+- 搜索防抖（可配置延迟）
+- 事件驱动更新
 
-Boop Python 是一个功能强大、架构清晰的文本处理工具，通过脚本执行系统提供了灵活的文本处理能力。其核心优势包括：
+### 9.3 脚本执行
 
-- **模块化设计**：清晰的模块划分，职责明确
-- **隔离执行**：脚本在独立子进程中执行，确保安全稳定
-- **事件驱动**：通过事件系统实现组件间通信，降低耦合
-- **性能优化**：缓存机制、异步操作、进程池等技术提高性能
-- **用户友好**：直观的界面设计，丰富的功能，良好的响应速度
+- 子进程隔离
+- 超时保护（默认 30 秒）
+- 进程池复用
 
-该设计既满足了当前的功能需求，又为未来的扩展和优化提供了良好的基础。
+## 10. 扩展性
+
+### 10.1 添加新脚本
+
+1. 创建 Python 文件
+2. 添加元数据 docstring
+3. 实现 `main(state)` 函数
+4. 将文件放入脚本目录
+
+### 10.2 添加新功能
+
+1. 在 `core/` 添加核心逻辑
+2. 在 `ui/` 添加界面组件
+3. 使用事件系统通信
+4. 在 `MainWindow` 中集成

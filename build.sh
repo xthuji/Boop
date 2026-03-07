@@ -27,7 +27,8 @@ readonly RESERVE_DIR_ARRAY=(".app")
 # For macOS, the files will be placed in Contents/Resources
 readonly APP_FILES=("${SCRIPT_DIR}/boop/scripts:scripts"
                    "${SCRIPT_DIR}/boop/core/script_wrapper.py:boop/core"
-                   "${SCRIPT_DIR}/version.txt:.")
+                   "${SCRIPT_DIR}/version.txt:."
+                   "${SCRIPT_DIR}/USER_GUIDE.md:.")
 
 # Configuration file is now in project root, no need to include in build
 

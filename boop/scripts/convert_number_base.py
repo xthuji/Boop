@@ -64,15 +64,17 @@ def run(text):
             if to_base == 10:
                 converted = str(decimal)
             else:
-                # 处理 16 进制以上的字母
-                digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+                # 使用内置函数转换进制
                 converted = ""
-                temp = decimal
-                while temp > 0:
-                    converted = digits[temp % to_base] + converted
-                    temp = temp // to_base
-                if not converted:
+                if decimal == 0:
                     converted = "0"
+                else:
+                    # Python 3.10+ 支持直接使用 int.to_bytes 或 format，但这里使用传统方法确保兼容性
+                    digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+                    temp = decimal
+                    while temp > 0:
+                        converted = digits[temp % to_base] + converted
+                        temp = temp // to_base
             
             # 处理大小写
             if uppercase:

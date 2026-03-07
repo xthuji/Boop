@@ -160,7 +160,7 @@ class RubyFormatter:
     def _post_process(self, code: str) -> str:
         """后处理"""
         code = re.sub(r'\n\s*\n', '\n', code)
-        return code.strip() + '\n'
+        return code.strip()
 
 
 def format_code(code: str) -> str:

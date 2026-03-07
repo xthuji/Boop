@@ -87,11 +87,8 @@ class ScriptPickerPopup:
 
         self.search_var = tk.StringVar()
         self.search_entry = tk.Entry(
-            search_frame,
-            textvariable=self.search_var,
-            font=('TkDefaultFont', 11),
-            relief=tk.FLAT,
-            bg='#f5f5f5'
+            search_frame, textvariable=self.search_var,
+            font=('TkDefaultFont', 11), relief=tk.FLAT, bg='#f5f5f5'
         )
         self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         self.search_entry.focus_set()
@@ -107,13 +104,7 @@ class ScriptPickerPopup:
         list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
         columns = ('name', 'description')
-        self.tree = ttk.Treeview(
-            list_frame,
-            columns=columns,
-            show='headings',
-            height=15,
-            selectmode='browse'
-        )
+        self.tree = ttk.Treeview( list_frame, columns=columns, show='headings', height=15, selectmode='browse' )
 
         self.tree.heading('name', text='Script Name')
         self.tree.heading('description', text='Description')
@@ -140,32 +131,18 @@ class ScriptPickerPopup:
         details_header = tk.Frame(details_frame, bg='#f5f5f5')
         details_header.pack(fill=tk.X, padx=10, pady=8)
 
-        tk.Label(
-            details_header,
-            text="📋 Script Details",
-            bg='#f5f5f5',
-            font=('TkDefaultFont', 11, 'bold')
-        ).pack(side=tk.LEFT)
+        tk.Label( details_header, text="📋 Script Details", bg='#f5f5f5', font=('TkDefaultFont', 11, 'bold') ).pack(side=tk.LEFT)
 
         # Script name
         name_frame = tk.Frame(details_frame, bg='white')
         name_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
 
-        tk.Label(
-            name_frame,
-            text="Name:",
-            bg='white',
-            font=('TkDefaultFont', 10, 'bold')
-        ).pack(side=tk.LEFT, padx=(0, 5))
+        tk.Label( name_frame, text="Name:", bg='white', font=('TkDefaultFont', 10, 'bold') ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_name_var = tk.StringVar(value="Select a script")
         tk.Label(
-            name_frame,
-            textvariable=self.script_name_var,
-            bg='white',
-            font=('TkDefaultFont', 10),
-            anchor=tk.W,
-            wraplength=250
+            name_frame, textvariable=self.script_name_var, bg='white',
+            font=('TkDefaultFont', 10), anchor=tk.W, wraplength=250
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Script filename
@@ -173,20 +150,14 @@ class ScriptPickerPopup:
         filename_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
 
         tk.Label(
-            filename_frame,
-            text="Filename:",
-            bg='white',
+            filename_frame, text="Filename:", bg='white',
             font=('TkDefaultFont', 10, 'bold')
         ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_filename_var = tk.StringVar(value="")
         tk.Label(
-            filename_frame,
-            textvariable=self.script_filename_var,
-            bg='white',
-            font=('TkDefaultFont', 10),
-            anchor=tk.W,
-            wraplength=250
+            filename_frame, textvariable=self.script_filename_var,
+            bg='white', font=('TkDefaultFont', 10), anchor=tk.W, wraplength=250
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Script description
@@ -194,21 +165,15 @@ class ScriptPickerPopup:
         desc_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
 
         tk.Label(
-            desc_frame,
-            text="Description:",
-            bg='white',
+            desc_frame, text="Description:", bg='white',
             font=('TkDefaultFont', 10, 'bold')
         ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_desc_var = tk.StringVar(value="")
         tk.Label(
-            desc_frame,
-            textvariable=self.script_desc_var,
-            bg='white',
-            font=('TkDefaultFont', 10),
-            anchor=tk.W,
-            wraplength=250,
-            justify=tk.LEFT
+            desc_frame, textvariable=self.script_desc_var,
+            bg='white', font=('TkDefaultFont', 10),
+            anchor=tk.W, wraplength=250, justify=tk.LEFT
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Script tags
@@ -216,21 +181,15 @@ class ScriptPickerPopup:
         tags_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
 
         tk.Label(
-            tags_frame,
-            text="Tags:",
-            bg='white',
-            font=('TkDefaultFont', 10, 'bold')
+            tags_frame, text="Tags:",
+            bg='white', font=('TkDefaultFont', 10, 'bold')
         ).pack(side=tk.LEFT, padx=(0, 5))
 
         self.script_tags_var = tk.StringVar(value="")
         tk.Label(
-            tags_frame,
-            textvariable=self.script_tags_var,
-            bg='white',
-            font=('TkDefaultFont', 10),
-            anchor=tk.W,
-            wraplength=250,
-            justify=tk.LEFT
+            tags_frame, textvariable=self.script_tags_var,
+            bg='white', font=('TkDefaultFont', 10),
+            anchor=tk.W, wraplength=250, justify=tk.LEFT
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Help information
@@ -238,20 +197,14 @@ class ScriptPickerPopup:
         help_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 5))
 
         tk.Label(
-            help_frame,
-            text="Help:",
-            bg='white',
-            font=('TkDefaultFont', 10, 'bold')
+            help_frame, text="Help:",
+            bg='white', font=('TkDefaultFont', 10, 'bold')
         ).pack(anchor=tk.NW, pady=(0, 5))
 
         self.help_text = tk.Text(
-            help_frame,
-            font=('TkDefaultFont', 10),
-            bg='#f9f9f9',
-            borderwidth=1,
-            relief=tk.SUNKEN,
-            wrap=tk.WORD,
-            height=8
+            help_frame, font=('TkDefaultFont', 10),
+            bg='#f9f9f9', borderwidth=1,
+            relief=tk.SUNKEN, wrap=tk.WORD, height=8
         )
         self.help_text.pack(fill=tk.BOTH, expand=True)
         self.help_text.insert(tk.END, "Select a script to see help information")
@@ -264,47 +217,30 @@ class ScriptPickerPopup:
         # Status
         self.status_var = tk.StringVar(value="")
         tk.Label(
-            main_frame,
-            textvariable=self.status_var,
-            bg='white',
-            fg='gray',
-            font=('TkDefaultFont', 9)
+            main_frame, textvariable=self.status_var,
+            bg='white', fg='gray', font=('TkDefaultFont', 9)
         ).pack(fill=tk.X, pady=(10, 0))
 
         # Buttons
         button_frame = tk.Frame(main_frame, bg='white')
         button_frame.pack(fill=tk.X, pady=(10, 0))
 
-        # Cancel button (Esc key)
+        # Cancel button (Esc key) - left side
         self.cancel_btn = tk.Button(
-            button_frame,
-            text="Cancel (Esc)",
-            command=self._close,
-            bg='#f5f5f5',
-            fg='#333333',
-            activebackground='#e0e0e0',
-            activeforeground='#000000',
-            relief=tk.RAISED,
-            borderwidth=1,
-            padx=15,
-            pady=5,
+            button_frame, text="Cancel (Esc)", command=self._close,
+            bg='#f5f5f5', fg='#333333',
+            activebackground='#e0e0e0', activeforeground='#000000',
+            relief=tk.RAISED, borderwidth=1, padx=15, pady=5,
             font=('TkDefaultFont', 10)
         )
-        self.cancel_btn.pack(side=tk.RIGHT, padx=5)
+        self.cancel_btn.pack(side=tk.LEFT, padx=5)
 
-        # Run button (Enter key)
+        # Run button (Enter key) - right side, blue text, bold to highlight
         self.run_btn = tk.Button(
-            button_frame,
-            text="Run (Enter)",
-            command=self._on_select,
-            bg='#0066cc',
-            fg='#ffffff',
-            activebackground='#0052a3',
-            activeforeground='#ffffff',
-            relief=tk.RAISED,
-            borderwidth=1,
-            padx=15,
-            pady=5,
+            button_frame, text="Run (Enter)", command=self._on_select,
+            bg='#f5f5f5', fg='#007aff',
+            activebackground='#e0e0e0', activeforeground='#0066cc',
+            relief=tk.RAISED, borderwidth=1, padx=15, pady=5,
             font=('TkDefaultFont', 10, 'bold')
         )
         self.run_btn.pack(side=tk.RIGHT, padx=5)

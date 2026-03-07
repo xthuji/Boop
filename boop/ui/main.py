@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
 from typing import Optional
+import os
 
 from boop.config.settings import BoopConfig
 from boop.core.script import ScriptManager
@@ -116,9 +117,11 @@ class MainWindow:
 
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About Boop", command=self._show_about)
+        help_menu.add_command(label="User Guide", command=self._show_user_guide)
         help_menu.add_separator()
         help_menu.add_command(label="Preferences", command=self._open_preferences, accelerator=self._get_accelerator("preferences"))
+        help_menu.add_separator()
+        help_menu.add_command(label="About Boop", command=self._show_about)
         menubar.add_cascade(label="Help", menu=help_menu)
         
         self.root.config(menu=menubar)
@@ -216,13 +219,7 @@ class MainWindow:
     def _open_script_picker(self):
         """Open script picker popup."""
         # Open script picker directly - no need to load scripts
-        ScriptPickerPopup(
-            self.root,
-            self.script_manager,
-            self._execute_script,
-            self.editor._text_widget,
-            self.config
-        )
+        ScriptPickerPopup( self.root, self.script_manager, self._execute_script, self.editor._text_widget, self.config )
     
     def _execute_script(self, script_tuple: Optional[tuple]):
         """Execute a script on the current text.
@@ -250,11 +247,12 @@ class MainWindow:
         self.status_var.set(f"Executing script: {metadata.name}")
         event_system.publish('script_execution_started', script_name=metadata.name)
         
-        # Run script in subprocess
+        # Run script in subprocess with timeout from config
         result = run_script_in_subprocess(
             file_path,
             content,
-            self.config.python_path
+            self.config.python_path,
+            self.config.script_timeout
         )
         
         if result['success']:
@@ -307,7 +305,7 @@ class MainWindow:
         import re
         import sys
         version = "1.0.0"  # Default version
-        
+
         # Try to find version.txt file in different locations
         # 1. In PyInstaller packaged app
         if hasattr(sys, '_MEIPASS'):
@@ -315,7 +313,7 @@ class MainWindow:
         # 2. In development environment
         else:
             version_file = Path(__file__).parent.parent.parent / "version.txt"
-        
+
         if version_file.exists():
             try:
                 with open(version_file, 'r') as f:
@@ -325,17 +323,97 @@ class MainWindow:
                         version = version_match.group(1)
             except Exception:
                 pass
-        
+
         messagebox.showinfo(
             "About Boop Python",
             f"Boop Python\nVersion {version}\n\nA text processing tool inspired by Boop macOS app."
         )
-    
+
+    def _show_user_guide(self):
+        """Open user guide in default browser or text editor."""
+        import subprocess
+        import sys
+        
+        # Find user guide file
+        if hasattr(sys, '_MEIPASS'):
+            # Packaged app - guide might not be available
+            guide_path = Path(sys._MEIPASS) / "USER_GUIDE.md"
+        else:
+            # Development environment
+            guide_path = Path(__file__).parent.parent.parent / "USER_GUIDE.md"
+        
+        if guide_path.exists():
+            try:
+                # Try to open in default markdown viewer or browser
+                if sys.platform == 'darwin':  # macOS
+                    subprocess.run(['open', str(guide_path)])
+                elif sys.platform == 'win32':  # Windows
+                    os.startfile(str(guide_path))
+                else:  # Linux
+                    subprocess.run(['xdg-open', str(guide_path)])
+            except Exception as e:
+                # Fallback: show content in a dialog
+                self._show_user_guide_in_window(guide_path)
+        else:
+            messagebox.showinfo(
+                "User Guide",
+                "User guide file not found."
+            )
+
+    def _show_user_guide_in_window(self, guide_path: Path):
+        """Show user guide content in a text window."""
+        guide_window = tk.Toplevel(self.root)
+        guide_window.title("User Guide")
+        guide_window.transient(self.root)
+        guide_window.geometry("800x600")
+        
+        # Text widget with scrollbar
+        text_frame = tk.Frame(guide_window)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        scrollbar = ttk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        text_widget = tk.Text(
+            text_frame,
+            font=('TkDefaultFont', 11),
+            wrap=tk.WORD,
+            yscrollcommand=scrollbar.set
+        )
+        text_widget.pack(fill=tk.BOTH, expand=True)
+        scrollbar.config(command=text_widget.yview)
+        
+        # Load content
+        try:
+            with open(guide_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # Convert markdown to plain text (basic conversion)
+            # Remove # headers formatting
+            content = re.sub(r'^#+\s*', '', content, flags=re.MULTILINE)
+            # Remove ** bold formatting
+            content = re.sub(r'\*\*(.+?)\*\*', r'\1', content)
+            # Remove ` code formatting
+            content = re.sub(r'`(.+?)`', r'\1', content)
+            text_widget.insert('1.0', content)
+        except Exception as e:
+            text_widget.insert('1.0', f"Error loading user guide: {e}")
+        
+        text_widget.configure(state=tk.DISABLED)
+        
+        # Close button
+        close_btn = ttk.Button(
+            guide_window, text="Close",
+            command=guide_window.destroy
+        )
+        close_btn.pack(pady=10)
+        
+        center_window(guide_window, 800, 600)
+
     def _open_preferences(self):
         """Open preferences panel."""
         logger.info("Opening preferences panel")
         from boop.ui.preferences import PreferencesPanel
-        PreferencesPanel(self.root, self.config)
+        PreferencesPanel(self.root, self.config, editor=self.editor)
 
     def _refresh_script_metadata_cache(self):
         """Refresh script metadata cache."""

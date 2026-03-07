@@ -4,7 +4,7 @@
       "category": "Code Formatting",
       "scripts": [
         {
-          "name": "Format CSS",
+          "name": "format_css",
           "tests": [
             {
               "input": "body{color:red;margin:0;padding:0}",
@@ -53,7 +53,7 @@
           ]
         },
         {
-          "name": "Format JSON",
+          "name": "format_json",
           "tests": [
             {
               "input": "{\"name\":\"John\",\"age\":30}",
@@ -78,7 +78,7 @@
           ]
         },
         {
-          "name": "Format SQL",
+          "name": "format_sql",
           "tests": [
             {
               "input": "SELECT*FROM users WHERE id=1",
@@ -111,7 +111,7 @@
           ]
         },
         {
-          "name": "Format Xml",
+          "name": "format_xml",
           "tests": [
             {
               "input": "<root><item>test</item></root>",
@@ -136,7 +136,7 @@
           ]
         },
         {
-          "name": "Format Java",
+          "name": "format_java",
           "tests": [
             {
               "input": "public class HelloWorld{public static void main(String[]args){System.out.println(\"Hello\");}}",
@@ -161,7 +161,7 @@
           ]
         },
         {
-          "name": "Format JavaScript",
+          "name": "format_javascript",
           "tests": [
             {
               "input": "function hello(){console.log('world');}",
@@ -202,7 +202,7 @@
           ]
         },
         {
-          "name": "Format Typescript",
+          "name": "format_typescript",
           "tests": [
             {
               "input": "interface Person{name:string;age:number;}",
@@ -239,7 +239,7 @@
           ]
         },
         {
-          "name": "Format Python",
+          "name": "format_python",
           "tests": [
             {
               "input": "def hello():\nprint('world')",
@@ -280,7 +280,7 @@
           ]
         },
         {
-          "name": "Format Lua",
+          "name": "format_lua",
           "tests": [
             {
               "input": "function hello()\nprint('world')\nend",
@@ -305,7 +305,7 @@
           ]
         },
         {
-          "name": "Format HTML",
+          "name": "format_html",
           "tests": [
             {
               "input": "<div><p>Hello</p><p>World</p></div>",
@@ -342,7 +342,7 @@
           ]
         },
         {
-          "name": "Format Ruby",
+          "name": "format_ruby",
           "tests": [
             {
               "input": "def hello() puts 'world' end",
@@ -367,7 +367,7 @@
           ]
         },
         {
-          "name": "Format Shell",
+          "name": "format_shell",
           "tests": [
             {
               "input": "#!/bin/bash if [ -f file.txt ]; then echo 'File exists'; fi",
@@ -388,7 +388,7 @@
           ]
         },
         {
-          "name": "Format YAML",
+          "name": "format_yaml",
           "tests": [
             {
               "input": "name:John\nage:30",
@@ -405,7 +405,7 @@
           ]
         },
         {
-          "name": "Format Properties",
+          "name": "format_properties",
           "tests": [
             {
               "input": "key1=value1\nkey2=value2",
@@ -422,7 +422,7 @@
           ]
         },
         {
-          "name": "Format INI",
+          "name": "format_ini",
           "tests": [
             {
               "input": "[General]\nname=John\nage=30",
@@ -435,7 +435,7 @@
           ]
         },
         {
-          "name": "Format Go",
+          "name": "format_go",
           "tests": [
             {
               "input": "package main\nimport \"fmt\"\nfunc main(){fmt.Println(\"Hello\")}",
@@ -468,7 +468,7 @@
           ]
         },
         {
-          "name": "Format AppleScript",
+          "name": "format_applescript",
           "tests": [
             {
               "input": "display dialog \"Hello\" buttons {\"OK\"}",
@@ -485,7 +485,7 @@
           ]
         },
         {
-          "name": "Format Scala",
+          "name": "format_scala",
           "tests": [
             {
               "input": "object HelloWorld {def main(args: Array[String]): Unit = println(\"Hello\")}",

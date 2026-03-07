@@ -12,10 +12,7 @@
 
 def main(state):
     """Count the number of lines"""
-    if not state.full_text:
-        line_count = 0
-    else:
-        lines = state.full_text.split('\n')
-        line_count = len(lines)
+    lines = state.text.split('\n')
+    line_count = len(lines)
     state.text = str(line_count)
     state.post_info(f"{line_count} lines")

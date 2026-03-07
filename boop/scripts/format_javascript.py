@@ -87,10 +87,13 @@ def format_code(code):
         formatted_line = re.sub(r'\)\s*\{', ') {', formatted_line)
         formatted_line = re.sub(r'\belse\s*\{', 'else {', formatted_line)
         formatted_line = re.sub(r'\s*=>\s*', ' => ', formatted_line)
+        # Fix arrow function spacing
+        formatted_line = re.sub(r'\s*=\s*>\s*', ' => ', formatted_line)
 
-        # Handle spacing around equals sign (but not ==, ===, !=, !==)
-        formatted_line = re.sub(r'([^=!<>])=([^\s=])', r'\1 = \2', formatted_line)
-        formatted_line = re.sub(r'([^\s=])=([^=])', r'\1 = \2', formatted_line)
+        # Handle spacing around equals sign (but not ==, ===, !=, !==, or =>)
+        # Exclude arrow functions
+        formatted_line = re.sub(r'([^=!<>])(=)(?!>)', r'\1 \2 ', formatted_line)
+        formatted_line = re.sub(r'([^\s=])(=)(?!>)', r'\1 \2 ', formatted_line)
 
         # Handle spacing around operators (exclude comparison operators already handled)
         formatted_line = re.sub(r'([^\s])\+([^\s])', r'\1 + \2', formatted_line)
@@ -155,6 +158,8 @@ def format_code(code):
 
     # Fix arrow function spacing
     result = re.sub(r'\s*=\s*=>\s*', ' => ', result)
+    # Additional fix for arrow function spacing
+    result = re.sub(r'\s*=>\s*', ' => ', result)
 
     # Fix template string variable spacing
     result = re.sub(r'\$\{\s*([^}]+)\s*\}', r'${\1}', result)
@@ -177,7 +182,7 @@ def format_code(code):
     # Clean up extra blank lines
     result = re.sub(r'\n{3,}', '\n\n', result)
 
-    return result.strip() + CONFIG['NEWLINE']
+    return result.strip()
 
 
 def main(state):
@@ -198,7 +203,7 @@ def main(state):
 def is_minified(text):
     """Check if JavaScript code is minified."""
     text = text.strip()
-    return not '\n' in text and ('function' in text or 'const' in text or 'let' in text or 'var' in text)
+    return not '\n' in text
 
 def minify_code(code):
     """Minify JavaScript code."""

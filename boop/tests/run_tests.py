@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Test Runner - Execute tests for custom Python scripts
+BoopPython Optimized Test Runner (Grouped Output Edition)
+功能：自动扫描测试用例、按脚本分组并行执行、保证输出连续性。
 """
 
 import sys
@@ -8,307 +9,150 @@ import json
 import unittest
 import time
 import argparse
+import importlib.util
+import concurrent.futures
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from collections import defaultdict
+from typing import Dict, List, Any, Optional, Tuple, NamedTuple
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+# --- 数据模型 ---
 
-from boop.config.settings import BoopConfig
-from boop.core.script import ScriptManager
-from boop.core.utils import run_script_in_subprocess
+class TestResult(NamedTuple):
+    name: str
+    passed: bool
+    message: str = ""
+    duration: float = 0.0
 
-
-class TestResult:
-    """Test result holder."""
+class BoopState:
+    def __init__(self, text: str):
+        self.text = text
     
-    def __init__(self, name: str, passed: bool, message: str = "", duration: float = 0.0):
-        self.name = name
-        self.passed = passed
-        self.message = message
-        self.duration = duration
-
-
-def run_script_test(script_name: str, input_text: str, expected: str, 
-                    script_manager: ScriptManager, config: BoopConfig) -> TestResult:
-    """Run a single script test.
+    def post_info(self, msg):
+        pass # 生产环境通常重定向或忽略，避免干扰控制台
     
-    Args:
-        script_name: Name of the script to test
-        input_text: Input text for the script
-        expected: Expected output text
-        script_manager: Script manager instance
-        config: Configuration
+    def post_error(self, msg):
+        pass
+
+# --- 核心逻辑 ---
+
+class TestRunner:
+    def __init__(self, scripts_dir: Path):
+        self.scripts_dir = scripts_dir
+
+    def run_single(self, script_name: str, input_text: str, expected: str) -> TestResult:
+        start_time = time.time()
+        script_path = self.scripts_dir / f"{script_name}.py"
         
-    Returns:
-        TestResult object
-    """
-    start_time = time.time()
-    
-    try:
-        # Get script
-        script = script_manager.get_script(script_name)
-        if not script:
-            return TestResult(
-                script_name, 
-                False, 
-                f"Script '{script_name}' not found",
-                time.time() - start_time
-            )
-        
-        # Run script in subprocess
-        result = run_script_in_subprocess(
-            script.file_path,
-            input_text,
-            config.python_path
-        )
-        
-        if not result.get('success', False):
-            return TestResult(
-                script_name,
-                False,
-                f"Script execution failed: {result.get('error', 'Unknown error')}",
-                time.time() - start_time
-            )
-        
-        actual_output = result.get('output', '')
-        
-        if actual_output == expected:
-            return TestResult(
-                script_name,
-                True,
-                f"Output matches expected",
-                time.time() - start_time
-            )
-        else:
-            return TestResult(
-                script_name,
-                False,
-                f"Output mismatch.\nExpected: {repr(expected)}\nActual: {repr(actual_output)}",
-                time.time() - start_time
-            )
+        if not script_path.exists():
+            return TestResult(script_name, False, f"未找到脚本: {script_path}", time.time() - start_time)
+
+        try:
+            spec = importlib.util.spec_from_file_location(script_name, script_path)
+            if not spec or not spec.loader:
+                return TestResult(script_name, False, "无法加载模块", time.time() - start_time)
             
-    except Exception as e:
-        return TestResult(
-            script_name,
-            False,
-            f"Exception: {str(e)}",
-            time.time() - start_time
-        )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
 
+            state = BoopState(input_text)
+            module.main(state)
 
-def load_test_cases(test_cases_path: Path) -> Optional[Dict[str, Any]]:
-    """Load test cases from JSON file.
-    
-    Args:
-        test_cases_path: Path to test cases file
-        
-    Returns:
-        Test cases dictionary or None
-    """
-    if not test_cases_path.exists():
-        print(f"Test cases file not found: {test_cases_path}")
-        return None
-    
-    try:
-        with open(test_cases_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading test cases: {e}")
-        return None
+            duration = time.time() - start_time
+            if state.text == expected:
+                return TestResult(script_name, True, "OK", duration)
+            else:
+                return TestResult(script_name, False, f"FAIL: 期望 {repr(expected)} 但得到 {repr(state.text)}", duration)
+        except Exception as e:
+            return TestResult(script_name, False, f"ERROR: {str(e)}", time.time() - start_time)
 
+# --- 辅助工具 ---
 
-def run_all_tests(test_cases: Dict[str, Any], config: BoopConfig, target_script: str = None) -> List[TestResult]:
-    """Run all tests from test cases.
-    
-    Args:
-        test_cases: Test cases dictionary
-        config: Configuration
-        target_script: Optional target script name to test
-        
-    Returns:
-        List of TestResult objects
-    """
-    results = []
-    
-    # Create script manager
-    script_manager = ScriptManager(config)
-    script_manager.load_scripts()
-    
-    print("=" * 70)
-    print("Running Python Script Tests")
-    print("=" * 70)
-    
-    for category in test_cases.get('testCases', []):
-        category_name = category.get('category', 'Unknown')
-        print(f"\n{'=' * 70}")
-        print(f"Category: {category_name}")
-        print("=" * 70)
-        
-        for script_test in category.get('scripts', []):
-            script_name = script_test.get('name', '')
-            # Run all scripts regardless of file extension
-            
-            # Skip if target_script is specified and doesn't match
-            if target_script and script_name != target_script:
-                continue
-                
-            tests = script_test.get('tests', [])
-            
-            print(f"\n  Script: {script_name}")
-            
-            for test in tests:
-                input_text = test.get('input', '')
-                expected = test.get('expected', '')
-                test_name = test.get('name', f"Input: {input_text[:30]}")
-                
-                result = run_script_test(
-                    script_name,
-                    input_text,
-                    expected,
-                    script_manager,
-                    config
-                )
-                
-                status = "✓ PASS" if result.passed else "✗ FAIL"
-                print(f"    {status}: {test_name}")
-                if not result.passed:
-                    print(f"      {result.message}")
-                
-                results.append(result)
-    
-    return results
+def load_all_test_cases(test_dir: Path) -> List[Dict]:
+    all_categories = []
+    for json_file in test_dir.glob("test_cases*.json"):
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                all_categories.extend(data.get('testCases', []))
+        except Exception as e:
+            print(f"警告: 无法加载 {json_file.name}: {e}")
+    return all_categories
 
+def print_summary(results: List[TestResult], unit_results: Optional[unittest.TestResult]):
+    """生成整洁的分组报告"""
+    print("\n" + "=" * 60)
+    print(f"测试报告 - {datetime.now().strftime('%H:%M:%S')}")
+    print("=" * 60)
 
-def run_unit_tests() -> unittest.TestResult:
-    """Run unit tests using unittest framework.
-    
-    Returns:
-        TestResult from unittest
-    """
-    print("\n" + "=" * 70)
-    print("Running Unit Tests")
-    print("=" * 70)
-    
-    # Discover and run tests
-    loader = unittest.TestLoader()
-    suite = loader.discover(
-        start_dir=str(Path(__file__).parent),
-        pattern='test_*.py'
-    )
-    
-    runner = unittest.TextTestRunner(verbosity=2)
-    return runner.run(suite)
+    # 按脚本名称分组打印结果
+    grouped = defaultdict(list)
+    for r in results:
+        grouped[r.name].append(r)
 
-
-def generate_report(results: List[TestResult], unit_test_result: Optional[unittest.TestResult] = None) -> str:
-    """Generate test report.
+    for script_name, res_list in sorted(grouped.items()):
+        all_ok = all(r.passed for r in res_list)
+        status_icon = "✅" if all_ok else "❌"
+        print(f"{status_icon} 脚本: {script_name}")
+        for i, r in enumerate(res_list):
+            prefix = "  └─" if i == len(res_list)-1 else "  ├─"
+            msg = f" Case {i+1}: {r.message}" if not r.passed else f" Case {i+1}: Pass"
+            print(f"{prefix}{msg} ({r.duration:.3f}s)")
     
-    Args:
-        results: List of test results
-        unit_test_result: Optional unittest result
-        
-    Returns:
-        Report string
-    """
     total = len(results)
     passed = sum(1 for r in results if r.passed)
-    failed = total - passed
-    
-    report = []
-    report.append("\n" + "=" * 70)
-    report.append("TEST REPORT")
-    report.append("=" * 70)
-    report.append(f"\nPython Script Tests:")
-    report.append(f"  Total:  {total}")
-    report.append(f"  Passed: {passed}")
-    report.append(f"  Failed: {failed}")
-    report.append(f"  Success Rate: {(passed/total*100) if total > 0 else 0:.1f}%")
-    
-    if unit_test_result:
-        report.append(f"\nUnit Tests:")
-        report.append(f"  Tests Run: {unit_test_result.testsRun}")
-        report.append(f"  Failures: {len(unit_test_result.failures)}")
-        report.append(f"  Errors: {len(unit_test_result.errors)}")
-        report.append(f"  Skipped: {len(unit_test_result.skipped)}")
-    
-    if failed > 0:
-        report.append(f"\nFailed Tests:")
-        for result in results:
-            if not result.passed:
-                report.append(f"  - {result.name}: {result.message}")
-    
-    report.append("\n" + "=" * 70)
-    
-    return "\n".join(report)
+    print("-" * 60)
+    print(f"统计概览: {passed}/{total} 通过")
+    if unit_results and unit_results.testsRun > 0:
+        print(f"单元测试: {unit_results.testsRun - len(unit_results.failures) - len(unit_results.errors)}/{unit_results.testsRun} 通过")
+    print("=" * 60)
 
+# --- 主程序 ---
 
 def main():
-    """Main test runner entry point."""
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Run tests for Boop scripts')
-    parser.add_argument('script', nargs='?', help='Name of the script to test (optional)')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('script', nargs='?', help='指定脚本名')
+    parser.add_argument('--workers', type=int, default=8)
     args = parser.parse_args()
-    target_script = args.script
-    
-    print("=" * 70)
-    print("BoopPython Test Suite")
-    print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    if target_script:
-        print(f"Testing specific script: {target_script}")
-    print("=" * 70)
-    
-    # Load configuration
-    config_path = project_root / 'boop' / 'config.json'
-    config = BoopConfig.from_file(config_path)
-    
-    # Load test cases
-    test_cases_path = Path(__file__).parent / 'test_cases.json'
-    test_cases = load_test_cases(test_cases_path)
-    
-    # Load format test cases
-    format_test_cases_path = Path(__file__).parent / 'test_cases_format.json'
-    format_test_cases = load_test_cases(format_test_cases_path)
-    
-    # Combine test cases
-    if format_test_cases:
-        if test_cases:
-            test_cases['testCases'].extend(format_test_cases['testCases'])
-        else:
-            test_cases = format_test_cases
-    
-    all_results = []
-    unit_test_result = None
-    
-    # Run script tests if test cases loaded
-    if test_cases:
-        script_results = run_all_tests(test_cases, config, target_script)
-        all_results.extend(script_results)
-    
-    # Run unit tests
-    unit_test_result = run_unit_tests()
-    
-    # Generate report
-    report = generate_report(all_results, unit_test_result)
-    print(report)
-    
-    # Save report to file
-    report_path = Path(__file__).parent / 'test_report.txt'
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write(report)
-        f.write(f"\n\nReport saved at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
-    print(f"\nReport saved to: {report_path}")
-    
-    # Exit with appropriate code
-    failed_count = sum(1 for r in all_results if not r.passed)
-    if unit_test_result:
-        failed_count += len(unit_test_result.failures) + len(unit_test_result.errors)
-    
-    sys.exit(0 if failed_count == 0 else 1)
 
+    test_dir = Path(__file__).parent
+    scripts_dir = test_dir.parent / 'scripts'
+    
+    # 1. 搜集并分组任务
+    categories = load_all_test_cases(test_dir)
+    tasks = [] # (script_name, input, expected)
+    
+    for cat in categories:
+        for script_item in cat.get('scripts', []):
+            s_name = script_item.get('name')
+            if args.script and s_name != args.script: continue
+            for test in script_item.get('tests', []):
+                tasks.append((s_name, test.get('input', ''), test.get('expected', '')))
+
+    # 2. 并行执行
+    results = []
+    if tasks:
+        print(f"正在并行执行 {len(tasks)} 个用例...")
+        runner = TestRunner(scripts_dir)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+            # 提交所有任务
+            future_to_task = [executor.submit(runner.run_single, *t) for t in tasks]
+            # 按提交顺序收集结果（确保即使并发完成，列表顺序也是可控的）
+            for future in future_to_task:
+                results.append(future.result())
+
+    # 3. 运行单元测试（仅当存在 test_*.py 文件时）
+    suite = unittest.defaultTestLoader.discover(str(test_dir), pattern='test_*.py')
+    unit_test_result = unittest.TextTestRunner(verbosity=0).run(suite)
+    # 只有在实际运行了单元测试时才保留结果，否则设为 None
+    if unit_test_result.testsRun == 0:
+        unit_test_result = None
+
+    # 4. 打印报告
+    print_summary(results, unit_test_result)
+
+    has_failed = any(not r.passed for r in results) or not unit_test_result.wasSuccessful()
+    sys.exit(1 if has_failed else 0)
 
 if __name__ == '__main__':
     main()

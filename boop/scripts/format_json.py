@@ -29,11 +29,11 @@ def minify_code(text):
 
     try:
         parsed = json5.loads(text)
-        return json.dumps(parsed, separators=(',', ':'), ensure_ascii=False) + '\n'
+        return json.dumps(parsed, separators=(',', ':'), ensure_ascii=False)
     except (json.JSONDecodeError, ValueError) as e:
         raise ValueError("Invalid JSON: {}".format(e))
 
-def format_code(text):
+def format_code(text, indent=4):
     """Format JSON text using json5 for compatibility."""
     if not text or not text.strip():
         return text
@@ -41,17 +41,17 @@ def format_code(text):
     try:
         # Use json5 for compatibility with various JSON formats
         parsed = json5.loads(text)
-        return json.dumps(parsed, indent=4, ensure_ascii=False) + '\n'
+        return json.dumps(parsed, indent=indent, ensure_ascii=False)
     except (json.JSONDecodeError, ValueError) as e:
         raise ValueError("Invalid JSON: {}".format(e))
 
-def process_format_code(text):
+def process_format_code(text, indent=4):
     """Process JSON text - format or minify based on input state."""
     if not text or not text.strip():
         return text
 
     if is_minified(text):
-        return format_code(text)
+        return format_code(text, indent)
     else:
         return minify_code(text)
 
@@ -72,7 +72,7 @@ def main(state):
             pass
 
     try:
-        state.text = process_format_code(state.text, indent).strip() + '\n'
+        state.text = process_format_code(state.text, indent).strip()
     except ValueError as e:
         if hasattr(state, 'post_error'):
             state.post_error(str(e))

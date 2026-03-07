@@ -58,6 +58,8 @@ class EditorExtensions:
         self._original_selected_text = ""
         # New text being built during multi-cursor editing
         self._new_text = ""
+        # Flag to track if hint has been shown
+        self._hint_shown = False
         self._bind_events()
     
     def _bind_events(self):
@@ -205,7 +207,53 @@ class EditorExtensions:
             # Scroll to make the new selection visible
             self.text_widget.see(last_sel_end)
         
+        # Show multi-cursor mode hint if we have multiple selections and hint hasn't been shown
+        if len(self._selections) > 1 and not self._hint_shown:
+            self._show_multi_cursor_hint()
+            self._hint_shown = True
+        
         return 'break'
+    
+    def _show_multi_cursor_hint(self):
+        """Show a hint about how to exit multi-cursor mode."""
+        # Create a temporary toplevel window for the hint
+        hint_window = tk.Toplevel(self.text_widget)
+        hint_window.transient(self.text_widget)
+        hint_window.overrideredirect(True)  # Remove window decorations
+        hint_window.attributes('-topmost', True)  # Keep on top
+        hint_window.attributes('-alpha', 0.9)  # Semi-transparent
+        
+        # Calculate position at the top right corner of the window
+        # Get the top-level window
+        top_level = self.text_widget.winfo_toplevel()
+        window_width = top_level.winfo_width()
+        window_x = top_level.winfo_rootx()
+        window_y = top_level.winfo_rooty()
+        
+        # Create label with hint text to calculate its size
+        hint_label = tk.Label(
+            hint_window,
+            text="多光标编辑模式\n按 Escape、方向键、Enter、点击鼠标 或全选文本 可退出",
+            bg="#f8f9fa", fg="#343a40",
+            padx=16, pady=12, font=('SF Pro Display', 12), relief=tk.FLAT, borderwidth=1,
+            highlightbackground="#dee2e6", highlightthickness=1
+        )
+        hint_label.pack()
+        
+        # Update the window to get its size
+        hint_window.update_idletasks()
+        hint_width = hint_window.winfo_width()
+        
+        # Position the window at the top right corner
+        hint_x = window_x + window_width - hint_width - 20
+        hint_y = window_y + 20
+        hint_window.geometry(f"+{hint_x}+{hint_y}")
+        
+        # Add some modern styling
+        hint_window.configure(bg="#f8f9fa")
+        
+        # Schedule window to close after 3 seconds
+        self.text_widget.after(3000, hint_window.destroy)
     
     def on_key_press(self, event):
         """Handle key press events for multi-cursor editing."""
@@ -240,6 +288,8 @@ class EditorExtensions:
         self._original_text = ""
         self._original_selected_text = ""
         self._new_text = ""
+        # Reset hint shown flag
+        self._hint_shown = False
         self.text_widget.tag_remove(tk.SEL, '1.0', tk.END)
     
     def _handle_paste(self, event):

@@ -21,7 +21,7 @@ def run(text):
     if byte_size > 1000000:
         mb_size = byte_size / 1000000
         result = f"{mb_size:.2f} Mb"
-    elif byte_size > 1000:
+    elif byte_size > 100000:
         kb_size = byte_size / 1000
         result = f"{kb_size:.2f} Kb"
     else:

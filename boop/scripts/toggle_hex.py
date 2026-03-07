@@ -5,8 +5,8 @@
   "name": "Toggle Hex",
   "description": "在十六进制和文本之间转换",
   "icon": "↔️",
-  "tags": ["hex","encode","decode"],
-  "help": "在十六进制和文本之间转换\n\n示例:\n输入:\nhello\n\n输出:\n68656c6c6f"
+  "tags": ["hex", "encode", "decode"],
+  "help": "在十六进制和文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为十六进制\n- decode/d: 强制解码十六进制\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello\n\n输出:\n68656c6c6f\n\n示例 2 (强制解码):\n输入:\ndecode\n68656c6c6f\n\n输出:\nhello"
 }
 '''
 
@@ -35,7 +35,6 @@ def _decode_hex(text):
             if not line:
                 decoded_lines.append('')
             else:
-                # 移除可能的空格和0x前缀
                 clean_hex = line.replace(' ', '').replace('0x', '')
                 if len(clean_hex) % 2 == 0 and all(c in '0123456789abcdefABCDEF' for c in clean_hex):
                     decoded = bytes.fromhex(clean_hex).decode('utf-8')
@@ -55,21 +54,17 @@ def _toggle_hex(text):
         if not line:
             processed_lines.append('')
             continue
-        
-        # 检查是否为有效的十六进制字符串
+
         clean_line = line.replace(' ', '').replace('0x', '')
         if len(clean_line) % 2 == 0 and all(c in '0123456789abcdefABCDEF' for c in clean_line):
-            # 尝试解码
             try:
                 decoded = bytes.fromhex(clean_line).decode('utf-8')
-                # 如果解码后的结果与原始输入不同，说明输入是十六进制编码的
                 if decoded != line:
                     processed_lines.append(decoded)
                     continue
             except Exception:
                 pass
-        
-        # 编码
+
         try:
             encoded = line.encode('utf-8').hex()
             processed_lines.append(encoded)
@@ -84,10 +79,10 @@ def run(text):
     """
     lines = text.split('\n')
     first_line = lines[0].strip().lower()
-    
+
     mode = 'toggle'
     text_to_process = text
-    
+
     mode_map = {
         'encode': 'encode',
         'e': 'encode',
@@ -96,21 +91,41 @@ def run(text):
         'toggle': 'toggle',
         't': 'toggle'
     }
-    
+
     if first_line in mode_map:
         mode = mode_map[first_line]
         text_to_process = '\n'.join(lines[1:])
-    
+
     if mode == 'encode':
         return _encode_hex(text_to_process)
     elif mode == 'decode':
         return _decode_hex(text_to_process)
-    else:  # toggle
+    else:
         return _toggle_hex(text_to_process)
+
 
 def main(state):
     """
-    主函数，调用run函数处理输入文本
+    主函数，调用 run 函数处理输入文本
     """
-    state.text = run(state.text)
-    state.post_info("十六进制编解码")
+    original = state.text.strip()
+    lines = original.split('\n')
+    first_line = lines[0].strip().lower()
+
+    mode_map = {
+        'encode': '→ Hex',
+        'e': '→ Hex',
+        'decode': '→ Dec',
+        'd': '→ Dec',
+        'toggle': '↔',
+        't': '↔'
+    }
+
+    mode = first_line if first_line in mode_map else 'toggle'
+    result = run(original)
+
+    if result != original:
+        state.text = result
+        state.post_info(f"Hex {mode_map.get(mode, '↔')}")
+    else:
+        state.post_info("Hex 无变化")

@@ -6,7 +6,7 @@
   "icon": "✨",
   "tags": ["java","format","fmt","code"],
   "dependencies": [],
-  "help": "格式化或压缩 Java 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\npublic class Test{public static void main(String[]args){System.out.println(\"Hello\")}}\n\n输出:\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}"
+  "help": "格式化 Java 代码\n\n示例:\n输入:\npublic class Test{public static void main(String[]args){System.out.println(\"Hello\")}}\n\n输出:\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}"
 }"""
 
 import re
@@ -156,7 +156,7 @@ def post_process(code):
     body_content = re.sub(r'\n{3,}', '\n\n', body_content)
     output.append(body_content)
 
-    return '\n'.join(output).strip() + '\n'
+    return '\n'.join(output).strip()
 
 
 def main(state):
@@ -165,40 +165,11 @@ def main(state):
         return
 
     try:
-        state.text = process_format_code(state.text)
+        state.text = format_code(state.text)
         if hasattr(state, 'post_info'):
-            state.post_info("Java code formatted or minified")
+            state.post_info("Java code formatted")
     except Exception as e:
         if hasattr(state, 'post_error'):
             state.post_error("Error formatting Java: {}".format(str(e)))
         else:
             print("Error formatting Java: {}".format(str(e)))
-
-def is_minified(text):
-    """Check if Java code is minified."""
-    text = text.strip()
-    return not '\n' in text and ('class' in text or 'public' in text or 'static' in text)
-
-def minify_code(code):
-    """Minify Java code."""
-    if not code or not code.strip():
-        return code
-
-    # 移除注释
-    code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
-    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
-    # 移除多余空格和换行
-    code = re.sub(r'\s+', ' ', code)
-    # 移除行尾分号
-    code = re.sub(r';$', '', code)
-    return code.strip()
-
-def process_format_code(text):
-    """Process Java code - format or minify based on input state."""
-    if not text or not text.strip():
-        return text
-
-    if is_minified(text):
-        return format_code(text)
-    else:
-        return minify_code(text)

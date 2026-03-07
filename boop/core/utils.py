@@ -8,8 +8,18 @@ import json
 from typing import Any, Dict, Optional
 from pathlib import Path
 
-def run_script_in_subprocess_worker(script_path: Path, input_text: str, python_path: str = "") -> Dict[str, Any]:
-    """Run a script in a subprocess (worker function)."""
+def run_script_in_subprocess(script_path: Path, input_text: str, python_path: str = "", timeout: int = 5) -> Dict[str, Any]:
+    """Run a script in a subprocess.
+    
+    Args:
+        script_path: Path to the script file
+        input_text: Input text for the script
+        python_path: Path to Python interpreter (optional)
+        timeout: Timeout in seconds (optional)
+        
+    Returns:
+        Dictionary with execution results
+    """
     try:
         # Use specified Python or default
         python_exe = python_path
@@ -59,7 +69,7 @@ def run_script_in_subprocess_worker(script_path: Path, input_text: str, python_p
         
         # Send script path followed by input text
         input_data = f"{str(script_path)}\n{input_text}"
-        stdout, stderr = process.communicate(input=input_data, timeout=30)  # 30 second timeout
+        stdout, stderr = process.communicate(input=input_data, timeout=timeout)  # Use provided timeout
         
         # Parse the result
         try:
@@ -82,20 +92,6 @@ def run_script_in_subprocess_worker(script_path: Path, input_text: str, python_p
             'error': str(e),
             'stderr': str(e)
         }
-
-def run_script_in_subprocess(script_path: Path, input_text: str, python_path: str = "") -> Dict[str, Any]:
-    """Run a script in a subprocess.
-    
-    Args:
-        script_path: Path to the script file
-        input_text: Input text for the script
-        python_path: Path to Python interpreter (optional)
-        
-    Returns:
-        Dictionary with execution results
-    """
-    # Use direct execution
-    return run_script_in_subprocess_worker(script_path, input_text, python_path)
 
 
 def center_window(window, width: int, height: int):

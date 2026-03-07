@@ -92,8 +92,13 @@ def parse_input(text, format):
             url_text = 'http://example.com' + text
         
         parsed_url = urllib.parse.urlparse(url_text)
+        url_path = parsed_url.scheme + '://' + parsed_url.netloc
+        if parsed_url.path:
+            url_path += parsed_url.path
+        else:
+            url_path += '/'
         url_data = {
-            'url_path': parsed_url.scheme + '://' + parsed_url.netloc + parsed_url.path
+            'url_path': url_path
         }
         
         params = urllib.parse.parse_qs(parsed_url.query)

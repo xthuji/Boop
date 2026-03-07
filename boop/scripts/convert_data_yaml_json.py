@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 '''
 {
-    "name": "Convert YAML JSON",
+    "name": "Convert Data YAML JSON",
     "description": "在 YAML 和 JSON 之间相互转换",
-    "icon": "💊",
+    "icon": "🎹",
     "tags": ["convert","yaml","json","code","data"],
     "help": "在 YAML 和 JSON 之间相互转换\n\n首行参数格式:\nformat (指定转换模式)\n\n支持的模式:\n- json/j: 强制转换为 JSON\n- yaml/y: 强制转换为 YAML\n- toggle/t: 自动检测并切换格式 (默认)\n\n示例 1 (强制转换为 JSON):\n输入:\njson\nname: John\nage: 30\n\n输出:\n{\n  \"name\": \"John\",\n  \"age\": 30\n}\n\n示例 2 (强制转换为 YAML):\n输入:\nyaml\n{\"name\": \"John\", \"age\": 30}\n\n输出:\nname: John\nage: 30"
 }
@@ -46,7 +46,7 @@ def run(text):
         elif mode == 'yaml':
             # 强制转换为YAML
             data = json.loads(text_to_convert)
-            return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+            return yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False).strip()
         else:
             # 自动检测并切换格式
             input_format = detect_input_format(text_to_convert)
@@ -54,8 +54,9 @@ def run(text):
                 data = yaml.safe_load(text_to_convert)
                 return json.dumps(data, ensure_ascii=False, indent=2)
             else:
+                # 自动检测模式下，从JSON转换为YAML
                 data = json.loads(text_to_convert)
-                return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+                return yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False).strip()
     except Exception as e:
         return f"转换失败: {str(e)}"
 

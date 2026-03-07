@@ -142,7 +142,7 @@ def parse_sql_insert(sql_str):
     for match in insert_regex.finditer(sql_str):
         table_name = match.group(1).replace('`', '').replace("'", '').replace('"', '')
         columns = [c.strip().replace('`', '').replace("'", '').replace('"', '') for c in match.group(2).split(',')]
-        values_content = match.group(3).trim()
+        values_content = match.group(3).strip()
         
         # 解析值组
         group_regex = re.compile(r'\(([\s\S]*?)\)(?:\s*,\s*|\s*;?\s*$)')
@@ -173,13 +173,13 @@ def split_sql_values(str):
         elif char == quote_char and in_quotes:
             in_quotes = False
         elif char == ',' and not in_quotes:
-            result.append(current.trim())
+            result.append(current.strip())
             current = ''
         else:
             current += char
     
     if current:
-        result.append(current.trim())
+        result.append(current.strip())
     return result
 
 def parse_csv(csv_str, delimiter=',', headerless=False):
@@ -192,7 +192,7 @@ def parse_csv(csv_str, delimiter=',', headerless=False):
     
     if headerless:
         # 无表头模式
-        return [parse_simple_value(v) for v in line.split(delimiter)] for line in lines if line
+        return [[parse_simple_value(v) for v in line.split(delimiter)] for line in lines if line]
     
     # 有表头模式
     if len(lines) < 2:
@@ -264,12 +264,14 @@ def get_headers(data):
     """
     获取数据的表头
     """
-    headers = set()
+    headers = []
+    seen = set()
     for row in data:
         for key in row:
-            if key != 'table':
-                headers.add(key)
-    return list(headers)
+            if key != 'table' and key not in seen:
+                headers.append(key)
+                seen.add(key)
+    return headers
 
 def parse_simple_value(v):
     """
@@ -305,10 +307,10 @@ def format_value_by_type(v, type):
         return 'NULL' if type == 'sql' else ''
     
     if type == 'sql' and isinstance(v, str):
-        return f"'{v.replace("'", "''")}'"
+        return "'" + v.replace("'", "''") + "'"
     
     if type == 'csv' and ',' in str(v):
-        return f'"{str(v).replace(""", """)}"'
+        return '"' + str(v).replace('"', '\\"') + '"'
     
     if type == 'xml':
         return str(v).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -327,22 +329,18 @@ def format_to_csv(data, headerless=False):
     """
     if headerless and isinstance(data, list) and data and isinstance(data[0], list):
         # 无表头模式
-        output = io.StringIO()
-        writer = csv.writer(output)
+        rows = []
         for row in data:
-            writer.writerow([format_value_by_type(v, 'csv') for v in row])
-        return output.getvalue().strip()
+            rows.append(','.join([format_value_by_type(v, 'csv') for v in row]))
+        return '\n'.join(rows)
     
     # 有表头模式
     headers = get_headers(data)
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(headers)
-    
+    rows = [','.join(headers)]
     for row in data:
-        writer.writerow([format_value_by_type(row.get(h), 'csv') for h in headers])
+        rows.append(','.join([format_value_by_type(row.get(h), 'csv') for h in headers]))
     
-    return output.getvalue().strip()
+    return '\n'.join(rows)
 
 def format_to_tabtext(data, headerless=False):
     """
@@ -405,7 +403,7 @@ def format_to_sql_insert(data, table_name='table_name', multiline=True):
         statements = []
         for row in data:
             values = [format_value_by_type(row.get(h), 'sql') for h in headers]
-            statements.append(f"INSERT INTO {table_name} ({', '.join(headers)}) VALUES ({', '.join(values)});")
+            statements.append("INSERT INTO " + table_name + " (" + ", ".join(headers) + ") VALUES (" + ", ".join(values) + ");")
         return '\n'.join(statements)
     else:
         # 单行模式
@@ -413,7 +411,7 @@ def format_to_sql_insert(data, table_name='table_name', multiline=True):
         for row in data:
             row_values = [format_value_by_type(row.get(h), 'sql') for h in headers]
             values.append(f"({', '.join(row_values)})")
-        return f"INSERT INTO {table_name} ({', '.join(headers)}) VALUES\n  {',\n  '.join(values)};"
+        return "INSERT INTO " + table_name + " (" + ", ".join(headers) + ") VALUES\n  " + ",\n  ".join(values) + ";"
 
 def parse_html_list(html_str):
     """

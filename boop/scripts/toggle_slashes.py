@@ -5,95 +5,88 @@
   "name": "Toggle Slashes",
   "description": "在正斜杠和反斜杠之间切换",
   "icon": "↔️",
-  "tags": ["slashes","toggle","path"],
-  "help": "在正斜杠 (/) 和反斜杠 (\\) 之间切换\n\n示例:\n输入:\npath/to/file\n\n输出:\npath\\to\\file"
+  "tags": ["slashes", "toggle", "path"],
+  "help": "在正斜杠 (/) 和反斜杠 (\\) 之间切换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- forward/f: 转换为正斜杠 (/)\n- back/b: 转换为反斜杠 (\\)\n- toggle/t: 自动检测并切换 (默认)\n\n示例 1 (转反斜杠):\n输入:\nback\npath/to/file\n\n输出:\npath\\to\\file\n\n示例 2 (转正斜杠):\n输入:\nforward\npath\\to\\file\n\n输出:\npath/to/file"
 }
 '''
 
-def _add_slashes(text):
-    """添加反斜杠转义"""
-    lines = text.split('\n')
-    escaped_lines = []
-    for line in lines:
-        # 转义引号和反斜杠
-        escaped = line.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
-        # 转义 null 字符
-        escaped = escaped.replace('\x00', '\\0')
-        escaped_lines.append(escaped)
-    return '\n'.join(escaped_lines)
+
+def _to_backslash(text):
+    """将正斜杠转换为反斜杠"""
+    return text.replace('/', '\\')
 
 
-def _remove_slashes(text):
-    """移除反斜杠转义"""
-    lines = text.split('\n')
-    unescaped_lines = []
-    for line in lines:
-        # 处理转义字符
-        unescaped = ''
-        i = 0
-        while i < len(line):
-            if line[i] == '\\' and i + 1 < len(line):
-                next_char = line[i + 1]
-                if next_char == '\\':
-                    unescaped += '\\'
-                elif next_char == '0':
-                    unescaped += '\x00'
-                else:
-                    unescaped += next_char
-                i += 2
-            else:
-                unescaped += line[i]
-                i += 1
-        unescaped_lines.append(unescaped)
-    return '\n'.join(unescaped_lines)
+def _to_forward_slash(text):
+    """将反斜杠转换为正斜杠"""
+    return text.replace('\\', '/')
 
 
-def _is_escaped(text):
-    """检查文本是否已转义"""
-    return '\\\\' in text or "\\'" in text or '\\"' in text or '\\0' in text
+def _is_backslash(text):
+    """检查文本是否包含反斜杠"""
+    return '\\' in text
 
 
 def _toggle_slashes(text):
-    """自动切换转义/反转义模式"""
-    if _is_escaped(text):
-        return _remove_slashes(text)
+    """自动切换正斜杠和反斜杠"""
+    if _is_backslash(text):
+        return _to_forward_slash(text)
     else:
-        return _add_slashes(text)
+        return _to_backslash(text)
 
 
 def run(text):
     """
-    在反斜杠转义和反转义之间切换
+    在正斜杠和反斜杠之间切换
     """
     lines = text.split('\n')
     first_line = lines[0].strip().lower()
-    
+
     mode = 'toggle'
     text_to_process = text
-    
+
     mode_map = {
-        'add': 'add',
-        'a': 'add',
-        'remove': 'remove',
-        'r': 'remove',
+        'forward': 'forward',
+        'f': 'forward',
+        'back': 'back',
+        'b': 'back',
         'toggle': 'toggle',
         't': 'toggle'
     }
-    
+
     if first_line in mode_map:
         mode = mode_map[first_line]
         text_to_process = '\n'.join(lines[1:])
-    
-    if mode == 'add':
-        return _add_slashes(text_to_process)
-    elif mode == 'remove':
-        return _remove_slashes(text_to_process)
+
+    if mode == 'forward':
+        return _to_forward_slash(text_to_process)
+    elif mode == 'back':
+        return _to_backslash(text_to_process)
     else:  # toggle
         return _toggle_slashes(text_to_process)
 
+
 def main(state):
     """
-    主函数，调用run函数处理输入文本
+    主函数，调用 run 函数处理输入文本
     """
-    state.text = run(state.text)
-    state.post_info("切换斜杠")
+    original = state.text.strip()
+    lines = original.split('\n')
+    first_line = lines[0].strip().lower()
+
+    mode_map = {
+        'forward': '→ /',
+        'f': '→ /',
+        'back': '→ \\',
+        'b': '→ \\',
+        'toggle': '↔',
+        't': '↔'
+    }
+
+    mode = first_line if first_line in mode_map else 'toggle'
+    result = run(original)
+
+    if result != original:
+        state.text = result
+        state.post_info(f"Slashes {mode_map.get(mode, '↔')}")
+    else:
+        state.post_info("Slashes 无变化")

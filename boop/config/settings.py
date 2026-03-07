@@ -61,7 +61,7 @@ class BoopConfig:
     font_family: str = "Menlo"
     font_size: int = 14
     theme: str = "system"
-    script_timeout: int = 30
+    script_timeout: int = 5
     filter_delay: int = 200
     shortcuts: dict = field(default_factory=_get_default_shortcuts)
     

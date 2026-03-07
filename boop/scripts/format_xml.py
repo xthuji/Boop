@@ -99,7 +99,7 @@ def format_code(code):
 
     result = tokens.restore('\n'.join(formatted))
     result = re.sub(r'\n{3,}', '\n\n', result)
-    return result.strip() + CONFIG['NEWLINE']
+    return result.strip()
 
 
 def main(state):

@@ -23,7 +23,7 @@ def format_code(text):
     # Use PyYAML for YAML formatting
     try:
         data = yaml.safe_load(text)
-        return yaml.dump(data, default_flow_style=False, allow_unicode=True, indent=2, sort_keys=False)
+        return yaml.dump(data, default_flow_style=False, allow_unicode=True, indent=2, sort_keys=False).strip()
     except Exception as e:
         raise Exception("Error formatting YAML: {}".format(e))
 

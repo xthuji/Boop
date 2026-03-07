@@ -73,7 +73,7 @@ def run(text):
     }
     
     # 处理首行自定义参数
-    if lines:
+    if lines and len(lines) > 1:
         first_line = lines[0].strip()
         
         if first_line == 'cycle' or first_line == 'c':
@@ -85,7 +85,7 @@ def run(text):
                 input_format = resolve_format_alias(parts[0].strip(), format_aliases)
                 output_format = resolve_format_alias(parts[1].strip(), format_aliases)
                 text_to_convert = '\n'.join(lines[1:])
-        elif first_line:
+        elif first_line in format_aliases or first_line in formats:
             output_format = resolve_format_alias(first_line, format_aliases)
             text_to_convert = '\n'.join(lines[1:])
     
@@ -129,8 +129,14 @@ def run(text):
         # 尝试解析时间
         dt = parse_time(line)
         if not dt:
-            result.append(line)
-            continue
+            # 尝试使用更宽松的解析方式
+            try:
+                # 尝试解析为日期时间
+                import dateutil.parser
+                dt = dateutil.parser.parse(line)
+            except Exception:
+                result.append(line)
+                continue
         
         # 处理输出格式
         if output_format:
@@ -189,8 +195,12 @@ def parse_time(time_str):
         '%H:%M:%S',
         '%Y-%m-%dT%H:%M:%S.%f%z',
         '%Y-%m-%dT%H:%M:%S%z',
+        '%Y-%m-%dT%H:%M:%S.%f',
+        '%Y-%m-%dT%H:%M:%S',
         '%m/%d/%Y %H:%M:%S',
-        '%d/%m/%Y %H:%M:%S'
+        '%d/%m/%Y %H:%M:%S',
+        '%m/%d/%Y',
+        '%d/%m/%Y'
     ]
     
     for fmt in date_formats:
@@ -198,6 +208,12 @@ def parse_time(time_str):
             return datetime.strptime(trimmed, fmt)
         except ValueError:
             continue
+    
+    # 尝试使用 ISO 格式解析
+    try:
+        return datetime.fromisoformat(trimmed)
+    except ValueError:
+        pass
     
     return None
 
@@ -228,6 +244,9 @@ def detect_time_format(time_str):
     elif re.match(r'^\d{1,2}:\d{2}(:\d{2})?$', trimmed):
         return 'hms'
     elif re.match(r'^\d+$', trimmed):
+        # 检查是否是 10 位时间戳
+        if len(trimmed) == 10:
+            return 'timestamp10'
         return 'seconds'
     else:
         return 'datestring'

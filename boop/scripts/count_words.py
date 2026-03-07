@@ -10,22 +10,21 @@
 }
 '''
 
+import re
+
 def run(text):
     """
     计算文本中的单词数量
     """
-    # 分割单词并计数
-    words = text.split()
+    # 使用正则表达式匹配非空白字符序列作为单词
+    words = re.findall(r'\S+', text)
     word_count = len(words)
-    
-    # 格式化结果
-    result = f"单词数: {word_count}"
-    
-    return result
+    return word_count
 
 def main(state):
     """
     主函数，调用run函数处理输入文本
     """
-    state.text = run(state.text)
-    state.post_info("单词计数")
+    count = run(state.text)
+    state.post_info(f"{count} words")
+    state.text = str(count)

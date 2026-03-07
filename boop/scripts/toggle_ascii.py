@@ -3,27 +3,24 @@
 '''
 {
   "name": "Toggle ASCII",
-  "description": "在 ASCII 和可读文本之间转换",
+  "description": "在 ASCII 码和可读文本之间转换",
   "icon": "↔️",
-  "tags": ["ascii","encode","decode"],
-  "help": "在 ASCII 编码和可读文本之间转换\n\n示例:\n输入:\nhello\n\n输出:\n104 101 108 108 111"
+  "tags": ["ascii", "encode", "decode"],
+  "help": "在 ASCII 码和可读文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 ASCII 码\n- decode/d: 强制解码 ASCII 码\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello\n\n输出:\n104 101 108 108 111\n\n示例 2 (强制解码):\n输入:\ndecode\n104 101 108 108 111\n\n输出:\nhello"
 }
 '''
 
 import re
 
 def _encode_ascii(text):
-    """将文本编码为ASCII码"""
+    """将文本编码为 ASCII 码"""
     lines = text.split('\n')
-    encoded_lines = []
-    for line in lines:
-        codes = [str(ord(c)) for c in line]
-        encoded_lines.append(' '.join(codes))
+    encoded_lines = [' '.join(str(ord(c)) for c in line) for line in lines]
     return '\n'.join(encoded_lines)
 
 
 def _decode_ascii(text):
-    """将ASCII码解码为文本"""
+    """将 ASCII 码解码为文本"""
     lines = text.split('\n')
     decoded_lines = []
     for line in lines:
@@ -43,43 +40,39 @@ def _decode_ascii(text):
 
 
 def _toggle_ascii(text):
-    """自动切换ASCII编码/解码模式"""
+    """自动切换 ASCII 编码/解码模式"""
     lines = text.split('\n')
     processed_lines = []
     for line in lines:
         if not line:
             processed_lines.append('')
             continue
-        
-        # 检查是否为ASCII码序列
+
         parts = re.split(r'[ ,]+', line)
         parts = [p.strip() for p in parts if p.strip()]
         if all(p.isdigit() and 0 <= int(p) <= 127 for p in parts):
-            # 尝试解码
             try:
                 decoded = _decode_ascii(line)
-                # 如果解码后的结果与原始输入不同，说明输入是ASCII码序列
                 if decoded != line:
                     processed_lines.append(decoded)
                     continue
             except Exception:
                 pass
-        
-        # 编码
+
         processed_lines.append(_encode_ascii(line))
     return '\n'.join(processed_lines)
 
 
 def run(text):
     """
-    在ASCII码和字符之间切换
+    在 ASCII 码和字符之间切换
     """
     lines = text.split('\n')
     first_line = lines[0].strip().lower()
-    
+
     mode = 'toggle'
     text_to_process = text
-    
+
     mode_map = {
         'encode': 'encode',
         'e': 'encode',
@@ -88,21 +81,41 @@ def run(text):
         'toggle': 'toggle',
         't': 'toggle'
     }
-    
+
     if first_line in mode_map:
         mode = mode_map[first_line]
         text_to_process = '\n'.join(lines[1:])
-    
+
     if mode == 'encode':
         return _encode_ascii(text_to_process)
     elif mode == 'decode':
         return _decode_ascii(text_to_process)
-    else:  # toggle
+    else:
         return _toggle_ascii(text_to_process)
+
 
 def main(state):
     """
-    主函数，调用run函数处理输入文本
+    主函数，调用 run 函数处理输入文本
     """
-    state.text = run(state.text)
-    state.post_info("ASCII转换")
+    original = state.text.strip()
+    lines = original.split('\n')
+    first_line = lines[0].strip().lower()
+
+    mode_map = {
+        'encode': '→ Enc',
+        'e': '→ Enc',
+        'decode': '→ Dec',
+        'd': '→ Dec',
+        'toggle': '↔',
+        't': '↔'
+    }
+
+    mode = first_line if first_line in mode_map else 'toggle'
+    result = run(original)
+
+    if result != original:
+        state.text = result
+        state.post_info(f"ASCII {mode_map.get(mode, '↔')}")
+    else:
+        state.post_info("ASCII 无变化")

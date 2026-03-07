@@ -54,28 +54,6 @@ def main(state):
 
 def _calculate(s):
     """Calculate sum and format output."""
-    comment = '\t// '
     numbers = _num_string_to_array(s)
-
     sum_output = sum(numbers)
-
-    # Build the comment showing addition
-    if len(numbers) > 1:
-        sum_output_str = f'{sum_output}{comment}{" + ".join(str(n) for n in numbers)}'
-    else:
-        sum_output_str = str(sum_output)
-
-    # Process each line
-    result_lines = []
-    for line in re.split(r'[\n,;]', s):
-        line = line.strip()
-        num = _get_number(line)
-        if line.startswith('=') or line == '' or (num is not None and str(num) == line):
-            result_lines.append(line)
-        elif num is not None:
-            result_lines.append(f'{line}{comment}{num}')
-        else:
-            result_lines.append(line)
-
-    result_lines.append(f'= {sum_output_str}')
-    return '\n'.join(result_lines)
+    return str(int(sum_output) if sum_output.is_integer() else sum_output)

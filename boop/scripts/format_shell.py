@@ -125,7 +125,7 @@ def post_process(code):
     code = re.sub(r'[ \t]+\n', r'\n', code)
     code = re.sub(r'\n\s*\n', '\n', code)
 
-    return code.strip() + '\n'
+    return code.strip()
 
 
 def main(state):
