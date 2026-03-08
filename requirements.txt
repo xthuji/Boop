@@ -3,6 +3,7 @@
 
 # Runtime dependencies (Tkinter is usually included with Python)
 # tkinter
+pynput>=1.7.6
 
 # Build dependencies
 pyinstaller>=5.0

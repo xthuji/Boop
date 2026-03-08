@@ -7,7 +7,7 @@ from pathlib import Path
 
 from boop.config.settings import BoopConfig
 from boop.ui.main import MainWindow
-from boop.core.logging import logger
+from boop.core.log import logger
 from boop.core.path import get_user_data_dir, get_default_script_dir, update_script_directories
 
 

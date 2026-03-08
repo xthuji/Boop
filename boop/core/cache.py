@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 from boop.core.path import get_user_data_dir
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 class MetadataCache:

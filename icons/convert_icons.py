@@ -24,6 +24,8 @@ class IconConverter:
         # Source images are in icon.iconset/ subdirectory
         self.iconset_dir = source_dir / "icon.iconset"
         self.output_dir = source_dir
+        # Main source image
+        self.main_image = source_dir / "boop.png"
         
         # Create output directory if needed
         self.output_dir.mkdir(exist_ok=True)
@@ -48,16 +50,21 @@ class IconConverter:
     
     def load_image(self, size: str) -> Image.Image:
         """Load and resize image to specified size."""
-        source = self.get_source_image(size)
-        if source.exists():
-            img = Image.open(source)
+        # Use boop.png as primary source
+        if self.main_image.exists():
+            img = Image.open(self.main_image)
         else:
-            # Fallback to largest available in iconset
-            largest = self.iconset_dir / "icon_512x512@2x.png"
-            if largest.exists():
-                img = Image.open(largest)
+            # Fallback to get_source_image if boop.png doesn't exist
+            source = self.get_source_image(size)
+            if source.exists():
+                img = Image.open(source)
             else:
-                raise FileNotFoundError(f"No source image found for {size}")
+                # Fallback to largest available in iconset
+                largest = self.iconset_dir / "icon_512x512@2x.png"
+                if largest.exists():
+                    img = Image.open(largest)
+                else:
+                    raise FileNotFoundError(f"No source image found for {size}")
 
         # Convert to RGBA if necessary
         if img.mode != "RGBA":
@@ -177,6 +184,41 @@ class IconConverter:
 
         return icns_path if icns_path.exists() else None
     
+    def cleanup_redundant_files(self):
+        """Clean up redundant icon files, keeping only what's needed for packaging."""
+        print("Cleaning up redundant files...")
+        
+        # Files to keep
+        keep_files = {
+            "boop.png",
+            "convert_icons.py",
+            "icon.ico",
+            "icon.icns",
+            "icon_256x256.png"
+        }
+        
+        # Remove redundant files
+        for file in self.output_dir.iterdir():
+            if file.name not in keep_files and file.is_file():
+                if file.suffix.lower() in [".png", ".ico", ".icns"]:
+                    try:
+                        file.unlink()
+                        print(f"  Removed: {file.name}")
+                    except Exception as e:
+                        print(f"  Warning: Could not remove {file.name}: {e}")
+        
+        # Remove iconset directory
+        iconset_dir = self.output_dir / "icon.iconset"
+        if iconset_dir.exists() and iconset_dir.is_dir():
+            try:
+                import shutil
+                shutil.rmtree(iconset_dir)
+                print(f"  Removed: icon.iconset/")
+            except Exception as e:
+                print(f"  Warning: Could not remove icon.iconset/: {e}")
+        
+        print("Cleanup complete!")
+    
     def create_all(self):
         """Create all icon formats."""
         print("=" * 50)
@@ -208,6 +250,10 @@ class IconConverter:
             results["macos"] = self.create_macos_icns()
         except Exception as e:
             print(f"Failed to create macOS icon: {e}")
+        
+        print()
+        # Clean up redundant files
+        self.cleanup_redundant_files()
         
         print()
         print("=" * 50)

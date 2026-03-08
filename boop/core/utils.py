@@ -107,6 +107,92 @@ def center_window(window, width: int, height: int):
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
+def normalize_shortcut(shortcut):
+    """Normalize shortcut string to standard format.
+    
+    Args:
+        shortcut: Shortcut string (e.g., 'Control+b')
+        
+    Returns:
+        Normalized shortcut string
+    """
+    # Convert to consistent format
+    normalized = shortcut.strip()
+    # Replace common variations
+    normalized = normalized.replace('Ctrl', 'Control')
+    normalized = normalized.replace('Cmd', 'Command')
+    return normalized
+
+def get_tk_shortcut(shortcut):
+    """Convert shortcut string to Tkinter binding format.
+    
+    Args:
+        shortcut: Shortcut string (e.g., 'Control+b')
+        
+    Returns:
+        Tkinter-compatible shortcut string
+    """
+    normalized = normalize_shortcut(shortcut)
+    return normalized.replace('+', '-')
+
+def parse_hotkey_for_pynput(hotkey):
+    """Parse hotkey string to pynput key set.
+    
+    Args:
+        hotkey: Hotkey string (e.g., 'Control+b')
+        
+    Returns:
+        Set of pynput key objects or None if parsing fails
+    """
+    try:
+        from pynput import keyboard
+        
+        # Normalize the shortcut string first
+        normalized_hotkey = normalize_shortcut(hotkey)
+        parts = normalized_hotkey.split('+')
+        keys = set()
+        
+        for part in parts:
+            part = part.strip()
+            if part == 'Command':
+                keys.add(keyboard.Key.cmd)
+            elif part == 'Control':
+                keys.add(keyboard.Key.ctrl)
+            elif part == 'Shift':
+                keys.add(keyboard.Key.shift)
+            elif part == 'Alt':
+                keys.add(keyboard.Key.alt)
+            elif len(part) == 1:
+                keys.add(part.lower())
+            else:
+                # Handle special keys
+                key_map = {
+                    'Enter': keyboard.Key.enter,
+                    'Esc': keyboard.Key.esc,
+                    'Tab': keyboard.Key.tab,
+                    'Space': keyboard.Key.space,
+                    'Up': keyboard.Key.up,
+                    'Down': keyboard.Key.down,
+                    'Left': keyboard.Key.left,
+                    'Right': keyboard.Key.right,
+                    'Home': keyboard.Key.home,
+                    'End': keyboard.Key.end,
+                    'PageUp': keyboard.Key.page_up,
+                    'PageDown': keyboard.Key.page_down,
+                }
+                if part in key_map:
+                    keys.add(key_map[part])
+                else:
+                    from boop.core.log import logger
+                    logger.warning(f"Unknown key: {part}")
+                    return None
+        
+        return keys
+    except Exception as e:
+        from boop.core.log import logger
+        logger.error(f"Error parsing hotkey {hotkey}: {e}")
+        return None
+
 def binding_hotkey_action(widget, shortcuts, action):
     """Bind hotkey action to multiple shortcuts.
     
@@ -117,14 +203,24 @@ def binding_hotkey_action(widget, shortcuts, action):
     """
     for shortcut in shortcuts:
         # Convert shortcut strings to Tkinter binding format
-        widget.bind(f'<{shortcut.replace("+", "-")}>', action)
+        tk_shortcut = get_tk_shortcut(shortcut)
+        widget.bind(f'<{tk_shortcut}>', action)
         # Bind reverse order for three-part shortcuts (e.g. Ctrl+Shift+z)
         parts = shortcut.split('+')
         if parts and len(parts) == 3:
-            widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}>', action)
+            # Convert each part for Tkinter compatibility
+            part0 = normalize_shortcut(parts[0])
+            part1 = normalize_shortcut(parts[1])
+            part2 = normalize_shortcut(parts[2])
+            widget.bind(f'<{part1}-{part0}-{part2}>', action)
         elif parts and len(parts) == 4:
-            widget.bind(f'<{parts[0]}-{parts[2]}-{parts[1]}-{parts[3]}>', action)
-            widget.bind(f'<{parts[1]}-{parts[0]}-{parts[2]}-{parts[3]}>', action)
-            widget.bind(f'<{parts[1]}-{parts[2]}-{parts[0]}-{parts[3]}>', action)
-            widget.bind(f'<{parts[2]}-{parts[1]}-{parts[0]}-{parts[3]}>', action)
-            widget.bind(f'<{parts[2]}-{parts[0]}-{parts[1]}-{parts[3]}>', action)
+            # Convert each part for Tkinter compatibility
+            part0 = normalize_shortcut(parts[0])
+            part1 = normalize_shortcut(parts[1])
+            part2 = normalize_shortcut(parts[2])
+            part3 = normalize_shortcut(parts[3])
+            widget.bind(f'<{part0}-{part2}-{part1}-{part3}>', action)
+            widget.bind(f'<{part1}-{part0}-{part2}-{part3}>', action)
+            widget.bind(f'<{part1}-{part2}-{part0}-{part3}>', action)
+            widget.bind(f'<{part2}-{part1}-{part0}-{part3}>', action)
+            widget.bind(f'<{part2}-{part0}-{part1}-{part3}>', action)

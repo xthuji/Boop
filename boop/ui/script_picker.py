@@ -10,7 +10,7 @@ from tkinter import ttk
 from typing import Optional, List, Callable
 from boop.core.script import ScriptManager
 from boop.core.utils import center_window
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 class ScriptPickerPopup:
@@ -66,8 +66,10 @@ class ScriptPickerPopup:
         self._bind_events()
         self._refresh_scripts()
         
-        # Set focus to search entry for immediate typing
+        # Set focus to search entry for immediate typing - ensure this is the last operation
         self.search_entry.focus_set()
+        # Add a small delay to ensure focus is set after all other operations
+        self.parent.after(100, lambda: self.search_entry.focus_set())
 
     def _create_ui(self):
         """Create dialog UI components."""
@@ -247,7 +249,7 @@ class ScriptPickerPopup:
 
     def _bind_events(self):
         """Bind keyboard events."""
-        # Navigation keys for script list
+        # Navigation keys
         self.dialog.bind('<Up>', lambda e: self._navigate(-1))
         self.dialog.bind('<Down>', lambda e: self._navigate(1))
         self.dialog.bind('<Prior>', lambda e: self._navigate_page(-1))  # PageUp

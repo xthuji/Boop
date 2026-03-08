@@ -3,7 +3,7 @@ Event System - Publish-subscribe pattern for component communication
 """
 
 from typing import Dict, List, Callable, Any
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 class EventSystem:

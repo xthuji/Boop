@@ -6,7 +6,7 @@ from pathlib import Path
 from boop.config.settings import BoopConfig
 from boop.core.cache import MetadataCache
 from boop.core.script_metadata import ScriptMetadata
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 class ScriptManager:

@@ -10,9 +10,11 @@ import os
 
 from boop.config.settings import BoopConfig
 from boop.core.script import ScriptManager
-from boop.core.utils import run_script_in_subprocess, center_window, binding_hotkey_action
+from boop.core.utils import run_script_in_subprocess, center_window
+from boop.core.shortcut_manager import shortcut_manager
 from boop.core.event import event_system
-from boop.core.logging import logger
+from boop.core.log import logger
+from boop.core.global_hotkey import global_hotkey_manager
 from boop.ui.editor import Editor
 from boop.ui.script_picker import ScriptPickerPopup
 
@@ -84,6 +86,9 @@ class MainWindow:
         
         # Load script metadata in background after startup
         self.root.after(1000, self._load_script_metadata)
+        
+        # Initialize global hotkey manager
+        self._init_global_hotkeys()
     
     def _create_ui(self):
         """Create the main window UI."""        
@@ -174,17 +179,15 @@ class MainWindow:
     def _bind_events(self):
         """Bind keyboard and mouse events."""
         
-        # Bind shortcuts
-        binding_hotkey_action(self.root, self.config.shortcuts.get('quit', ['Ctrl+q']), lambda e: self._quit())
-        binding_hotkey_action(self.root, self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
-        binding_hotkey_action(self.root, self.config.shortcuts.get('preferences', ['Ctrl+,']), lambda e: self._open_preferences())
-        binding_hotkey_action(self.root, self.config.shortcuts.get('move_to_start', ['Ctrl+Home']), lambda e: self.editor._move_to_start(None))
-        binding_hotkey_action(self.root, self.config.shortcuts.get('move_to_end', ['Ctrl+End']), lambda e: self.editor._move_to_end(None))
-        binding_hotkey_action(self.root, self.config.shortcuts.get('undo', ['Ctrl+z']), lambda e: self.editor._undo(None))
-        binding_hotkey_action(self.root, self.config.shortcuts.get('redo', ['Ctrl+Shift+Z']), lambda e: self.editor._redo(None))
-        # 系统自带的复制/粘贴/剪切等快捷键不用绑定，可能会冲突导致不可预期的行为
+        # Bind main window shortcuts
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('quit', ['Ctrl+q']), lambda e: self._quit())
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('preferences', ['Ctrl+,']), lambda e: self._open_preferences())
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('move_to_start', ['Ctrl+Home']), lambda e: self.editor._move_to_start(e))
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('move_to_end', ['Ctrl+End']), lambda e: self.editor._move_to_end(e))
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('undo', ['Ctrl+z']), lambda e: self.editor._undo(e))
+        shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('redo', ['Ctrl+Shift+Z']), lambda e: self.editor._redo(e))
         
-        # Editor events
+        # Bind editor status update events
         self.editor._text_widget.bind('<KeyRelease>', self._update_status)
         self.editor._text_widget.bind('<ButtonRelease>', self._update_status)
         
@@ -428,9 +431,82 @@ class MainWindow:
             messagebox.showerror("Error", f"Failed to refresh metadata cache: {e}")
             logger.error(f"Failed to refresh metadata cache: {e}")
     
+    def _init_global_hotkeys(self):
+        """Initialize global hotkeys."""
+        # Check if global hotkeys are enabled in config
+        if hasattr(self.config, 'enable_global_hotkeys') and self.config.enable_global_hotkeys:
+            try:
+                # Try to import global hotkey module to check if dependencies are available
+                from boop.core.global_hotkey import global_hotkey_manager
+                
+                # Set main window reference
+                global_hotkey_manager.set_main_window(self)
+                
+                # Register global hotkey for activating Boop
+                global_hotkey = self.config.shortcuts.get('global_run_script', 'Control+b')
+                if global_hotkey:
+                    global_hotkey_manager.register_hotkey(global_hotkey, self._activate_boop)
+                
+                # Start the global hotkey listener
+                global_hotkey_manager.start()
+                logger.info("Global hotkeys initialized successfully")
+            except ImportError:
+                # Global hotkey dependencies not available
+                logger.warning("Global hotkey dependencies not available, falling back to local hotkeys")
+                # Enable local run_script binding using shortcut_manager
+                shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
+                # Show warning to user
+                messagebox.showwarning("Global Hotkeys Unavailable", "Global hotkeys are enabled in settings but the required dependencies are not installed. Please rebuild the application with global hotkeys support or disable global hotkeys in preferences.")
+        else:
+            # Global hotkeys disabled, use local hotkeys
+            logger.info("Global hotkeys disabled, using local hotkeys")
+            # Enable local run_script binding using shortcut_manager
+            shortcut_manager.bind_hotkey(self.root, self.config.shortcuts.get('run_script', ['Ctrl+b']), lambda e: self._open_script_picker())
+    
+    def _activate_boop(self):
+        """Activate Boop window or open script picker if already active."""
+        try:
+            # Check if Boop window is currently focused
+            is_focused = self.root.focus_get() is not None
+            
+            if is_focused:
+                # If Boop is focused, open script picker
+                self._open_script_picker()
+            else:
+                # If Boop is not focused, bring it to front and stay in edit window
+                import sys
+                platform = sys.platform
+                
+                if platform == 'darwin':  # macOS
+                    try:
+                        # Use PyObjC to activate the application on macOS
+                        from AppKit import NSApplication
+                        NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+                    except ImportError:
+                        # Fallback if PyObjC is not available
+                        self.root.lift()
+                        self.root.focus_force()
+                        # Focus the editor widget specifically
+                        self.editor.focus()
+                else:
+                    # For Windows and Linux
+                    self.root.lift()
+                    self.root.focus_force()
+                    # Focus the editor widget specifically
+                    self.editor.focus()
+        except Exception as e:
+            logger.error(f"Error in _activate_boop: {e}")
+    
     def _quit(self):
         """Quit the application."""
         if messagebox.askyesno("Quit", "Are you sure you want to quit?"):
+            # Stop global hotkey listener if enabled and available
+            if hasattr(self.config, 'enable_global_hotkeys') and self.config.enable_global_hotkeys:
+                try:
+                    from boop.core.global_hotkey import global_hotkey_manager
+                    global_hotkey_manager.stop()
+                except ImportError:
+                    pass
             self.root.quit()
     
 

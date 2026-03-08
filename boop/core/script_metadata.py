@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 @dataclass

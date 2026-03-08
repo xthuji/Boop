@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 from boop.config.settings import BoopConfig
-from boop.core.logging import logger
+from boop.core.log import logger
 from boop.core.utils import center_window
 from boop.core.path import get_log_path, get_user_data_dir
 
@@ -132,6 +132,16 @@ class PreferencesPanel:
         window_frame = ttk.LabelFrame(parent, text="Window", padding=(10, 5))
         window_frame.pack(fill=tk.X, padx=10, pady=5)
 
+        # Global hotkeys option
+        hotkeys_frame = ttk.Frame(window_frame)
+        hotkeys_frame.pack(fill=tk.X, pady=5)
+        self.enable_global_hotkeys_var = tk.BooleanVar(value=getattr(self.config, 'enable_global_hotkeys', False))
+        hotkeys_checkbox = ttk.Checkbutton(
+            hotkeys_frame, text="Enable Global Hotkeys Back To App",
+            variable=self.enable_global_hotkeys_var
+        )
+        hotkeys_checkbox.pack(side=tk.LEFT, padx=(0, 10))
+        
         # Maximize window option
         maximize_frame = ttk.Frame(window_frame)
         maximize_frame.pack(fill=tk.X, pady=5)
@@ -318,7 +328,7 @@ class PreferencesPanel:
 
     def _bind_events(self):
         """Bind keyboard events."""
-        # Bind Enter key to save button (without confirmation dialog)
+        # Bind Enter key to save button
         self.dialog.bind('<Return>', lambda e: self._save(show_message=False))
         # Bind Esc key to cancel button
         self.dialog.bind('<Escape>', lambda e: self._close())
@@ -463,6 +473,7 @@ class PreferencesPanel:
             self.config.window_width = int(self.width_var.get())
             self.config.window_height = int(self.height_var.get())
             self.config.maximize_window = self.maximize_var.get()
+            self.config.enable_global_hotkeys = self.enable_global_hotkeys_var.get()
             self.config.font_family = self.font_family_var.get()
             self.config.font_size = int(self.font_size_var.get())
 

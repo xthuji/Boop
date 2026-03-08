@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Optional
-from boop.core.logging import logger
+from boop.core.log import logger
 
 
 # Get default shortcuts based on platform
@@ -19,6 +19,7 @@ def _get_default_shortcuts():
         return {
             'quit': ['Command+q'],
             'run_script': ['Command+b'],
+            'global_run_script': 'Command+b',
             'preferences': ['Command+,'],
             'undo': ['Command+z'],
             'redo': ['Command+Shift+Z', 'Command+y'],
@@ -29,12 +30,17 @@ def _get_default_shortcuts():
             'select_next_occurrence': ['Command+d'],
             'stop_multi_edit': ['Escape'],
             'move_to_start': ['Command+Up'],
-            'move_to_end': ['Command+Down']
+            'move_to_end': ['Command+Down'],
+            'select_to_start': ['Command+Shift+Up'],
+            'select_to_end': ['Command+Shift+Down'],
+            'indent': ['Tab'],
+            'outdent': ['Shift+Tab'],
         }
     else:
         return {
             'quit': ['Control+q'],
             'run_script': ['Control+b'],
+            'global_run_script': 'Control+b',
             'preferences': ['Control+,'],
             'undo': ['Control+z'],
             'redo': ['Control+Shift+Z', 'Control+y'],
@@ -45,7 +51,11 @@ def _get_default_shortcuts():
             'select_next_occurrence': ['Control+d'],
             'stop_multi_edit': ['Escape'],
             'move_to_start': ['Control+Home'],
-            'move_to_end': ['Control+End']
+            'move_to_end': ['Control+End'],
+            'select_to_start': ['Control+Shift+Home'],
+            'select_to_end': ['Control+Shift+End'],
+            'indent': ['Tab'],
+            'outdent': ['Shift+Tab'],
         }
 
 @dataclass
@@ -61,8 +71,9 @@ class BoopConfig:
     font_family: str = "Menlo"
     font_size: int = 14
     theme: str = "system"
-    script_timeout: int = 5
+    script_timeout: int = 10
     filter_delay: int = 200
+    enable_global_hotkeys: bool = False
     shortcuts: dict = field(default_factory=_get_default_shortcuts)
     
     @classmethod

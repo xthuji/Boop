@@ -116,7 +116,7 @@ def main():
     args = parser.parse_args()
 
     test_dir = Path(__file__).parent
-    scripts_dir = test_dir.parent / 'scripts'
+    scripts_dir = test_dir.parent / 'boop' / 'scripts'
     
     # 1. 搜集并分组任务
     categories = load_all_test_cases(test_dir)
@@ -151,7 +151,7 @@ def main():
     # 4. 打印报告
     print_summary(results, unit_test_result)
 
-    has_failed = any(not r.passed for r in results) or not unit_test_result.wasSuccessful()
+    has_failed = any(not r.passed for r in results) or (unit_test_result and not unit_test_result.wasSuccessful())
     sys.exit(1 if has_failed else 0)
 
 if __name__ == '__main__':
