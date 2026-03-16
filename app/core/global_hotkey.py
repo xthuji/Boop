@@ -5,8 +5,8 @@ Global Hotkey Manager - Handle global system-wide hotkeys
 import threading
 from pynput import keyboard
 from typing import Optional, Callable
-from boop.core.log import logger
-from boop.core.shortcut_manager import shortcut_manager
+from app.core.log import logger
+from app.core.shortcut_manager import shortcut_manager
 
 
 class GlobalHotkeyManager:

@@ -8,9 +8,9 @@ Uses tk.Toplevel for proper window management.
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, List, Callable
-from boop.core.script import ScriptManager
-from boop.core.utils import center_window
-from boop.core.log import logger
+from app.core.script import ScriptManager
+from app.core.utils import center_window
+from app.core.log import logger
 
 
 class ScriptPickerPopup:

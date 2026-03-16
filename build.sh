@@ -25,8 +25,8 @@ readonly RESERVE_DIR_ARRAY=(".app")
 
 # App files and directories to include in the build
 # For macOS, the files will be placed in Contents/Resources
-readonly APP_FILES=("${SCRIPT_DIR}/boop/scripts:scripts"
-                   "${SCRIPT_DIR}/boop/core/script_wrapper.py:boop/core"
+readonly APP_FILES=("${SCRIPT_DIR}/app/scripts:scripts"
+                   "${SCRIPT_DIR}/app/core/script_wrapper.py:app/core"
                    "${SCRIPT_DIR}/version.txt:."
                    "${SCRIPT_DIR}/USER_GUIDE.md:.")
 
@@ -142,17 +142,17 @@ pyinstaller_build() {
     fi
     
     args+=(--hidden-import tkinter --hidden-import tkinter.ttk
-           --hidden-import boop.ui.main
-           --hidden-import boop.ui.script_picker
-           --hidden-import boop.core.script
-           --hidden-import boop.config.settings
-           --hidden-import boop.core.global_hotkey
+           --hidden-import app.ui.main
+           --hidden-import app.ui.script_picker
+           --hidden-import app.core.script
+           --hidden-import app.config.settings
+           --hidden-import app.core.global_hotkey
            --hidden-import pynput
            --hidden-import pynput.keyboard)
     log "默认启用全局快捷键支持"
     [[ -n "$icon" ]] && args+=($icon)
     [[ ${#extra_args[@]} -gt 0 ]] && args+=(${extra_args[@]})
-    args+=("${SCRIPT_DIR}/boop/__main__.py")
+    args+=("${SCRIPT_DIR}/app/__main__.py")
 
     $PYTHON -m PyInstaller "${args[@]}" || { error "${name} 版本构建失败"; exit 1; }
 }
@@ -224,8 +224,8 @@ keep_artifact() {
 
 clean_py_files() {
     log "清理 .py 文件，只保留 .pyc 文件..."
-    # 删除所有 .py 文件，但保留 scripts 目录中的 .py 文件
-    find "${DIST_DIR}" -type f -name "*.py" -not -path "*/scripts/*" -delete 2>/dev/null
+    # 删除所有 .py 文件，但保留 scripts 目录中的 .py 文件和 script_wrapper.py 文件
+    find "${DIST_DIR}" -type f -name "*.py" -not -path "*/scripts/*" -not -name "script_wrapper.py" -delete 2>/dev/null
     # 确保 .pyc 文件存在
     find "${DIST_DIR}" -type f -name "*.pyc" | head -5 && log "确认 .pyc 文件存在"
 }
@@ -355,7 +355,7 @@ $PYTHON -m pip install -r requirements.txt
 
 # 预编译字节码（忽略scripts目录）
 log "正在预编译字节码..."
-$PYTHON -m compileall -b . --exclude "boop/scripts" 2>/dev/null || log "字节码预编译完成"
+$PYTHON -m compileall -b . --exclude "app/scripts" 2>/dev/null || log "字节码预编译完成"
 
 # Build
 if [[ "$BUILD_MACOS" == true ]]; then build_macos; fi

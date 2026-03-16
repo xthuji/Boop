@@ -5,8 +5,8 @@ Cache Management - Provides caching functionality for script metadata
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any
-from boop.core.path import get_user_data_dir
-from boop.core.log import logger
+from app.core.path import get_user_data_dir
+from app.core.log import logger
 
 
 class MetadataCache:

@@ -5,9 +5,9 @@ Editor Component - Text editor with line numbers and syntax highlighting
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, List, Dict, Any
-from boop.core.shortcut_manager import shortcut_manager, CURRENT_PLATFORM_MODIFIERS
-from boop.ui.editor_extensions import EditorExtensions
-from boop.core.log import logger
+from app.core.shortcut_manager import shortcut_manager, CURRENT_PLATFORM_MODIFIERS
+from app.ui.editor_extensions import EditorExtensions
+from app.core.log import logger
 
 class Editor:
     """带有行号和语法高亮功能的文本编辑器组件。"""

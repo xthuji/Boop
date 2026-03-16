@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
-from boop.core.path import get_log_path
+from app.core.path import get_log_path
 
 
 def is_packaged_app():

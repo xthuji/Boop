@@ -6,7 +6,7 @@ import tkinter as tk
 import platform
 from typing import List, Callable, Optional, Set, Dict
 from pynput import keyboard
-from boop.core.log import logger
+from app.core.log import logger
 
 # 平台检测
 PLATFORM = platform.system()

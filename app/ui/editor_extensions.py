@@ -6,7 +6,7 @@ Editor Extensions - 增强型多光标编辑插件
 import tkinter as tk
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
-from boop.core.log import logger
+from app.core.log import logger
 
 @dataclass
 class MultiCursorState:

@@ -15,10 +15,10 @@ import argparse
 from abc import ABC, abstractmethod
 
 # 假设这些模块在您的环境中已正确配置
-from boop.ui.editor import Editor
-from boop.config.settings import BoopConfig
-from boop.core.shortcut_manager import shortcut_manager, CURRENT_PLATFORM_MODIFIERS
-from boop.core.log import logger
+from app.ui.editor import Editor
+from app.config.settings import BoopConfig
+from app.core.shortcut_manager import shortcut_manager, CURRENT_PLATFORM_MODIFIERS
+from app.core.log import logger
 
 test_cases_file = 'test_cases.json'
 # --- 模拟事件类 ---

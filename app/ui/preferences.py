@@ -10,10 +10,10 @@ from tkinter import ttk, messagebox
 from pathlib import Path
 from typing import Optional
 
-from boop.config.settings import BoopConfig
-from boop.core.log import logger
-from boop.core.utils import center_window
-from boop.core.path import get_log_path, get_user_data_dir
+from app.config.settings import BoopConfig
+from app.core.log import logger
+from app.core.utils import center_window
+from app.core.path import get_log_path, get_user_data_dir
 
 
 class PreferencesPanel:
@@ -370,7 +370,7 @@ class PreferencesPanel:
     
     def _load_dependencies(self, dropdown):
         """Load dependencies into the dropdown list."""
-        from boop.core.script import ScriptManager
+        from app.core.script import ScriptManager
         
         try:
             # Create script manager and load metadata
@@ -518,7 +518,7 @@ class PreferencesPanel:
         import subprocess
         import sys
         from pathlib import Path
-        from boop.core.script import ScriptManager
+        from app.core.script import ScriptManager
         
         # Create script manager and load metadata
         script_manager = ScriptManager(self.config)
@@ -625,7 +625,7 @@ class PreferencesPanel:
     def _refresh_metadata_cache(self):
         """Refresh metadata cache."""
         logger.info("Refreshing metadata cache")
-        from boop.core.script import ScriptManager
+        from app.core.script import ScriptManager
         
         try:
             # Create a script manager and use the new refresh_metadata_cache method

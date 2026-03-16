@@ -8,15 +8,15 @@ from pathlib import Path
 from typing import Optional
 import os
 
-from boop.config.settings import BoopConfig
-from boop.core.script import ScriptManager
-from boop.core.utils import run_script_in_subprocess, center_window
-from boop.core.shortcut_manager import shortcut_manager
-from boop.core.event import event_system
-from boop.core.log import logger
-from boop.core.global_hotkey import global_hotkey_manager
-from boop.ui.editor import Editor
-from boop.ui.script_picker import ScriptPickerPopup
+from app.config.settings import BoopConfig
+from app.core.script import ScriptManager
+from app.core.utils import run_script_in_subprocess, center_window
+from app.core.shortcut_manager import shortcut_manager
+from app.core.event import event_system
+from app.core.log import logger
+from app.core.global_hotkey import global_hotkey_manager
+from app.ui.editor import Editor
+from app.ui.script_picker import ScriptPickerPopup
 
 
 class MainWindow:
@@ -415,7 +415,7 @@ class MainWindow:
     def _open_preferences(self):
         """Open preferences panel."""
         logger.info("Opening preferences panel")
-        from boop.ui.preferences import PreferencesPanel
+        from app.ui.preferences import PreferencesPanel
         PreferencesPanel(self.root, self.config, editor=self.editor)
 
     def _refresh_script_metadata_cache(self):
@@ -437,7 +437,7 @@ class MainWindow:
         if hasattr(self.config, 'enable_global_hotkeys') and self.config.enable_global_hotkeys:
             try:
                 # Try to import global hotkey module to check if dependencies are available
-                from boop.core.global_hotkey import global_hotkey_manager
+                from app.core.global_hotkey import global_hotkey_manager
                 
                 # Set main window reference
                 global_hotkey_manager.set_main_window(self)
@@ -503,7 +503,7 @@ class MainWindow:
             # Stop global hotkey listener if enabled and available
             if hasattr(self.config, 'enable_global_hotkeys') and self.config.enable_global_hotkeys:
                 try:
-                    from boop.core.global_hotkey import global_hotkey_manager
+                    from app.core.global_hotkey import global_hotkey_manager
                     global_hotkey_manager.stop()
                 except ImportError:
                     pass

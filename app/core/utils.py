@@ -53,7 +53,7 @@ def run_script_in_subprocess(script_path: Path, input_text: str, python_path: st
         # Handle PyInstaller bundled app
         if hasattr(sys, '_MEIPASS'):
             # In bundled app, the script_wrapper.py is in the same directory as the executable
-            wrapper_script = os.path.join(sys._MEIPASS, 'boop', 'core', 'script_wrapper.py')
+            wrapper_script = os.path.join(sys._MEIPASS, 'app', 'core', 'script_wrapper.py')
         else:
             # In development mode, use relative path
             wrapper_script = os.path.join(os.path.dirname(__file__), 'script_wrapper.py')
@@ -183,13 +183,13 @@ def parse_hotkey_for_pynput(hotkey):
                 if part in key_map:
                     keys.add(key_map[part])
                 else:
-                    from boop.core.log import logger
+                    from app.core.log import logger
                     logger.warning(f"Unknown key: {part}")
                     return None
         
         return keys
     except Exception as e:
-        from boop.core.log import logger
+        from app.core.log import logger
         logger.error(f"Error parsing hotkey {hotkey}: {e}")
         return None
 

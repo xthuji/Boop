@@ -3,10 +3,10 @@ Script Loader - Load and manage Python scripts from configured directories
 """
 from pathlib import Path
 
-from boop.config.settings import BoopConfig
-from boop.core.cache import MetadataCache
-from boop.core.script_metadata import ScriptMetadata
-from boop.core.log import logger
+from app.config.settings import BoopConfig
+from app.core.cache import MetadataCache
+from app.core.script_metadata import ScriptMetadata
+from app.core.log import logger
 
 
 class ScriptManager:
