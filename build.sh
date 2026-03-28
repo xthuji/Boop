@@ -19,7 +19,8 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly VERSION=$(grep -E '^VERSION = ' "${SCRIPT_DIR}/version.txt" | cut -d ' ' -f 3)
 readonly BUILD_DIR="${SCRIPT_DIR}/build"
 readonly DIST_DIR="${SCRIPT_DIR}/dist"
-readonly PYTHON="$HOME/miniconda3/envs/python39/bin/python3"
+# readonly PYTHON="$HOME/miniconda3/envs/python39/bin/python3"
+readonly PYTHON=$(jq -r '.python_path' "${HOME}/common_config.json" | sed "s#~#$HOME#g")
 readonly RESERVE_FILE_ARRAY=(-macos.dmg -windows.zip -linux.tar.gz)
 readonly RESERVE_DIR_ARRAY=(".app")
 
@@ -268,7 +269,12 @@ build_macos() {
         error "未找到 Info.plist 文件"
     fi
     
-    create_dmg
+    # 选择是否构建 DMG 安装包
+    read -p "是否构建 DMG 安装包？（y/n 默认n）：" build_type
+    if [[ "$build_type" == "y" ]]; then
+        echo "✅ 构建 DMG 安装包"
+        create_dmg
+    fi
     final_cleanup
     success "${DIST_DIR}/${PROJECT_NAME}-${VERSION}-macos.dmg"
 }
@@ -351,7 +357,7 @@ mkdir -p "${BUILD_DIR}" "${DIST_DIR}"
 clean
 
 log "正在安装依赖..."
-$PYTHON -m pip install -r requirements.txt
+$PYTHON -m pip install -r "${SCRIPT_DIR}/requirements.txt"
 
 # 预编译字节码（忽略scripts目录）
 log "正在预编译字节码..."
