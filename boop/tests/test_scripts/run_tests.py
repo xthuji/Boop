@@ -116,7 +116,7 @@ def main():
     args = parser.parse_args()
 
     test_dir = Path(__file__).parent
-    scripts_dir = test_dir.parent / 'app' / 'scripts'
+    scripts_dir = test_dir.parent.parent / 'app' / 'scripts'
     
     # 1. 搜集并分组任务
     categories = load_all_test_cases(test_dir)

@@ -9,10 +9,14 @@
 
 import time
 import os
+import sys
 import tkinter as tk
 import json
 import argparse
 from abc import ABC, abstractmethod
+
+# 添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # 假设这些模块在您的环境中已正确配置
 from app.ui.editor import Editor
@@ -20,7 +24,7 @@ from app.config.settings import BoopConfig
 from app.core.shortcut_manager import shortcut_manager, CURRENT_PLATFORM_MODIFIERS
 from app.core.log import logger
 
-test_cases_file = 'test_cases.json'
+test_cases_file = os.path.join(os.path.dirname(__file__), 'test_cases.json')
 # --- 模拟事件类 ---
 class MockEvent:
     def __init__(self, keysym, char='', state=0):
@@ -327,12 +331,11 @@ def main():
     parser.add_argument('cases', nargs='*', help='指定要运行的测试用例名')
     args = parser.parse_args()
 
-    config_path = os.path.join(os.path.dirname(__file__), test_cases_file)
-    if not os.path.exists(config_path):
+    if not os.path.exists(test_cases_file):
         print(f"错误: 找不到 {test_cases_file} 配置文件")
         return
 
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(test_cases_file, 'r', encoding='utf-8') as f:
         all_configs = json.load(f)
 
     runner = TestRunner()

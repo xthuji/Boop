@@ -1,272 +1,686 @@
 {
-  "testCases": [
-    {
-      "category": "Code Alignment",
-      "scripts": [
-        {
-          "name": "align_code",
-          "tests": [
-            {
-              "input": "name = John\nage = 30",
-              "expected": "name = John\nage  = 30"
-            },
-            {
-              "input": "::after\nname = John\nage = 30",
-              "expected": "name = John\nage  = 30"
-            },
-            {
-              "input": "::none\nname=John\nage=30",
-              "expected": "name=John\nage=30"
-            },
-            {
-              "input": "=>:both\nname => John\nage => 30",
-              "expected": "name => John\nage  => 30"
-            },
-            {
-              "input": "=:both:false\nname = John\nage = 30\ncity = NY",
-              "expected": "name = John\nage  = 30\ncity = NY"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "Insert Numbers",
-      "scripts": [
-        {
-          "name": "insert_sequence_number",
-          "tests": [
-            {
-              "input": "first line\nsecond line",
-              "expected": "1 first line\n2 second line"
-            },
-            {
-              "input": "1:1:n: \nfirst line\nsecond line",
-              "expected": "1 first line\n2 second line"
-            },
-            {
-              "input": "1:1:c:、\nfirst line\nsecond line",
-              "expected": "一、first line\n二、second line"
-            },
-            {
-              "input": "A:1:a:、\nfirst line\nsecond line",
-              "expected": "A、first line\nB、second line"
-            },
-            {
-              "input": "a:1:b:、\nfirst line\nsecond line",
-              "expected": "a、first line\nb、second line"
-            },
-            {
-              "input": "1:1:n:. \nfirst line\nsecond line",
-              "expected": "1. first line\n2. second line"
-            },
-            {
-              "input": "10:2:n: \nfirst line\nsecond line",
-              "expected": "10 first line\n12 second line"
-            },
-            {
-              "input": "1:1:n: :02\nfirst line\nsecond line\nthird line",
-              "expected": "01 first line\n02 second line\n03 third line"
-            },
-            {
-              "input": "1:1:n: :03\nfirst line\nsecond line",
-              "expected": "001 first line\n002 second line"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "Quick Replace",
-      "scripts": [
-        {
-          "name": "quick_replace",
-          "tests": [
-            {
-              "input": "old:new\nold text\nanother old text",
-              "expected": "new text\nanother new text"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "Quotes Handling",
-      "scripts": [
-        {
-          "name": "quotes_fix_smart",
-          "tests": [
-            {
-              "input": "“hello” ‘world’",
-              "expected": "\"hello\" 'world'"
-            },
-            {
-              "input": "It’s a test",
-              "expected": "It's a test"
-            },
-            {
-              "input": "She said “Hello”",
-              "expected": "She said \"Hello\""
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "JSON Processing",
-      "scripts": [
-        {
-          "name": "sort_json",
-          "tests": [
-            {
-              "input": "{\"z\": 1, \"a\": 2, \"m\": 3}",
-              "expected": "{\n  \"a\": 2,\n  \"m\": 3,\n  \"z\": 1\n}"
-            },
-            {
-              "input": "{\"b\": {\"z\": 1, \"a\": 2}, \"a\": [3, 1, 2]}",
-              "expected": "{\n  \"a\": [\n    3,\n    1,\n    2\n  ],\n  \"b\": {\n    \"a\": 2,\n    \"z\": 1\n  }\n}"
-            },
-            {
-              "input": "invalid json",
-              "expected": "无效的JSON格式"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "Text Counting",
-      "scripts": [
-        {
-          "name": "count_characters",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "11"
-            },
-            {
-              "input": "\nhello\nworld\n",
-              "expected": "13"
-            }
-          ]
-        },
-        {
-          "name": "count_lines",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "1"
-            },
-            {
-              "input": "hello\nworld",
-              "expected": "2"
-            },
-            {
-              "input": "hello\n\nworld",
-              "expected": "3"
-            }
-          ]
-        },
-        {
-          "name": "count_words",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "2"
-            },
-            {
-              "input": "hello\nworld\nhow are you",
-              "expected": "5"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "category": "Hash Generation",
-      "scripts": [
-        {
-          "name": "generate_hash",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-            },
-            {
-              "input": "sha1\nhello world",
-              "expected": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
-            },
-            {
-              "input": "1\nhello world",
-              "expected": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
-            },
-            {
-              "input": "sha256\nhello world",
-              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-            },
-            {
-              "input": "256\nhello world",
-              "expected": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-            },
-            {
-              "input": "sha512\nhello world",
-              "expected": "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
-            },
-            {
-              "input": "512\nhello world",
-              "expected": "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
-            }
-          ]
-        },
-        {
-          "name": "generate_md5",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "5eb63bbbe01eeed093cb22bb8f5acdc3"
-            }
-          ]
-        },
-        {
-          "name": "generate_placeholder_text",
-          "tests": [
-            {
-              "input": "5",
-              "expected": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            }
-          ]
-        },
-        {
-          "name": "generate_sum",
-          "tests": [
-            {
-              "input": "1\n2\n3",
-              "expected": "6"
-            }
-          ]
-        },
-        {
-          "name": "calculate_size",
-          "tests": [
-            {
-              "input": "hello world",
-              "expected": "11 bytes"
-            },
-            {
-              "input": "",
-              "expected": "0 bytes"
-            },
-            {
-              "input": "你好世界",
-              "expected": "12 bytes"
-            },
-            {
-              "input": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-              "expected": "445 bytes"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "基本文本操作测试": {
+    "steps": [
+      {
+        "action": "set_content",
+        "text": "Hello, World!"
+      },
+      {
+        "action": "move_cursor",
+        "position": "1.0"
+      },
+      {
+        "action": "comment",
+        "text": "测试选择文本功能"
+      },
+      {
+        "action": "select_text",
+        "start": "1.0",
+        "end": "1.5"
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Hello"
+      },
+      {
+        "action": "comment",
+        "text": "测试方向键行为 (VSCode 风格)"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Left",
+        "modifiers": []
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Hello"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Left",
+        "modifiers": []
+      },
+      {
+        "action": "assert_selection",
+        "expected": ""
+      }
+    ]
+  },
+  "多光标编辑核心功能测试": {
+    "steps": [
+      {
+        "action": "set_content",
+        "text": "test test test test test"
+      },
+      {
+        "action": "select_text",
+        "start": "1.0",
+        "end": "1.4"
+      },
+      {
+        "action": "comment",
+        "text": "测试多光标选择"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 3
+      },
+      {
+        "action": "comment",
+        "text": "测试多光标输入"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "a",
+        "char": "a",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "a a a test test"
+      },
+      {
+        "action": "comment",
+        "text": "测试多光标粘贴"
+      },
+      {
+        "action": "set_clipboard",
+        "content": "replaced"
+      },
+      {
+        "action": "on_paste",
+        "keysym": "v",
+        "modifiers": ["Command"],
+        "content": "replaced"
+      },
+      {
+        "action": "assert_content",
+        "expected": "replaced replaced replaced test test"
+      },
+      {
+        "action": "comment",
+        "text": "测试多光标回车键"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Return",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "\n \n \n test test"
+      },
+      {
+        "action": "comment",
+        "text": "测试多光标退出"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Escape",
+        "modifiers": []
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 0
+      }
+    ]
+  },
+  "快捷键功能测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "测试 Command+Up/Down 移动到文档头部/尾部"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+      },
+      {
+        "action": "move_cursor",
+        "position": "3.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Up",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "1.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Down",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "5.6"
+      },
+      {
+        "action": "comment",
+        "text": "测试 Command+Shift+Up/Down 选择到文档头部/尾部"
+      },
+      {
+        "action": "move_cursor",
+        "position": "3.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Up",
+        "modifiers": ["Command", "Shift"]
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Line 1\nLine 2\nLine 3"
+      },
+      {
+        "action": "clear_selection"
+      },
+      {
+        "action": "move_cursor",
+        "position": "3.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Down",
+        "modifiers": ["Command", "Shift"]
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Line 3\nLine 4\nLine 5"
+      }
+    ]
+  },
+  "Escape键功能测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "场景 1: 单光标模式下，选中文本后按 Escape 键"
+      },
+      {
+        "action": "set_content",
+        "text": "Hello World"
+      },
+      {
+        "action": "move_cursor",
+        "position": "1.0"
+      },
+      {
+        "action": "select_text",
+        "start": "1.0",
+        "end": "1.5"
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Hello"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Escape",
+        "modifiers": []
+      },
+      {
+        "action": "assert_selection",
+        "expected": ""
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "1.5"
+      },
+      {
+        "action": "comment",
+        "text": "场景 2: 多光标模式下，选中文本后按 Escape 键"
+      },
+      {
+        "action": "set_content",
+        "text": "test test test"
+      },
+      {
+        "action": "select_text",
+        "start": "1.0",
+        "end": "1.4"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 3
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Escape",
+        "modifiers": []
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 0
+      },
+      {
+        "action": "assert_selection",
+        "expected": ""
+      }
+    ]
+  },
+  "多光标编辑混合操作测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "场景 1: 先输入字符再粘贴之后再输入字符"
+      },
+      {
+        "action": "set_content",
+        "text": "test test test"
+      },
+      {
+        "action": "select_text",
+        "start": "1.0",
+        "end": "1.4"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "d",
+        "char": "d",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 3
+      },
+      {
+        "action": "comment",
+        "text": "输入字符 'X'"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "X",
+        "char": "X",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "X X X"
+      },
+      {
+        "action": "set_clipboard",
+        "content": "PASTE"
+      },
+      {
+        "action": "comment",
+        "text": "粘贴内容"
+      },
+      {
+        "action": "on_paste",
+        "keysym": "v",
+        "modifiers": ["Command"],
+        "content": "PASTE"
+      },
+      {
+        "action": "assert_content",
+        "expected": "PASTE PASTE PASTE"
+      },
+      {
+        "action": "comment",
+        "text": "输入字符 'Y'"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Y",
+        "char": "Y",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Y Y Y"
+      },
+      {
+        "action": "clear_multi_cursor_state"
+      },
+      {
+        "action": "assert_multi_cursor_selections",
+        "expected_count": 0
+      }
+    ]
+  },
+  "撤销重做功能测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "测试撤销/重做功能"
+      },
+      {
+        "action": "set_content",
+        "text": "Initial content"
+      },
+      {
+        "action": "comment",
+        "text": "输入文本"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "a",
+        "char": "a",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Initial contenta"
+      },
+      {
+        "action": "comment",
+        "text": "撤销操作"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "z",
+        "char": "z",
+        "modifiers": ["Command"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Initial content"
+      },
+      {
+        "action": "comment",
+        "text": "重做操作"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Z",
+        "char": "Z",
+        "modifiers": ["Command", "Shift"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Initial contenta"
+      }
+    ]
+  },
+  "字符计数功能测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "测试字符计数功能"
+      },
+      {
+        "action": "set_content",
+        "text": "Hello World"
+      },
+      {
+        "action": "assert_char_count",
+        "expected": 11
+      },
+      {
+        "action": "comment",
+        "text": "修改文本后测试字符计数"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "a",
+        "char": "a",
+        "modifiers": []
+      },
+      {
+        "action": "assert_char_count",
+        "expected": 12
+      }
+    ]
+  },
+  "缩进调整测试": {
+    "steps": [
+      {
+        "action": "comment",
+        "text": "测试单行缩进功能"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3"
+      },
+      {
+        "action": "move_cursor",
+        "position": "2.0"
+      },
+      {
+        "action": "comment",
+        "text": "测试 Tab 缩进"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\tLine 2\nLine 3"
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "2.1"
+      },
+      {
+        "action": "comment",
+        "text": "测试 Shift+Tab 取消缩进"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": ["Shift"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\nLine 2\nLine 3"
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "2.0"
+      },
+      {
+        "action": "comment",
+        "text": "测试多行缩进功能"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3\nLine 4"
+      },
+      {
+        "action": "select_text",
+        "start": "2.0",
+        "end": "4.0"
+      },
+      {
+        "action": "comment",
+        "text": "测试 Tab 缩进多行"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\tLine 2\n\tLine 3\nLine 4"
+      },
+      {
+        "action": "assert_selection",
+        "expected": "\tLine 2\n\tLine 3"
+      },
+      {
+        "action": "comment",
+        "text": "测试 Shift+Tab 取消缩进多行"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": ["Shift"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\nLine 2\nLine 3\nLine 4"
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Line 2\nLine 3"
+      },
+      {
+        "action": "comment",
+        "text": "测试场景：多行缩进后部分取消缩进"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3\nLine 4"
+      },
+      {
+        "action": "select_text",
+        "start": "2.0",
+        "end": "4.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\tLine 2\n\tLine 3\nLine 4"
+      },
+      {
+        "action": "move_cursor",
+        "position": "2.0"
+      },
+      {
+        "action": "clear_selection"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": ["Shift"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\nLine 2\n\tLine 3\nLine 4"
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "2.0"
+      },
+      {
+        "action": "comment",
+        "text": "测试场景：多行缩进后取消部分缩进（保持选择）"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3\nLine 4"
+      },
+      {
+        "action": "select_text",
+        "start": "2.0",
+        "end": "4.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\tLine 2\n\tLine 3\nLine 4"
+      },
+      {
+        "action": "select_text",
+        "start": "2.0",
+        "end": "3.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": ["Shift"]
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\nLine 2\n\tLine 3\nLine 4"
+      },
+      {
+        "action": "assert_selection",
+        "expected": "Line 2"
+      },
+      {
+        "action": "comment",
+        "text": "测试场景：光标在行中间时的缩进"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\nLine 2\nLine 3"
+      },
+      {
+        "action": "move_cursor",
+        "position": "2.4"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\tLine 2\nLine 3"
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "2.5"
+      },
+      {
+        "action": "comment",
+        "text": "测试场景：空行的缩进"
+      },
+      {
+        "action": "set_content",
+        "text": "Line 1\n\nLine 3"
+      },
+      {
+        "action": "move_cursor",
+        "position": "2.0"
+      },
+      {
+        "action": "on_key_press",
+        "keysym": "Tab",
+        "modifiers": []
+      },
+      {
+        "action": "assert_content",
+        "expected": "Line 1\n\t\nLine 3"
+      },
+      {
+        "action": "assert_cursor_position",
+        "expected": "2.1"
+      }
+    ]
+  }
 }
