@@ -1,0 +1,1189 @@
+[
+  {
+    "name": "Align Code",
+    "description": "对齐代码中的赋值语句",
+    "tags": [
+      "format",
+      "code",
+      "align",
+      "assignment",
+      "dq"
+    ],
+    "dependencies": [],
+    "icon": "📏",
+    "help": "对齐代码中的赋值语句，使等号对齐整齐\n\n用法：在第一行指定配置（可选）\n  格式：symbol:spaceMode:alignAll\n\n参数说明：\n  symbol - 对齐的符号（默认为 =）\n  spaceMode - 空格模式：both（默认，等号两侧空格）、after（等号后空格）、none（无空格）\n  alignAll - 是否对齐所有符号：true（默认，对齐所有）、false（仅对齐第一个）\n\n示例:\n输入:\n=:both:true\na = 1\nbb = 2\nccc = 3\n\n输出:\na   = 1\nbb  = 2\nccc = 3",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/align_code.py",
+    "module_name": "script_align_code",
+    "bias": 0,
+    "filename": "align_code.py"
+  },
+  {
+    "name": "Calculate Size",
+    "description": "计算文本的字节大小",
+    "tags": [
+      "size",
+      "calculate"
+    ],
+    "dependencies": [],
+    "icon": "🧮",
+    "help": "计算文本的字节大小和 KB 大小\n\n示例:\n输入:\nhello world\n\n输出:\n11 bytes\n0.01 KB",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/calculate_size.py",
+    "module_name": "script_calculate_size",
+    "bias": 0,
+    "filename": "calculate_size.py"
+  },
+  {
+    "name": "Compare Lines",
+    "description": "比较两行文本的差异",
+    "tags": [
+      "compare",
+      "lines"
+    ],
+    "dependencies": [],
+    "icon": "⚖️",
+    "help": "比较两行文本的差异\n\n示例:\n输入:\nhello world\nhello word\n\n输出:\n差异位置：7\n行 1: w\n行 2: d",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_compare.py",
+    "module_name": "script_lines_compare",
+    "bias": 0,
+    "filename": "lines_compare.py"
+  },
+  {
+    "name": "Convert Data Key Value Format",
+    "description": "在键值对格式 json/url/cookie/kv 之间转换",
+    "tags": [
+      "convert",
+      "data",
+      "json",
+      "url",
+      "cookie",
+      "kv",
+      "key",
+      "value"
+    ],
+    "dependencies": [],
+    "icon": "🎹",
+    "help": "在键值对格式 json/url/cookie/kv 之间转换\n\n用法：在第一行指定目标格式（可选）\n  格式：format\n\n参数说明：\n  format - 目标格式：json（默认）、url、cookie、kv（键值对）\n\n支持的输入格式：\n- JSON 格式：{\"key\": \"value\"}\n- URL 参数：key1=value1\u0026key2=value2\n- Cookie 格式：key1=value1; key2=value2\n- 键值对格式：key1=value1\n\n示例:\n输入:\njson\nkey1=value1\nkey2=value2\n\n输出:\n{\n  \"key1\": \"value1\",\n  \"key2\": \"value2\"\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_data_key_value_format.py",
+    "module_name": "script_convert_data_key_value_format",
+    "bias": 0,
+    "filename": "convert_data_key_value_format.py"
+  },
+  {
+    "name": "Convert Data List Format",
+    "description": "在列表格式 json/xml/yaml/csv/tsv/sql/md/html 之间转换",
+    "tags": [
+      "convert",
+      "data",
+      "list",
+      "json",
+      "xml",
+      "yaml",
+      "csv",
+      "tsv",
+      "sql",
+      "md",
+      "html"
+    ],
+    "dependencies": [],
+    "icon": "📊",
+    "help": "在列表格式 json/xml/yaml/csv/tsv/sql/md/html 之间转换 (减号和星号格式)\n\n示例:\n输入:\n- item1\n- item2\n- item3\n\n输出:\n* item1\n* item2\n* item3",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_data_list_format.py",
+    "module_name": "script_convert_data_list_format",
+    "bias": 0,
+    "filename": "convert_data_list_format.py"
+  },
+  {
+    "name": "Convert Data YAML JSON",
+    "description": "在 YAML 和 JSON 之间相互转换",
+    "tags": [
+      "convert",
+      "yaml",
+      "json",
+      "code",
+      "data"
+    ],
+    "dependencies": [],
+    "icon": "🎹",
+    "help": "在 YAML 和 JSON 之间相互转换\n\n首行参数格式:\nformat (指定转换模式)\n\n支持的模式:\n- json/j: 强制转换为 JSON\n- yaml/y: 强制转换为 YAML\n- toggle/t: 自动检测并切换格式 (默认)\n\n示例 1 (强制转换为 JSON):\n输入:\njson\nname: John\nage: 30\n\n输出:\n{\n  \"name\": \"John\",\n  \"age\": 30\n}\n\n示例 2 (强制转换为 YAML):\n输入:\nyaml\n{\"name\": \"John\", \"age\": 30}\n\n输出:\nname: John\nage: 30",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_data_yaml_json.py",
+    "module_name": "script_convert_data_yaml_json",
+    "bias": 0,
+    "filename": "convert_data_yaml_json.py"
+  },
+  {
+    "name": "Convert JSON Code String",
+    "description": "在 JSON/JS/Python/Lua/Php 代码之间转换",
+    "tags": [
+      "convert",
+      "json",
+      "code",
+      "js",
+      "javascript",
+      "py",
+      "python",
+      "lua",
+      "php"
+    ],
+    "dependencies": [],
+    "icon": "💊",
+    "help": "在 JSON/JS/Python/Lua/Php 代码之间转换\n\n首行参数格式:\n1. output_format (仅指定输出格式)\n2. input_format:output_format (指定输入和输出格式)\n\n支持的格式:\n- json: JSON 格式\n- js/javascript: JavaScript 格式\n- py/python: Python 格式\n- lua: Lua 格式\n- php: PHP 格式\n\n示例 1 (JSON 转 JavaScript):\n输入:\njavascript\n{\"name\": \"John\", \"age\": 30}\n\n输出:\n{\n  \"name\": \"John\",\n  \"age\": 30\n};\n\n示例 2 (JavaScript 转 Python):\n输入:\njavascript:python\n{name: 'John', age: 30}\n\n输出:\n{'name': 'John', 'age': 30}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_json_code.py",
+    "module_name": "script_convert_json_code",
+    "bias": 0,
+    "filename": "convert_json_code.py"
+  },
+  {
+    "name": "Convert Number Base",
+    "description": "在不同进制之间转换数字",
+    "tags": [
+      "convert",
+      "number",
+      "2",
+      "8",
+      "10",
+      "16"
+    ],
+    "dependencies": [],
+    "icon": "🔢",
+    "help": "在不同进制之间转换数字，支持2-36进制\n\n首行参数格式:\nfrom_base:to_base:uppercase\n\n参数说明:\n- from_base: 输入数字的进制 (2-36)\n- to_base: 输出数字的进制 (2-36)\n- uppercase: 是否使用大写字母 (true/false，默认true)\n\n示例:\n1. 默认转换（十进制转十六进制）:\n输入:\n10\n输出:\nA\n\n2. 自定义转换（二进制转八进制）:\n输入:\n2:8\n1010\n输出:\n12\n\n3. 自定义转换（十进制转十六进制，小写）:\n输入:\n10:16:false\n255\n输出:\nff",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_number_base.py",
+    "module_name": "script_convert_number_base",
+    "bias": 0,
+    "filename": "convert_number_base.py"
+  },
+  {
+    "name": "Convert Time Format",
+    "description": "在不同时间格式之间转换",
+    "tags": [
+      "convert",
+      "time",
+      "iso",
+      "date",
+      "datetime",
+      "dt",
+      "timestamp",
+      "ts"
+    ],
+    "dependencies": [],
+    "icon": "⏰",
+    "help": "在不同时间格式之间转换，支持多种时间格式\n\n首行参数格式:\n1. cycle 或 c (循环模式)\n2. output_format (仅指定输出格式)\n3. input_format:output_format (指定输入和输出格式)\n\n支持的格式:\n- iso: ISO 格式 (2022-12-25T12:00:00.000000+00:00)\n- date: 日期格式 (2022-12-25)\n- time: 时间格式 (12:00:00)\n- datetime: 日期时间格式 (2022-12-25 12:00:00)\n- datetime-ms: 带毫秒的日期时间格式\n- timestamp: 10位时间戳 (秒)\n- timestamp-ms: 13位时间戳 (毫秒)\n- slashes: 带斜杠的日期时间格式 (2022/12/25 12:00:00)\n- us: 美国格式 (12/25/2022 12:00:00)\n- eu: 欧洲格式 (25/12/2022 12:00:00)\n\n示例 1 (默认转换 - 时间戳转日期时间):\n输入:\n1671979200\n输出:\n2022-12-25 12:00:00\n\n示例 2 (指定输出格式 - 日期时间转13位时间戳):\n输入:\ntimestamp-ms\n2022-12-25 12:00:00\n输出:\n1671979200000\n\n示例 3 (循环模式):\n输入:\ncycle\n2022-12-25 12:00:00\n输出:\n1671979200",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/convert_time.py",
+    "module_name": "script_convert_time",
+    "bias": 0,
+    "filename": "convert_time.py"
+  },
+  {
+    "name": "Count Characters",
+    "description": "计算文本中的字符数量",
+    "tags": [
+      "count",
+      "characters"
+    ],
+    "dependencies": [],
+    "icon": "🤖",
+    "help": "计算文本中的字符数量\n\n示例:\n输入:\nhello world\n\n输出:\n总字符数：11\n非空白字符数：11\n单词数：2",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/count_characters.py",
+    "module_name": "script_count_characters",
+    "bias": 0,
+    "filename": "count_characters.py"
+  },
+  {
+    "name": "Count Lines",
+    "description": "计算文本的行数",
+    "tags": [
+      "count",
+      "lines"
+    ],
+    "dependencies": [],
+    "icon": "🤖",
+    "help": "计算文本的行数\n\n示例:\n输入:\nHello\nWorld\n\n输出:\n2",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/count_lines.py",
+    "module_name": "script_count_lines",
+    "bias": 0,
+    "filename": "count_lines.py"
+  },
+  {
+    "name": "Count Words",
+    "description": "计算文本中的单词数量",
+    "tags": [
+      "count",
+      "words"
+    ],
+    "dependencies": [],
+    "icon": "🤖",
+    "help": "计算文本中的单词数量\n\n示例:\n输入:\nhello world\n\n输出:\n单词数：2",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/count_words.py",
+    "module_name": "script_count_words",
+    "bias": 0,
+    "filename": "count_words.py"
+  },
+  {
+    "name": "Find Duplicate Lines",
+    "description": "查找文本中的重复行",
+    "tags": [
+      "duplicate",
+      "lines"
+    ],
+    "dependencies": [],
+    "icon": "🔍",
+    "help": "查找文本中的重复行\n\n示例:\n输入:\napple\nbanana\napple\ncherry\nbanana\n\n输出:\n重复行:\napple (2 次)\nbanana (2 次)",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_find_duplicate.py",
+    "module_name": "script_lines_find_duplicate",
+    "bias": 0,
+    "filename": "lines_find_duplicate.py"
+  },
+  {
+    "name": "Fix Smart Quotes",
+    "description": "修复智能引号为普通引号",
+    "tags": [
+      "quotes",
+      "fix"
+    ],
+    "dependencies": [],
+    "icon": "📝",
+    "help": "修复智能引号为普通引号\n\n示例:\n输入:\n\"hello\" 'world'\n\n输出:\n\"hello\" 'world'",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/quotes_fix_smart.py",
+    "module_name": "script_quotes_fix_smart",
+    "bias": 0,
+    "filename": "quotes_fix_smart.py"
+  },
+  {
+    "name": "Format AppleScript",
+    "description": "格式化 AppleScript 代码",
+    "tags": [
+      "applescript",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 AppleScript 代码\n\n示例:\n输入:\non hello() say \"Hello\"\nend hello\n\n输出:\non hello()\n    say \"Hello\"\nend hello",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_applescript.py",
+    "module_name": "script_format_applescript",
+    "bias": 0,
+    "filename": "format_applescript.py"
+  },
+  {
+    "name": "Format Go",
+    "description": "格式化 Go 代码",
+    "tags": [
+      "go",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Go 代码\n\n示例:\n输入:\nfunc main(){fmt.Println(\"Hello\")}\n\n输出:\nfunc main() {\n    fmt.Println(\"Hello\")\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_go.py",
+    "module_name": "script_format_go",
+    "bias": 0,
+    "filename": "format_go.py"
+  },
+  {
+    "name": "Format INI",
+    "description": "格式化 INI 配置文件",
+    "tags": [
+      "ini",
+      "format",
+      "fmt",
+      "config",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 INI 配置文件\n\n示例:\n输入:\n[section]\nkey=value\n\n输出:\n[section]\nkey = value",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_ini.py",
+    "module_name": "script_format_ini",
+    "bias": 0,
+    "filename": "format_ini.py"
+  },
+  {
+    "name": "Format Java",
+    "description": "格式化 Java 代码",
+    "tags": [
+      "java",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Java 代码\n\n示例:\n输入:\npublic class Test{public static void main(String[]args){System.out.println(\"Hello\")}}\n\n输出:\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_java.py",
+    "module_name": "script_format_java",
+    "bias": 0,
+    "filename": "format_java.py"
+  },
+  {
+    "name": "Format Lua",
+    "description": "格式化 Lua 代码",
+    "tags": [
+      "lua",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Lua 代码\n\n示例:\n输入:\nfunction hello()print(\"Hello\")end\n\n输出:\nfunction hello()\n    print(\"Hello\")\nend",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_lua.py",
+    "module_name": "script_format_lua",
+    "bias": 0,
+    "filename": "format_lua.py"
+  },
+  {
+    "name": "Format Properties",
+    "description": "格式化 Properties 文件",
+    "tags": [
+      "properties",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Properties 配置文件\n\n示例:\n输入:\nkey=value\n\n输出:\nkey = value",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_properties.py",
+    "module_name": "script_format_properties",
+    "bias": 0,
+    "filename": "format_properties.py"
+  },
+  {
+    "name": "Format Python",
+    "description": "格式化 Python 代码",
+    "tags": [
+      "python",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Python 代码\n\n示例:\n输入:\ndef hello():print(\"Hello\")\n\n输出:\ndef hello():\n    print(\"Hello\")",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_python.py",
+    "module_name": "script_format_python",
+    "bias": 0,
+    "filename": "format_python.py"
+  },
+  {
+    "name": "Format Ruby",
+    "description": "格式化 Ruby 代码",
+    "tags": [
+      "ruby",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Ruby 代码\n\n示例:\n输入:\ndef hello;puts\"Hello\";end\n\n输出:\ndef hello\n    puts \"Hello\"\nend",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_ruby.py",
+    "module_name": "script_format_ruby",
+    "bias": 0,
+    "filename": "format_ruby.py"
+  },
+  {
+    "name": "Format SQL",
+    "description": "格式化 SQL 查询语句",
+    "tags": [
+      "sql",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [
+      "sqlparse"
+    ],
+    "icon": "✨",
+    "help": "格式化 SQL 查询语句\n\n示例:\n输入:\nSELECT * FROM users WHERE id=1\n\n输出:\nSELECT *\nFROM users\nWHERE id = 1",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_sql.py",
+    "module_name": "script_format_sql",
+    "bias": 0,
+    "filename": "format_sql.py"
+  },
+  {
+    "name": "Format Scala",
+    "description": "格式化 Scala 代码",
+    "tags": [
+      "scala",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Scala 代码\n\n示例:\n输入:\nobject Test{def main(args:Array[String]){println(\"Hello\")}}\n\n输出:\nobject Test {\n    def main(args: Array[String]) {\n        println(\"Hello\")\n    }\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_scala.py",
+    "module_name": "script_format_scala",
+    "bias": 0,
+    "filename": "format_scala.py"
+  },
+  {
+    "name": "Format Shell",
+    "description": "格式化 Shell 脚本",
+    "tags": [
+      "shell",
+      "bash",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化 Shell 脚本\n\n示例:\n输入:\nif [ true ];then echo \"Hello\";fi\n\n输出:\nif [ true ]; then\n    echo \"Hello\"\nfi",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_shell.py",
+    "module_name": "script_format_shell",
+    "bias": 0,
+    "filename": "format_shell.py"
+  },
+  {
+    "name": "Format YAML",
+    "description": "格式化 YAML 文档",
+    "tags": [
+      "yaml",
+      "format",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [
+      "pyyaml"
+    ],
+    "icon": "✨",
+    "help": "格式化 YAML 文档\n\n示例:\n输入:\nname: John\nage: 30\n\n输出:\nname: John\nage: 30",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_yaml.py",
+    "module_name": "script_format_yaml",
+    "bias": 0,
+    "filename": "format_yaml.py"
+  },
+  {
+    "name": "Format/Minify CSS",
+    "description": "格式化或压缩 CSS 样式代码",
+    "tags": [
+      "css",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化或压缩 CSS 样式代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nbody{color:red}\n\n输出:\nbody {\n    color: red;\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_css.py",
+    "module_name": "script_format_css",
+    "bias": 0,
+    "filename": "format_css.py"
+  },
+  {
+    "name": "Format/Minify HTML",
+    "description": "格式化或压缩 HTML 代码",
+    "tags": [
+      "html",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [
+      "beautifulsoup4",
+      "lxml"
+    ],
+    "icon": "✨",
+    "help": "格式化或压缩 HTML 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\n\u003chtml\u003e\u003cbody\u003e\u003cp\u003eHello\u003c/p\u003e\u003c/body\u003e\u003c/html\u003e\n\n输出:\n\u003chtml\u003e\n    \u003cbody\u003e\n        \u003cp\u003eHello\u003c/p\u003e\n    \u003c/body\u003e\n\u003c/html\u003e",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_html.py",
+    "module_name": "script_format_html",
+    "bias": 0,
+    "filename": "format_html.py"
+  },
+  {
+    "name": "Format/Minify JSON",
+    "description": "格式化或压缩 JSON 数据",
+    "tags": [
+      "json",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [
+      "json5"
+    ],
+    "icon": "✨",
+    "help": "格式化或压缩 JSON 数据\n\n如果数据已格式化，将进行压缩。\n\n示例:\n输入:\n{\"name\":\"John\",\"age\":30}\n\n输出:\n{\n    \"name\": \"John\",\n    \"age\": 30\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_json.py",
+    "module_name": "script_format_json",
+    "bias": 0,
+    "filename": "format_json.py"
+  },
+  {
+    "name": "Format/Minify JavaScript",
+    "description": "格式化或压缩 JavaScript 代码",
+    "tags": [
+      "javascript",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化或压缩 JavaScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello(){console.log(\"Hello\")}\n\n输出:\nfunction hello() {\n    console.log(\"Hello\");\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_javascript.py",
+    "module_name": "script_format_javascript",
+    "bias": 0,
+    "filename": "format_javascript.py"
+  },
+  {
+    "name": "Format/Minify TypeScript",
+    "description": "格式化或压缩 TypeScript 代码",
+    "tags": [
+      "typescript",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [
+      "jsbeautifier"
+    ],
+    "icon": "✨",
+    "help": "格式化或压缩 TypeScript 代码\n\n如果代码已格式化，将进行压缩。\n\n示例:\n输入:\nfunction hello(name:string):void{console.log(`Hello ${name}`)}\n\n输出:\nfunction hello(name: string): void {\n    console.log(`Hello ${name}`);\n}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_typescript.py",
+    "module_name": "script_format_typescript",
+    "bias": 0,
+    "filename": "format_typescript.py"
+  },
+  {
+    "name": "Format/Minify XML",
+    "description": "格式化或压缩 XML 文档",
+    "tags": [
+      "xml",
+      "format",
+      "minify",
+      "fmt",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "✨",
+    "help": "格式化或压缩 XML 文档\n\n如果文档已格式化，将进行压缩。\n\n示例:\n输入:\n\u003croot\u003e\u003cchild\u003etext\u003c/child\u003e\u003c/root\u003e\n\n输出:\n\u003croot\u003e\n    \u003cchild\u003etext\u003c/child\u003e\n\u003c/root\u003e",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/format_xml.py",
+    "module_name": "script_format_xml",
+    "bias": 0,
+    "filename": "format_xml.py"
+  },
+  {
+    "name": "Generate Hash",
+    "description": "计算文本的哈希值 (SHA1/SHA256/SHA512)",
+    "tags": [
+      "hash",
+      "sha1",
+      "sha256",
+      "sha512",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "📄",
+    "help": "计算文本的哈希值\n\n用法：在第一行指定哈希算法 (可选)\n  格式：algorithm\n\n参数说明:\n  algorithm - 哈希算法:\n              sha1/1    - SHA1 哈希\n              sha256/256 - SHA256 哈希 (默认)\n              sha512/512 - SHA512 哈希\n\n示例:\n  sha1\n  hello world\n\n  将输出:\n  2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/generate_hash.py",
+    "module_name": "script_generate_hash",
+    "bias": 0,
+    "filename": "generate_hash.py"
+  },
+  {
+    "name": "Generate MD5",
+    "description": "计算文本的 MD5 哈希值",
+    "tags": [
+      "hash",
+      "md5",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "📄",
+    "help": "计算文本的 MD5 哈希值\n\n示例:\n输入:\nhello world\n\n输出:\n5eb63bbbe01eeed093cb22bb8f5acdc3",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/generate_md5.py",
+    "module_name": "script_generate_md5",
+    "bias": 0,
+    "filename": "generate_md5.py"
+  },
+  {
+    "name": "Generate Placeholder Text",
+    "description": "生成占位符文本",
+    "tags": [
+      "placeholder",
+      "text",
+      "zhanwei"
+    ],
+    "dependencies": [],
+    "icon": "📄",
+    "help": "生成占位符文本 (Lorem Ipsum)\n\n示例:\n输入:\n5\n\n输出:\nLorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/generate_placeholder_text.py",
+    "module_name": "script_generate_placeholder_text",
+    "bias": 0,
+    "filename": "generate_placeholder_text.py"
+  },
+  {
+    "name": "Generate Sum",
+    "description": "计算文本数字的总和",
+    "tags": [
+      "calculate",
+      "sum",
+      "math",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "📄",
+    "help": "计算文本中所有数字的总和\n\n示例:\n输入:\n1\n2\n3\n4\n5\n\n输出:\n15",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/generate_sum.py",
+    "module_name": "script_generate_sum",
+    "bias": 0,
+    "filename": "generate_sum.py"
+  },
+  {
+    "name": "Insert Sequence Number",
+    "description": "在每行前插入序列号",
+    "tags": [
+      "sequence",
+      "number"
+    ],
+    "dependencies": [],
+    "icon": "🔢",
+    "help": "在每行前插入序列号\n\n首行参数格式:\nstart:step:type:separator:width\n\n参数说明:\n- start: 起始值 (数字或字母)\n- step: 步长 (默认 1)\n- type: 类型 (1/num/n: 阿拉伯数字, 2/zh/c: 中文数字, a/u/upper: 大写字母, b/l/lower: 小写字母)\n- separator: 分隔符 (默认空格)\n- width: 数字宽度 (仅阿拉伯数字有效)\n\n示例 1 (默认设置):\n输入:\napple\nbanana\ncherry\n\n输出:\n1 apple\n2 banana\n3 cherry\n\n示例 2 (自定义设置):\n输入:\n5:2:upper:.\napple\nbanana\ncherry\n\n输出:\nE. apple\nG. banana\nI. cherry",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/insert_sequence_number.py",
+    "module_name": "script_insert_sequence_number",
+    "bias": 0,
+    "filename": "insert_sequence_number.py"
+  },
+  {
+    "name": "Lines join",
+    "description": "Script from lines_join.py",
+    "tags": [],
+    "dependencies": [],
+    "icon": "",
+    "help": "",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_join.py",
+    "module_name": "script_lines_join",
+    "bias": 0,
+    "filename": "lines_join.py"
+  },
+  {
+    "name": "Lines split",
+    "description": "Script from lines_split.py",
+    "tags": [],
+    "dependencies": [],
+    "icon": "",
+    "help": "",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_split.py",
+    "module_name": "script_lines_split",
+    "bias": 0,
+    "filename": "lines_split.py"
+  },
+  {
+    "name": "Manage Todo",
+    "description": "管理 Todo 服务",
+    "tags": [
+      "todo",
+      "manage",
+      "code"
+    ],
+    "dependencies": [
+      "pywebview"
+    ],
+    "icon": "🌐",
+    "help": "管理 Todo 服务\n\n打开Todo管理页面 http://127.0.0.1:3000/",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/manage_todo.py",
+    "module_name": "script_manage_todo",
+    "bias": 0,
+    "filename": "manage_todo.py"
+  },
+  {
+    "name": "Quick Replace",
+    "description": "快速替换文本",
+    "tags": [
+      "replace",
+      "string"
+    ],
+    "dependencies": [],
+    "icon": "💫",
+    "help": "快速替换文本中的内容\n\n首行参数格式:\nsource:target\n\n参数说明:\n- source: 要查找的内容\n- target: 要替换的内容\n\n示例:\n输入:\nhello:hi\nhello world\nhello there\n\n输出:\nhi world\nhi there",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/quick_replace.py",
+    "module_name": "script_quick_replace",
+    "bias": 0,
+    "filename": "quick_replace.py"
+  },
+  {
+    "name": "Remove Duplicate Lines",
+    "description": "移除文本中的重复行",
+    "tags": [
+      "remove",
+      "duplicate",
+      "lines"
+    ],
+    "dependencies": [],
+    "icon": "🧹",
+    "help": "移除文本中的重复行\n\n示例:\n输入:\napple\nbanana\napple\ncherry\n\n输出:\napple\nbanana\ncherry",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_remove_duplicate.py",
+    "module_name": "script_lines_remove_duplicate",
+    "bias": 0,
+    "filename": "lines_remove_duplicate.py"
+  },
+  {
+    "name": "Remove Empty Lines",
+    "description": "移除文本中的空行",
+    "tags": [
+      "remove",
+      "empty",
+      "lines"
+    ],
+    "dependencies": [],
+    "icon": "🧹",
+    "help": "移除文本中的空行\n\n示例:\n输入:\nhello\n\nworld\n\n输出:\nhello\nworld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_remove_empty.py",
+    "module_name": "script_lines_remove_empty",
+    "bias": 0,
+    "filename": "lines_remove_empty.py"
+  },
+  {
+    "name": "Reverse String",
+    "description": "反转字符串",
+    "tags": [
+      "reverse",
+      "string"
+    ],
+    "dependencies": [],
+    "icon": "🔁",
+    "help": "反转字符串\n\n示例:\n输入:\nhello\n\n输出:\nolleh",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_reverse_string.py",
+    "module_name": "script_lines_reverse_string",
+    "bias": 0,
+    "filename": "lines_reverse_string.py"
+  },
+  {
+    "name": "Shuffle Characters",
+    "description": "随机打乱字符顺序",
+    "tags": [
+      "shuffle",
+      "random",
+      "string"
+    ],
+    "dependencies": [],
+    "icon": "🔀",
+    "help": "随机打乱字符顺序\n\n示例:\n输入:\nhello\n\n输出:\n(随机结果)",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_shuffle_characters.py",
+    "module_name": "script_lines_shuffle_characters",
+    "bias": 0,
+    "filename": "lines_shuffle_characters.py"
+  },
+  {
+    "name": "Sort JSON",
+    "description": "对 JSON 对象的键进行排序",
+    "tags": [
+      "json",
+      "sort",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "↕️",
+    "help": "对 JSON 对象的键进行字母排序\n\n示例:\n输入:\n{\"z\": 1, \"a\": 2, \"m\": 3}\n\n输出:\n{\"a\": 2, \"m\": 3, \"z\": 1}",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/sort_json.py",
+    "module_name": "script_sort_json",
+    "bias": 0,
+    "filename": "sort_json.py"
+  },
+  {
+    "name": "Sort Lines",
+    "description": "对文本行进行排序",
+    "tags": [
+      "sort",
+      "lines",
+      "asc",
+      "desc",
+      "random",
+      "shuffle",
+      "reverse",
+      "number",
+      "string"
+    ],
+    "dependencies": [],
+    "icon": "↕️",
+    "help": "对文本行进行排序\n\n首行参数格式:\n1. mode (排序模式)\n2. column:order:type:delimiter (按列排序)\n\n支持的模式:\n- asc/ascending: 升序排序 (默认)\n- desc/descending: 降序排序\n- random/shuffle: 随机排序\n- reverse/r: 反转顺序\n\n按列排序参数:\n- column: 列索引 (从0开始)\n- order: 排序顺序 (asc/desc)\n- type: 数据类型 (string/number)\n- delimiter: 分隔符 (默认 ',')\n\n示例 1 (降序排序):\n输入:\ndesc\nbanana\napple\ncherry\n\n输出:\ncherry\nbanana\napple\n\n示例 2 (按第二列排序):\n输入:\n1:asc:number,\napple,3\nbanana,1\ncherry,2\n\n输出:\nbanana,1\ncherry,2\napple,3",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_sort.py",
+    "module_name": "script_lines_sort",
+    "bias": 0,
+    "filename": "lines_sort.py"
+  },
+  {
+    "name": "Space to Tab",
+    "description": "将空格转换为制表符",
+    "tags": [
+      "space",
+      "tab",
+      "convert",
+      "indent",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "⏭️",
+    "help": "将空格转换为制表符 (默认 4 个空格=1 个制表符)\n\n示例:\n输入:\n    hello\n    world\n\n输出:\n\thello\n\tworld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/space_to_tab.py",
+    "module_name": "script_space_to_tab",
+    "bias": 0,
+    "filename": "space_to_tab.py"
+  },
+  {
+    "name": "Tab to Space",
+    "description": "将制表符转换为空格",
+    "tags": [
+      "tab",
+      "space",
+      "convert",
+      "indent",
+      "code"
+    ],
+    "dependencies": [],
+    "icon": "⏮️",
+    "help": "将制表符转换为空格 (默认 1 个制表符=4 个空格)\n\n示例:\n输入:\n\thello\n\tworld\n\n输出:\n    hello\n    world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/tab_to_space.py",
+    "module_name": "script_tab_to_space",
+    "bias": 0,
+    "filename": "tab_to_space.py"
+  },
+  {
+    "name": "To Camel Case",
+    "description": "转为驼峰命名格式",
+    "tags": [
+      "format",
+      "case",
+      "camel",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🐪",
+    "help": "将文本转换为驼峰命名格式 (首单词小写，后续单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nhelloWorld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_camel.py",
+    "module_name": "script_case_to_camel",
+    "bias": 0,
+    "filename": "case_to_camel.py"
+  },
+  {
+    "name": "To Camel Case Upper",
+    "description": "转为首字母大写驼峰命名格式",
+    "tags": [
+      "format",
+      "case",
+      "camel",
+      "upper",
+      "first",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🐪",
+    "help": "将文本转换为首字母大写驼峰命名格式 (首单词大写，后续单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nHelloWorld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_camel_upper.py",
+    "module_name": "script_case_to_camel_upper",
+    "bias": 0,
+    "filename": "case_to_camel_upper.py"
+  },
+  {
+    "name": "To Kebab Case",
+    "description": "转为短横线命名格式",
+    "tags": [
+      "format",
+      "case",
+      "kebab",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🍡",
+    "help": "将文本转换为短横线命名格式 (kebab-case)\n\n示例:\n输入:\nhello world\n\n输出:\nhello-world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_kebab.py",
+    "module_name": "script_case_to_kebab",
+    "bias": 0,
+    "filename": "case_to_kebab.py"
+  },
+  {
+    "name": "To Kebab Upper Case",
+    "description": "转为大写短横线命名格式",
+    "tags": [
+      "format",
+      "case",
+      "kebab",
+      "upper",
+      "first",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🍡",
+    "help": "将文本转换为大写短横线命名格式 (KEBAB-CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO-WORLD",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_kebab_upper.py",
+    "module_name": "script_case_to_kebab_upper",
+    "bias": 0,
+    "filename": "case_to_kebab_upper.py"
+  },
+  {
+    "name": "To Lower Case",
+    "description": "转为小写格式",
+    "tags": [
+      "format",
+      "case",
+      "lower",
+      "all",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "⤵️",
+    "help": "将文本转换为全小写格式\n\n示例:\n输入:\nHELLO WORLD\n\n输出:\nhello world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_lower.py",
+    "module_name": "script_case_to_lower",
+    "bias": 0,
+    "filename": "case_to_lower.py"
+  },
+  {
+    "name": "To Pascal Case",
+    "description": "转为帕斯卡命名格式",
+    "tags": [
+      "format",
+      "case",
+      "pascal",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🏰",
+    "help": "将文本转换为帕斯卡命名格式 (每个单词首字母大写)\n\n示例:\n输入:\nhello world\n\n输出:\nHelloWorld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_pascal.py",
+    "module_name": "script_case_to_pascal",
+    "bias": 0,
+    "filename": "case_to_pascal.py"
+  },
+  {
+    "name": "To Snake Case",
+    "description": "转为蛇形命名格式",
+    "tags": [
+      "format",
+      "case",
+      "snake",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🐍",
+    "help": "将文本转换为蛇形命名格式 (snake_case)\n\n示例:\n输入:\nhello world\n\n输出:\nhello_world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_snake.py",
+    "module_name": "script_case_to_snake",
+    "bias": 0,
+    "filename": "case_to_snake.py"
+  },
+  {
+    "name": "To Snake Upper Case",
+    "description": "转为大写蛇形命名格式",
+    "tags": [
+      "format",
+      "case",
+      "snake",
+      "upper",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "🐍",
+    "help": "将文本转换为大写蛇形命名格式 (SNAKE_CASE)\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO_WORLD",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_snake_upper.py",
+    "module_name": "script_case_to_snake_upper",
+    "bias": 0,
+    "filename": "case_to_snake_upper.py"
+  },
+  {
+    "name": "To Upper Case",
+    "description": "转为大写格式",
+    "tags": [
+      "format",
+      "case",
+      "upper",
+      "all",
+      "var"
+    ],
+    "dependencies": [],
+    "icon": "⤴️",
+    "help": "将文本转换为全大写格式\n\n示例:\n输入:\nhello world\n\n输出:\nHELLO WORLD",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/case_to_upper.py",
+    "module_name": "script_case_to_upper",
+    "bias": 0,
+    "filename": "case_to_upper.py"
+  },
+  {
+    "name": "Toggle ASCII",
+    "description": "在 ASCII 码和可读文本之间转换",
+    "tags": [
+      "ascii",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在 ASCII 码和可读文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 ASCII 码\n- decode/d: 强制解码 ASCII 码\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello\n\n输出:\n104 101 108 108 111\n\n示例 2 (强制解码):\n输入:\ndecode\n104 101 108 108 111\n\n输出:\nhello",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_ascii.py",
+    "module_name": "script_toggle_ascii",
+    "bias": 0,
+    "filename": "toggle_ascii.py"
+  },
+  {
+    "name": "Toggle Base64",
+    "description": "在 Base64 编码和解码之间切换",
+    "tags": [
+      "base64",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在 Base64 编码和解码之间切换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 Base64\n- decode/d: 强制解码 Base64\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello world\n\n输出:\naGVsbG8gd29ybGQ=\n\n示例 2 (强制解码):\n输入:\ndecode\naGVsbG8gd29ybGQ=\n\n输出:\nhello world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_base64.py",
+    "module_name": "script_toggle_base64",
+    "bias": 0,
+    "filename": "toggle_base64.py"
+  },
+  {
+    "name": "Toggle Color RGB Hex",
+    "description": "RGB 与十六进制颜色值互相转换",
+    "tags": [
+      "color",
+      "rgb",
+      "hex",
+      "convert",
+      "toggle"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "RGB 与十六进制颜色值互相转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- rgb/r: 强制转换为 RGB 格式\n- hex/h: 强制转换为 Hex 格式\n- toggle/t: 自动检测并切换 (默认)\n\n示例 1 (转 Hex):\n输入:\nhex\n255, 0, 0\n\n输出:\n#FF0000\n\n示例 2 (转 RGB):\n输入:\nrgb\n#FF0000\n\n输出:\nrgb(255, 0, 0)",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_color.py",
+    "module_name": "script_toggle_color",
+    "bias": 0,
+    "filename": "toggle_color.py"
+  },
+  {
+    "name": "Toggle HTML Text",
+    "description": "在 HTML 实体和文本之间转换",
+    "tags": [
+      "html",
+      "entities",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在 HTML 实体和文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 HTML 实体\n- decode/d: 强制解码 HTML 实体\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\n\u003cdiv\u003eHello\u003c/div\u003e\n\n输出:\n\u0026lt;div\u0026gt;Hello\u0026lt;/div\u0026gt;\n\n示例 2 (强制解码):\n输入:\ndecode\n\u0026lt;div\u0026gt;Hello\u0026lt;/div\u0026gt;\n\n输出:\n\u003cdiv\u003eHello\u003c/div\u003e",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_html.py",
+    "module_name": "script_toggle_html",
+    "bias": 0,
+    "filename": "toggle_html.py"
+  },
+  {
+    "name": "Toggle Hex",
+    "description": "在十六进制和文本之间转换",
+    "tags": [
+      "hex",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在十六进制和文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为十六进制\n- decode/d: 强制解码十六进制\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello\n\n输出:\n68656c6c6f\n\n示例 2 (强制解码):\n输入:\ndecode\n68656c6c6f\n\n输出:\nhello",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_hex.py",
+    "module_name": "script_toggle_hex",
+    "bias": 0,
+    "filename": "toggle_hex.py"
+  },
+  {
+    "name": "Toggle Quotes",
+    "description": "在单引号和双引号之间切换",
+    "tags": [
+      "quotes",
+      "toggle"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在单引号和双引号之间切换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- double/d: 转换为双引号（无引号时包裹双引号）\n- single/s: 转换为单引号（无引号时包裹单引号）\n- escape_double/ed: 转义双引号\n- escape_single/es: 转义单引号\n- toggle/t: 自动切换 (默认)\n\n示例 1 (双引号):\n输入:\ndouble\nhello 'world'\n\n输出:\nhello \"world\"\n\n示例 2 (单引号):\n输入:\nsingle\nhello \"world\"\n\n输出:\nhello 'world'",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_quotes.py",
+    "module_name": "script_toggle_quotes",
+    "bias": 0,
+    "filename": "toggle_quotes.py"
+  },
+  {
+    "name": "Toggle Slashes",
+    "description": "在正斜杠和反斜杠之间切换",
+    "tags": [
+      "slashes",
+      "toggle",
+      "path"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在正斜杠 (/) 和反斜杠 (\\) 之间切换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- forward/f: 转换为正斜杠 (/)\n- back/b: 转换为反斜杠 (\\)\n- toggle/t: 自动检测并切换 (默认)\n\n示例 1 (转反斜杠):\n输入:\nback\npath/to/file\n\n输出:\npath\\to\\file\n\n示例 2 (转正斜杠):\n输入:\nforward\npath\\to\\file\n\n输出:\npath/to/file",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_slashes.py",
+    "module_name": "script_toggle_slashes",
+    "bias": 0,
+    "filename": "toggle_slashes.py"
+  },
+  {
+    "name": "Toggle URL Defang",
+    "description": "对 URL 进行伪装处理",
+    "tags": [
+      "url",
+      "defang",
+      "security"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "对 URL 进行伪装处理 (用于安全分析)\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- defang/d: 强制去危险化 (伪装 URL)\n- refang/r: 强制恢复 URL\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (去危险化):\n输入:\ndefang\nhttps://example.com/path\n\n输出:\nhXXps[://]example[.]com/path\n\n示例 2 (恢复):\n输入:\nrefang\nhXXps[://]example[.]com/path\n\n输出:\nhttps://example.com/path",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_url_defang.py",
+    "module_name": "script_toggle_url_defang",
+    "bias": 0,
+    "filename": "toggle_url_defang.py"
+  },
+  {
+    "name": "Toggle URL Encoding",
+    "description": "在 URL 编码和解码之间切换",
+    "tags": [
+      "url",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在 URL 编码和解码之间切换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 URL 格式\n- decode/d: 强制解码 URL 编码\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello world\n\n输出:\nhello%20world\n\n示例 2 (强制解码):\n输入:\ndecode\nhello%20world\n\n输出:\nhello world",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_url.py",
+    "module_name": "script_toggle_url",
+    "bias": 0,
+    "filename": "toggle_url.py"
+  },
+  {
+    "name": "Toggle Unicode",
+    "description": "在 Unicode 转义和文本之间转换",
+    "tags": [
+      "unicode",
+      "encode",
+      "decode"
+    ],
+    "dependencies": [],
+    "icon": "↔️",
+    "help": "在 Unicode 转义和文本之间转换\n\n首行参数格式:\nmode (指定转换模式)\n\n支持的模式:\n- encode/e: 强制编码为 Unicode 转义\n- decode/d: 强制解码 Unicode 转义\n- toggle/t: 自动检测并切换模式 (默认)\n\n示例 1 (强制编码):\n输入:\nencode\nhello\n\n输出:\n\\u0068\\u0065\\u006c\\u006c\\u006f\n\n示例 2 (强制解码):\n输入:\ndecode\n\\u0068\\u0065\\u006c\\u006c\\u006f\n\n输出:\nhello",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/toggle_unicode.py",
+    "module_name": "script_toggle_unicode",
+    "bias": 0,
+    "filename": "toggle_unicode.py"
+  },
+  {
+    "name": "Trim Lines",
+    "description": "移除每行首尾的空白字符",
+    "tags": [
+      "trim",
+      "lines",
+      "whitespace"
+    ],
+    "dependencies": [],
+    "icon": "🧹",
+    "help": "移除每行首尾的空白字符\n\n示例:\n输入:\n  hello  \n  world  \n\n输出:\nhello\nworld",
+    "file_path": "/Users/huji/work/MyProject/code_mine/gitee/boop/boop-go/scripts/lines_trim.py",
+    "module_name": "script_lines_trim",
+    "bias": 0,
+    "filename": "lines_trim.py"
+  }
+]

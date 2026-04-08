@@ -1,33 +1,38 @@
-# Python
-*.pyc
-__pycache__/
+# Go 相关
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
 
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Virtual Environment
-venv/
-env/
-
-# Build
+# 构建产物
 build/
 dist/
-*.egg-info/
 
-# Test
-/test_report.txt
+# 日志文件
+logs/*.log
+logs/*.log.*
 
-# Configuration
-config.json
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Logs
-logs/
-*.log
+# Go 模块缓存
+go.sum
 
-# Cache
-cache/
+# 临时文件
+*.tmp
+*.bak
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*

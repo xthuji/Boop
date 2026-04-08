@@ -1,0 +1,14 @@
+{
+  "script_directories": [],
+  "python_path": "",
+  "default_encoding": "utf-8",
+  "window_width": 800,
+  "window_height": 600,
+  "maximize_window": true,
+  "font_family": "Menlo",
+  "font_size": 16,
+  "theme": "system",
+  "script_timeout": 10,
+  "filter_delay": 200,
+  "enable_global_hotkeys": false
+}
