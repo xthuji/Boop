@@ -18,16 +18,11 @@ def get_user_data_dir() -> Path:
     # Check if we're in a PyInstaller bundled environment
     if hasattr(sys, '_MEIPASS'):
         # In bundled app, use platform-specific user data directory
-        if platform.system() == "Darwin":  # macOS
-            user_data_dir = Path.home() / "Library" / "Application Support" / "Boop"
-        elif platform.system() == "Windows":  # Windows
-            user_data_dir = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "Boop"
-        else:  # Linux
-            user_data_dir = Path.home() / ".config" / "boop"
+        user_data_dir = Path(sys._MEIPASS) / "data"
     else:
         # In development mode, use project root directory
         project_dir = Path(os.path.dirname(__file__)).parent.parent
-        user_data_dir = project_dir
+        user_data_dir = project_dir / "data"
     
     # Try to create directory if it doesn't exist
     try:

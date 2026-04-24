@@ -36,3 +36,6 @@ go.sum
 .AppleDouble
 .LSOverride
 ._*
+
+# cache
+cache/

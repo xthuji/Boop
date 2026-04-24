@@ -29,9 +29,8 @@ readonly RESERVE_DIR_ARRAY=(".app")
 readonly APP_FILES=("${SCRIPT_DIR}/app/scripts:scripts"
                    "${SCRIPT_DIR}/app/core/script_wrapper.py:app/core"
                    "${SCRIPT_DIR}/version.txt:."
-                   "${SCRIPT_DIR}/USER_GUIDE.md:.")
-
-# Configuration file is now in project root, no need to include in build
+                   "${SCRIPT_DIR}/USER_GUIDE.md:."
+                   "${SCRIPT_DIR}/data:data")
 
 PLATFORM="$(uname)"
 
