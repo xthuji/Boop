@@ -18,16 +18,11 @@ def get_user_data_dir() -> Path:
     # Check if we're in a PyInstaller bundled environment
     if hasattr(sys, '_MEIPASS'):
         # In bundled app, use platform-specific user data directory
-        if platform.system() == "Darwin":  # macOS
-            user_data_dir = Path.home() / "Library" / "Application Support" / "Boop"
-        elif platform.system() == "Windows":  # Windows
-            user_data_dir = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "Boop"
-        else:  # Linux
-            user_data_dir = Path.home() / ".config" / "boop"
+        user_data_dir = Path(sys._MEIPASS) / "data"
     else:
         # In development mode, use project root directory
         project_dir = Path(os.path.dirname(__file__)).parent.parent
-        user_data_dir = project_dir
+        user_data_dir = project_dir / "data"
     
     # Try to create directory if it doesn't exist
     try:
@@ -46,8 +41,7 @@ def get_log_path() -> Path:
     Returns:
         Path to the log directory
     """
-    user_data_dir = get_user_data_dir()
-    log_dir = user_data_dir / "logs"
+    log_dir = get_user_data_dir().parent / "logs"
     
     # Create directory if it doesn't exist
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -72,8 +66,9 @@ def get_default_script_dir() -> Optional[Path]:
             resolved_path = direct_script_dir.resolve()
             return resolved_path
     else:
-        # In development mode, use the scripts directory in the same folder as __main__.py
-        current_dir = Path(__file__).parent.parent  # boop directory
+        # In development mode, use the scripts directory relative to the project root
+        # path.py is in app/core/, so we need to go up 3 levels to get to boop directory
+        current_dir = Path(__file__).parent.parent.parent  # boop directory
         dev_script_dir = current_dir / "scripts"
         if dev_script_dir.exists():
             return dev_script_dir

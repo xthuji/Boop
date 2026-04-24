@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Package (boop Python app, macOS)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: boop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Python & tkinter
+        run: |
+          python -V
+          python -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
+
+      # build.sh 负责: 安装依赖 → 预编译字节码 → PyInstaller 打包 .app
+      # → PlistBuddy 更新版本号 → hdiutil 打包 DMG → 清理 dist 只保留 .app/DMG
+      # BOOP_PYTHON 指定 CI 中的 Python 解释器；--dmg 跳过交互确认强制生成 DMG
+      - name: Build & Package
+        run: |
+          chmod +x ./build.sh
+          ./build.sh --macos --dmg
+        env:
+          BOOP_PYTHON: python
+
+      - name: List artifacts
+        run: ls -lh dist/
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Boop ${{ github.ref_name }}
+          body: |
+            ## Boop ${{ github.ref_name }}
+
+            Auto-built macOS App (DMG), double-click to install and use.
+          files: boop/dist/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

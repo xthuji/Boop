@@ -4,6 +4,7 @@
 # Runtime dependencies (Tkinter is usually included with Python)
 # tkinter
 pynput>=1.7.6
+pyperclip>=1.8.2
 
 # Build dependencies
 pyinstaller>=5.0

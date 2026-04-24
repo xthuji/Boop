@@ -137,8 +137,8 @@ class MainWindow:
         
         # Editor
         self.editor = Editor(main_frame, self.config)
-        # Set focus to editor
-        self.editor.focus()
+        # Set focus to editor with auto-paste clipboard content
+        self.editor.focus(auto_paste_clipboard=True)
         
         # Status bar
         status_bar = tk.Frame(self.root, height=20, relief=tk.SUNKEN, bd=1)
@@ -304,32 +304,11 @@ class MainWindow:
     
     def _show_about(self):
         """Show about dialog."""
-        # Read version from version.txt file
-        import re
-        import sys
-        version = "1.0.0"  # Default version
-
-        # Try to find version.txt file in different locations
-        # 1. In PyInstaller packaged app
-        if hasattr(sys, '_MEIPASS'):
-            version_file = Path(sys._MEIPASS) / "version.txt"
-        # 2. In development environment
-        else:
-            version_file = Path(__file__).parent.parent.parent / "version.txt"
-
-        if version_file.exists():
-            try:
-                with open(version_file, 'r') as f:
-                    content = f.read()
-                    version_match = re.search(r'VERSION = ([\d.]+)', content)
-                    if version_match:
-                        version = version_match.group(1)
-            except Exception:
-                pass
+        from app import __version__
 
         messagebox.showinfo(
             "About Boop Python",
-            f"Boop Python\nVersion {version}\n\nA text processing tool inspired by Boop macOS app."
+            f"Boop Python\nVersion {__version__}\n\nA text processing tool inspired by Boop macOS app."
         )
 
     def _show_user_guide(self):
@@ -486,14 +465,12 @@ class MainWindow:
                         # Fallback if PyObjC is not available
                         self.root.lift()
                         self.root.focus_force()
-                        # Focus the editor widget specifically
-                        self.editor.focus()
                 else:
                     # For Windows and Linux
                     self.root.lift()
                     self.root.focus_force()
-                    # Focus the editor widget specifically
-                    self.editor.focus()
+                # Focus the editor widget specifically with auto-paste
+                self.editor.focus(auto_paste_clipboard=True)
         except Exception as e:
             logger.error(f"Error in _activate_boop: {e}")
     

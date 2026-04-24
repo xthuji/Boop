@@ -477,9 +477,15 @@ class PreferencesPanel:
             self.config.font_family = self.font_family_var.get()
             self.config.font_size = int(self.font_size_var.get())
 
+            import os
             # Update script settings
-            self.config.script_directories = list(self.dirs_listbox.get(0, tk.END))
-            self.config.python_path = self.python_var.get()
+            # Expand ~ in script directories
+            script_dirs = list(self.dirs_listbox.get(0, tk.END))
+            self.config.script_directories = [os.path.expanduser(d) for d in script_dirs]
+            
+            # Expand ~ in Python path
+            python_path = self.python_var.get()
+            self.config.python_path = os.path.expanduser(python_path)
             self.config.script_timeout = int(self.timeout_var.get())
             self.config.filter_delay = int(self.filter_delay_var.get())
 
