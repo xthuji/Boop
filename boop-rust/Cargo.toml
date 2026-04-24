@@ -1,0 +1,18 @@
+[package]
+name = "boop-rust"
+version = "1.0.0"
+edition = "2024"
+
+[[bin]]
+name = "boop"
+path = "src/main.rs"
+
+[dependencies]
+iced = { version = "0.14", features = ["smol"] }
+
+[profile.release]
+opt-level = "z"      # 专门针对体积进行优化 (优化等级 'z' 或 's')
+lto = true           # 开启链接时优化 (Link Time Optimization)
+codegen-units = 1    # 减少并行编译单元，提升全局优化效果
+strip = true         # 自动剔除调试符号 (符号信息通常占 5MB 以上)
+panic = "abort"      # 移除 panic 的堆栈展开逻辑 (可选，可减少约 0.5MB)
