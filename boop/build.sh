@@ -26,7 +26,7 @@ readonly RESERVE_DIR_ARRAY=(".app")
 
 # App files and directories to include in the build
 # For macOS, the files will be placed in Contents/Resources
-readonly APP_FILES=("${SCRIPT_DIR}/app/scripts:scripts"
+readonly APP_FILES=("${SCRIPT_DIR}/scripts:scripts"
                    "${SCRIPT_DIR}/app/core/script_wrapper.py:app/core"
                    "${SCRIPT_DIR}/version.txt:."
                    "${SCRIPT_DIR}/USER_GUIDE.md:."

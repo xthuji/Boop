@@ -41,8 +41,7 @@ def get_log_path() -> Path:
     Returns:
         Path to the log directory
     """
-    user_data_dir = get_user_data_dir()
-    log_dir = user_data_dir / "logs"
+    log_dir = get_user_data_dir().parent / "logs"
     
     # Create directory if it doesn't exist
     log_dir.mkdir(parents=True, exist_ok=True)

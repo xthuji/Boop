@@ -8,7 +8,7 @@ TEST_MODE=false
 
 # 源目录：自定义脚本目录（使用相对路径，支持从任何位置运行脚本）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_DIR="${SCRIPT_DIR}/app/scripts"
+SOURCE_DIR="${SCRIPT_DIR}/scripts"
 SCRIPT_PATTERN="*.py"
 
 # 目标目录：应用程序脚本目录

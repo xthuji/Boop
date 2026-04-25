@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 BoopPython Optimized Test Runner (Grouped Output Edition)
 功能：自动扫描测试用例、按脚本分组并行执行、保证输出连续性。
@@ -116,7 +117,7 @@ def main():
     args = parser.parse_args()
 
     test_dir = Path(__file__).parent
-    scripts_dir = test_dir.parent.parent / 'app' / 'scripts'
+    scripts_dir = test_dir.parent.parent / 'scripts'
     
     # 1. 搜集并分组任务
     categories = load_all_test_cases(test_dir)
