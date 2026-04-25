@@ -1,6 +1,8 @@
 {
-  "script_directories": [],
-  "python_path": "",
+  "script_directories": [
+    "/Users/huji/work/MyProject/code_mine/gitee/boop/boop/scripts"
+  ],
+  "python_path": "/Users/huji/miniconda3/envs/python39/bin/python3",
   "default_encoding": "utf-8",
   "window_width": 800,
   "window_height": 600,

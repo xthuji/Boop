@@ -19,7 +19,8 @@ class Editor:
         # UI 组件初始化
         self._text_widget: Optional[tk.Text] = None
         self._line_numbers: Optional[tk.Text] = None
-        self._scrollbar: Optional[ttk.Scrollbar] = None
+        self._vscrollbar: Optional[ttk.Scrollbar] = None
+        self._hscrollbar: Optional[ttk.Scrollbar] = None
         
         # 撤销/重做历史
         self._history: List[str] = []
@@ -41,43 +42,66 @@ class Editor:
 
     def _create_ui(self):
         """构建编辑器用户界面。"""
-        frame = tk.Frame(self.parent)
-        frame.pack(fill=tk.BOTH, expand=True)
+        # 创建主框架
+        main_frame = tk.Frame(self.parent)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        self._scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
-        self._scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # 创建编辑器容器框架（包含所有组件）
+        editor_container = tk.Frame(main_frame)
+        editor_container.pack(fill=tk.BOTH, expand=True)
+
+        # 水平滚动条（放在编辑器容器底部）
+        self._hscrollbar = ttk.Scrollbar(editor_container, orient=tk.HORIZONTAL)
+        self._hscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # 创建编辑器区域框架（包含行号栏和文本框）
+        editor_area = tk.Frame(editor_container)
+        editor_area.pack(fill=tk.BOTH, expand=True)
+
+        # 垂直滚动条（放在编辑器区域右侧）
+        self._vscrollbar = ttk.Scrollbar(editor_area, orient=tk.VERTICAL)
+        self._vscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 行号栏配置
         self._line_numbers = tk.Text(
-            frame, width=4, padx=5, pady=2,
+            editor_area, width=4, padx=5, pady=2,
             bg='#f0f0f0', fg='#666666',
             font=(self.config.font_family, self.config.font_size),
-            state=tk.DISABLED, relief=tk.FLAT, takefocus=0
+            state=tk.DISABLED, relief=tk.FLAT, takefocus=0,
+            wrap=tk.NONE  # 行号栏不换行
         )
-        self._line_numbers.pack(side=tk.LEFT, fill=tk.Y)
+        self._line_numbers.pack(side=tk.LEFT, fill=tk.BOTH)
 
-        # 主文本框配置
+        # 主文本框配置 - 禁用自动换行，启用水平滚动
         self._text_widget = tk.Text(
-            frame, font=(self.config.font_family, self.config.font_size),
-            wrap=tk.WORD, relief=tk.FLAT, undo=False, # 使用自定义撤销逻辑
+            editor_area, font=(self.config.font_family, self.config.font_size),
+            wrap=tk.NONE, relief=tk.FLAT, undo=False, # 禁用换行，使用自定义撤销逻辑
             borderwidth=0, highlightthickness=0, padx=5, pady=2
         )
         self._text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 滚动联动
-        self._scrollbar.config(command=self._sync_scroll)
-        self._text_widget.config(yscrollcommand=self._scrollbar.set)
-        self._line_numbers.config(yscrollcommand=self._scrollbar.set)
+        self._vscrollbar.config(command=self._sync_vscroll)
+        self._hscrollbar.config(command=self._sync_hscroll)
+        self._text_widget.config(
+            yscrollcommand=self._update_vscrollbar,
+            xscrollcommand=self._update_hscrollbar
+        )
+        self._line_numbers.config(yscrollcommand=self._update_vscrollbar)
 
     def _move_to_start(self, event=None):
         """移动到文档开头。"""
         self._text_widget.mark_set(tk.INSERT, '1.0')
+        # 确保光标位置在视图中可见
+        self._text_widget.see('1.0')
         return 'break'
 
     def _move_to_end(self, event=None):
         """移动到文档结尾。"""
         # 移动到文档的最后一个字符位置
         self._text_widget.mark_set(tk.INSERT, 'end-1c')
+        # 确保光标位置在视图中可见
+        self._text_widget.see('end-1c')
         return 'break'
 
     def _select_to_start(self, event=None):
@@ -87,6 +111,8 @@ class Editor:
         # 移动到当前行的结尾
         line_end = self._text_widget.index('insert lineend')
         self._text_widget.tag_add(tk.SEL, '1.0', line_end)
+        # 确保选择起始位置在视图中可见
+        self._text_widget.see('1.0')
         return 'break'
 
     def _select_to_end(self, event=None):
@@ -94,6 +120,8 @@ class Editor:
         # 确保选择包含当前行的内容
         insert_pos = self._text_widget.index(tk.INSERT)
         self._text_widget.tag_add(tk.SEL, insert_pos, 'end-1c')
+        # 确保选择结束位置在视图中可见
+        self._text_widget.see('end-1c')
         return 'break'
 
     def _paste(self, event=None):
@@ -156,6 +184,10 @@ class Editor:
         # 滚轮事件同步
         tw.bind('<MouseWheel>', self._on_mousewheel)
         self._line_numbers.bind('<MouseWheel>', self._on_mousewheel)
+        
+        # 水平滚轮事件（如果支持）
+        tw.bind('<Shift-MouseWheel>', self._on_horizontal_mousewheel)
+        self._line_numbers.bind('<Shift-MouseWheel>', self._on_horizontal_mousewheel)
 
         # 扩展插件事件
         tw.bind('<Key>', self.extensions.on_key_press)
@@ -179,7 +211,6 @@ class Editor:
         try:
             sel_start = self._text_widget.index(tk.SEL_FIRST)
             sel_end = self._text_widget.index(tk.SEL_LAST)
-            insert_pos = self._text_widget.index(tk.INSERT)
         except tk.TclError:
             # 无选区，正常移动
             self.extensions._clear_multi_cursor_state()
@@ -189,30 +220,74 @@ class Editor:
         if event.state & CURRENT_PLATFORM_MODIFIERS['Shift']:
             return None
 
+        # 常见编辑器行为：有选区时按下方向键，取消选区并移动光标到边界
         target_index = sel_start if target_pos_type == "start" else sel_end
-
-        # 如果光标已经在目标边界，取消选区并正常移动
-        if insert_pos == target_index:
-            self._text_widget.tag_remove(tk.SEL, '1.0', tk.END)
-            self.extensions._clear_multi_cursor_state()
-            return None
         
-        # 否则，移动光标到边界并拦截默认行为 (VSCode 风格)
+        # 清除选区
+        self._text_widget.tag_remove(tk.SEL, '1.0', tk.END)
+        
+        # 移动光标到目标位置
         self._text_widget.mark_set(tk.INSERT, target_index)
+        
+        # 确保光标位置在视图中可见
+        self._text_widget.see(target_index)
+        
+        # 拦截默认行为
         return 'break'
 
-    def _sync_scroll(self, *args):
-        """同步滚动条。"""
+    def _update_vscrollbar(self, first, last):
+        """更新垂直滚动条位置。"""
+        self._vscrollbar.set(first, last)
+        self._update_line_numbers()
+
+    def _update_hscrollbar(self, first, last):
+        """更新水平滚动条位置。"""
+        self._hscrollbar.set(first, last)
+
+    def _sync_vscroll(self, *args):
+        """同步垂直滚动条。"""
         self._text_widget.yview(*args)
         self._line_numbers.yview(*args)
         self._update_line_numbers()
 
+    def _sync_hscroll(self, *args):
+        """同步水平滚动条。"""
+        self._text_widget.xview(*args)
+
     def _on_mousewheel(self, event):
         """处理鼠标滚轮。"""
-        delta = -1 * (event.delta // 120)
-        self._text_widget.yview_scroll(delta, 'units')
-        self._line_numbers.yview_scroll(delta, 'units')
+        # 处理不同平台的鼠标滚轮事件
+        if event.num == 4 or event.delta > 0:
+            # 向上滚动
+            self._text_widget.yview_scroll(-1, 'units')
+            self._line_numbers.yview_scroll(-1, 'units')
+        elif event.num == 5 or event.delta < 0:
+            # 向下滚动
+            self._text_widget.yview_scroll(1, 'units')
+            self._line_numbers.yview_scroll(1, 'units')
         self._update_line_numbers()
+        return "break"
+
+    def _on_horizontal_mousewheel(self, event):
+        """处理水平鼠标滚轮（如果支持）。"""
+        # 处理不同平台的水平滚轮事件
+        if hasattr(event, 'delta'):
+            # 在Windows/Linux上，Shift+鼠标滚轮产生水平滚动
+            delta = event.delta
+        elif hasattr(event, 'delta_x'):
+            # 在某些平台上可能有delta_x属性
+            delta = event.delta_x
+        else:
+            # 默认处理
+            delta = 0
+        
+        # 根据delta值判断滚动方向
+        if delta > 0:
+            # 向左滚动
+            self._text_widget.xview_scroll(-1, 'units')
+        elif delta < 0:
+            # 向右滚动
+            self._text_widget.xview_scroll(1, 'units')
         return "break"
 
     def _on_modified(self, event):
@@ -224,7 +299,8 @@ class Editor:
 
     def _update_line_numbers(self):
         """更新行号显示。"""
-        scroll_pos = self._text_widget.yview()[0]
+        # 获取文本框的滚动位置
+        text_scroll_start, text_scroll_end = self._text_widget.yview()
         
         # 获取当前行数
         content = self._text_widget.get('1.0', 'end-1c')
@@ -239,7 +315,9 @@ class Editor:
             self._line_numbers.insert('1.0', line_numbers_str)
             self._line_numbers.config(state=tk.DISABLED)
         
-        self._line_numbers.yview_moveto(scroll_pos)
+        # 使用精确的同步方法，避免滚动到底部时的错位问题
+        # 使用 yview_moveto 但确保精确计算滚动位置
+        self._line_numbers.yview_moveto(text_scroll_start)
 
     def _save_state(self):
         """保存当前状态到历史记录（用于撤销/重做）。"""

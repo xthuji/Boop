@@ -8,7 +8,7 @@ from pathlib import Path
 from app.config.settings import BoopConfig
 from app.ui.main import MainWindow
 from app.core.log import logger
-from app.core.path import get_user_data_dir, get_default_script_dir, update_script_directories
+from app.core.path import get_user_data_dir, update_script_directories
 
 
 def main():
