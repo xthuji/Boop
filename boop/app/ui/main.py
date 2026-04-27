@@ -137,8 +137,8 @@ class MainWindow:
         
         # Editor
         self.editor = Editor(main_frame, self.config)
-        # Set focus to editor
-        self.editor.focus()
+        # Set focus to editor with auto-paste clipboard content
+        self.editor.focus(auto_paste_clipboard=True)
         
         # Status bar
         status_bar = tk.Frame(self.root, height=20, relief=tk.SUNKEN, bd=1)
@@ -486,14 +486,12 @@ class MainWindow:
                         # Fallback if PyObjC is not available
                         self.root.lift()
                         self.root.focus_force()
-                        # Focus the editor widget specifically
-                        self.editor.focus()
                 else:
                     # For Windows and Linux
                     self.root.lift()
                     self.root.focus_force()
-                    # Focus the editor widget specifically
-                    self.editor.focus()
+                # Focus the editor widget specifically with auto-paste
+                self.editor.focus(auto_paste_clipboard=True)
         except Exception as e:
             logger.error(f"Error in _activate_boop: {e}")
     

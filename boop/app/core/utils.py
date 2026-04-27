@@ -221,6 +221,31 @@ def binding_hotkey_action(widget, shortcuts, action):
             part3 = normalize_shortcut(parts[3])
             widget.bind(f'<{part0}-{part2}-{part1}-{part3}>', action)
             widget.bind(f'<{part1}-{part0}-{part2}-{part3}>', action)
-            widget.bind(f'<{part1}-{part2}-{part0}-{part3}>', action)
-            widget.bind(f'<{part2}-{part1}-{part0}-{part3}>', action)
             widget.bind(f'<{part2}-{part0}-{part1}-{part3}>', action)
+            widget.bind(f'<{part2}-{part1}-{part0}-{part3}>', action)
+            widget.bind(f'<{part1}-{part2}-{part0}-{part3}>', action)
+
+
+def get_clipboard_content():
+    """获取剪贴板内容。
+    
+    Returns:
+        str: 剪贴板内容，如果无法获取或为空则返回空字符串
+    """
+    try:
+        import pyperclip
+        
+        # 使用 pyperclip 库获取剪贴板内容
+        clipboard_content = pyperclip.paste()
+        
+        # 检查内容是否为空或只包含空白字符
+        if clipboard_content and clipboard_content.strip():
+            return clipboard_content.strip()
+        else:
+            return ""
+            
+    except Exception as e:
+        # 其他异常，记录错误
+        from app.core.log import logger
+        logger.warning("Error accessing clipboard content: %s" % e)
+        return ""

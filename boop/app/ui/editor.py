@@ -375,8 +375,39 @@ class Editor:
         content = self._text_widget.get('1.0', 'end-1c')
         return len(content)
 
-    def focus(self):
+    def focus(self, auto_paste_clipboard=True):
+        """设置编辑器焦点，可选择自动粘贴剪贴板内容。
+        
+        Args:
+            auto_paste_clipboard: 是否自动粘贴剪贴板内容
+        """
         self._text_widget.focus_set()
+        
+        # 自动粘贴剪贴板内容
+        if auto_paste_clipboard:
+            self._auto_paste_clipboard()
+    
+    def _auto_paste_clipboard(self):
+        """自动粘贴剪贴板内容到编辑器（仅在编辑器为空时）。"""
+        try:
+            from app.core.utils import get_clipboard_content
+            from app.core.log import logger
+            
+            # 获取当前编辑器内容
+            current_content = self.get_content()
+            
+            # 仅当编辑器为空时才自动粘贴剪贴板内容
+            if not current_content:
+                # 获取剪贴板内容（如果为空则返回空字符串）
+                clipboard_content = get_clipboard_content()
+                
+                # 检查剪贴板是否有内容
+                if clipboard_content:
+                    self.set_content(clipboard_content)
+                    logger.info("Auto-pasted clipboard content to empty editor")
+            
+        except Exception as e:
+            logger.warning("Error in auto paste clipboard: %s" % e)
 
     def update_font(self, font_family: str, font_size: int):
         font_config = (font_family, font_size)

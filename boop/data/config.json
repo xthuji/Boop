@@ -12,5 +12,5 @@
   "theme": "system",
   "script_timeout": 10,
   "filter_delay": 200,
-  "enable_global_hotkeys": false
+  "enable_global_hotkeys": true
 }
