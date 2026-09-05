@@ -9,6 +9,8 @@
 #   ./build.sh --windows    # Build for Windows only
 #   ./build.sh --clean      # Clean build artifacts
 #   ./build.sh --verbose    # Show detailed output
+#   ./build.sh --dmg        # macOS 构建时强制生成 DMG
+#   ./build.sh --no-dmg     # macOS 构建时跳过 DMG（非交互，CI 使用）
 #
 
 # Configuration
@@ -20,7 +22,9 @@ readonly VERSION=$(grep -E '^VERSION = ' "${SCRIPT_DIR}/version.txt" | cut -d ' 
 readonly BUILD_DIR="${SCRIPT_DIR}/build"
 readonly DIST_DIR="${SCRIPT_DIR}/dist"
 # readonly PYTHON="$HOME/miniconda3/envs/python39/bin/python3"
-readonly PYTHON=$(jq -r '.python_path' "${HOME}/common_config.json" | sed "s#~#$HOME#g")
+# Python 解释器：优先使用环境变量 BOOP_PYTHON（CI 中由 setup-python 提供），
+# 否则从本地 common_config.json 读取
+readonly PYTHON="${BOOP_PYTHON:-$(jq -r '.python_path' "${HOME}/common_config.json" | sed "s#~#$HOME#g")}"
 readonly RESERVE_FILE_ARRAY=(-macos.dmg -windows.zip -linux.tar.gz)
 readonly RESERVE_DIR_ARRAY=(".app")
 
@@ -36,6 +40,7 @@ PLATFORM="$(uname)"
 
 # State
 VERBOSE=false
+DMG_MODE="ask"
 BUILD_MACOS=false BUILD_LINUX=false BUILD_WINDOWS=false CLEAN_ONLY=false
 
 # Exclude modules list - only exclude non-essential modules
@@ -122,8 +127,7 @@ pyinstaller_build() {
                 --optimize=2
                 --strip
                 --noconfirm
-                --log-level=ERROR
-                --version-file "${SCRIPT_DIR}/version.txt")
+                --log-level=ERROR)
     
     # Add exclude modules
     for module in "${EXCLUDE_MODULES[@]}"; do
@@ -269,10 +273,15 @@ build_macos() {
     fi
     
     # 选择是否构建 DMG 安装包
-    read -p "是否构建 DMG 安装包？（y/n 默认n）：" build_type
-    if [[ "$build_type" == "y" ]]; then
-        echo "✅ 构建 DMG 安装包"
+    if [[ "$DMG_MODE" == "yes" ]]; then
+        log "构建 DMG 安装包"
         create_dmg
+    elif [[ "$DMG_MODE" == "ask" ]]; then
+        read -p "是否构建 DMG 安装包？（y/n 默认n）：" build_type
+        if [[ "$build_type" == "y" ]]; then
+            echo "✅ 构建 DMG 安装包"
+            create_dmg
+        fi
     fi
     final_cleanup
     success "${DIST_DIR}/${PROJECT_NAME}-${VERSION}-macos.dmg"
@@ -310,6 +319,8 @@ Options:
   --windows, -w   构建 Windows 版本
   --clean, -c     仅清理构建产物
   --verbose, -v   显示详细输出
+  --dmg           macOS 构建时强制生成 DMG 安装包
+  --no-dmg        macOS 构建时跳过 DMG（非交互模式，CI 使用）
   --help, -h      显示帮助信息
 
 示例:
@@ -334,6 +345,8 @@ while [[ $# -gt 0 ]]; do
         --linux|-l) BUILD_LINUX=true; shift ;;
         --windows|-w) BUILD_WINDOWS=true; shift ;;
         --clean|-c) CLEAN_ONLY=true; shift ;;
+        --dmg) DMG_MODE="yes"; shift ;;
+        --no-dmg) DMG_MODE="no"; shift ;;
         --verbose|-v) VERBOSE=true; shift ;;
         --help|-h) usage; exit 0 ;;
         *) error "Unknown option: $1"; usage; exit 1 ;;
