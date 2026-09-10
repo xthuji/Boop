@@ -14,7 +14,7 @@ jobs:
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: boop
+        working-directory: .
 
     steps:
       - name: Checkout
@@ -52,6 +52,6 @@ jobs:
             ## Boop ${{ github.ref_name }}
 
             Auto-built macOS App (DMG), double-click to install and use.
-          files: boop/dist/*.dmg
+          files: dist/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
