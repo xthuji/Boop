@@ -35,14 +35,14 @@ Boop 的核心能力是执行用户编写的 Python 脚本对文本进行处理�
 
 ## Consequences
 
-- **Positive**：脚本崩溃被隔离在子进程；超时由 `subprocess.communicate(timeout=...)` 保证；实现仅 ~70 行（[script_wrapper.py](file:///Users/huji/work/MyProject/code_mine/gitee/boop/app/core/script_wrapper.py)）。
+- **Positive**：脚本崩溃被隔离在子进程；超时由 `subprocess.communicate(timeout=...)` 保证；实现仅 ~70 行（[script_wrapper.py](app/core/script_wrapper.py)）。
 - **Negative**：每次执行有 ~50-200ms 解释器启动开销；UI 在执行期间阻塞（同步 `communicate`）。
 - **Trade-off accepted**：桌面工具场景下，单次脚本执行延迟可接受；隔离性远重要于启动开销。
 - **Action items**：未来可引入"脚本结果缓存"或"长驻 worker"作为优化（见变更触发条件）。
 
 ## Compliance
 
-- [app/core/utils.py#run_script_in_subprocess](file:///Users/huji/work/MyProject/code_mine/gitee/boop/app/core/utils.py#L11-L94) 是唯一脚本执行入口
+- [app/core/utils.py#run_script_in_subprocess](app/core/utils.py#L11-L94) 是唯一脚本执行入口
 - `script_timeout` 配置项控制超时（默认 10s）
 
 ## Change Log

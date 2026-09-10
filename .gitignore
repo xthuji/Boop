@@ -1,10 +1,23 @@
 # 构建产物
 build/
 dist/
+release/
+*.spec
+
+# Python 虚拟环境
+.venv/
+.venv39/
+venv/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
 
 # 日志文件
-logs/*.log
-logs/*.log.*
+logs/
+*.log
 
 # IDE
 .idea/
@@ -23,6 +36,5 @@ logs/*.log.*
 .AppleDouble
 .LSOverride
 ._*
-
 # cache
 cache/

@@ -22,7 +22,7 @@
 
 ### Option B: PyQt5 / PySide2
 - Pros：控件丰富；外观更现代；信号槽机制
-- Cons：🔴 许可证复杂（PyQt GPL / PySide LGPL）；体积大（~50MB Qt 运行时）；`build.sh` 已显式排除（[build.sh#L76](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L76)）
+- Cons：🔴 许可证复杂（PyQt GPL / PySide LGPL）；体积大（~50MB Qt 运行时）；`run_tools.sh` 已显式排除（[run_tools.sh#L76](run_tools.sh)）
 
 ### Option C: wxPython
 - Pros：原生外观
@@ -34,18 +34,18 @@
 
 ## Decision
 
-选择 **Option A**：Tkinter。文本编辑器、选择器、偏好面板均用 `tkinter` + `ttk` 实现，多光标编辑自行在 [editor_extensions.py](file:///Users/huji/work/MyProject/code_mine/gitee/boop/app/ui/editor_extensions.py) 扩展。
+选择 **Option A**：Tkinter。文本编辑器、选择器、偏好面板均用 `tkinter` + `ttk` 实现，多光标编辑自行在 [editor_extensions.py](app/ui/editor_extensions.py) 扩展。
 
 ## Consequences
 
-- **Positive**：零额外运行时依赖；打包体积小；`build.sh` 仅需 `--hidden-import tkinter`。
+- **Positive**：零额外运行时依赖；打包体积小；`run_tools.sh` 仅需 `--hidden-import tkinter`。
 - **Negative**：外观与原生 macOS 应用有差距；多光标、行号等需自实现（已存在于 `editor_extensions.py`）。
 - **Trade-off accepted**：以外观代价换取体积与依赖最小化。
 
 ## Compliance
 
 - 所有 UI 模块 `import tkinter as tk`
-- `build.sh` `--exclude-module PyQt5 gi wx PySide2`（[build.sh#L76](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L76)）
+- `run_tools.sh` `--exclude-module PyQt5 gi wx PySide2`（[run_tools.sh#L76](run_tools.sh)）
 
 ## Change Log
 
