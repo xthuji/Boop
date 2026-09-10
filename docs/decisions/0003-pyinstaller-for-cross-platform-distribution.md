@@ -35,19 +35,19 @@
 
 ## Decision
 
-选择 **Option A**：PyInstaller `--onedir --windowed`。配合 `--exclude-module` 精细裁剪不需要的标准库模块（[build.sh#L43-L77](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L43-L77)），用 UPX 压缩减小体积。
+选择 **Option A**：PyInstaller `--onedir --windowed`。配合 `--exclude-module` 精细裁剪不需要的标准库模块（[run_tools.sh#L43-L77](run_tools.sh-L77)），用 UPX 压缩减小体积。
 
 ## Consequences
 
-- **Positive**：单一脚本 `build.sh` 覆盖三平台；`--exclude-module` 列表使体积从全量 ~80MB 降至 ~30-40MB；`_MEIPASS` 机制使资源路径解析统一（[path.py#L19-L25](file:///Users/huji/work/MyProject/code_mine/gitee/boop/app/core/path.py#L19-L25)）。
+- **Positive**：单一脚本 `run_tools.sh` 覆盖三平台；`--exclude-module` 列表使体积从全量 ~80MB 降至 ~30-40MB；`_MEIPASS` 机制使资源路径解析统一（[path.py#L19-L25](app/core/path.py#L19-L25)）。
 - **Negative**：每次依赖升级需重新打包；杀毒软件偶发误报需代码签名（当前未实现）。
-- **Risk**：🔴 [build.sh#L228](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L228) `clean_py_files` 删除 dist 下 `.py` 仅保留 `.pyc`，但保留 `scripts/` 与 `script_wrapper.py` 的 `.py`——若用户脚本 `from lib.base import State` 依赖 `.py` 存在，打包后可能失效。需验证 `lib/base.py` 是否也被保留。
+- **Risk**：🔴 [run_tools.sh#L228](run_tools.sh) `clean_py_files` 删除 dist 下 `.py` 仅保留 `.pyc`，但保留 `scripts/` 与 `script_wrapper.py` 的 `.py`——若用户脚本 `from lib.base import State` 依赖 `.py` 存在，打包后可能失效。需验证 `lib/base.py` 是否也被保留。
 
 ## Compliance
 
-- `build.sh` 是唯一构建入口
+- `run_tools.sh` 是唯一构建入口
 - `version.txt` 同时作为 PyInstaller 版本资源
-- `data/`、`scripts/`、`script_wrapper.py` 通过 `--add-data` 打入包（[build.sh#L29-L33](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L29-L33)）
+- `data/`、`scripts/`、`script_wrapper.py` 通过 `--add-data` 打入包（[run_tools.sh#L29-L33](run_tools.sh-L33)）
 
 ## Change Log
 

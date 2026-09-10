@@ -34,14 +34,14 @@
 
 ## Consequences
 
-- **Positive**：导入路径简洁；PyInstaller hidden-imports 配置直观（`--hidden-import app.ui.main`，见 [build.sh#L145-L151](file:///Users/huji/work/MyProject/code_mine/gitee/boop/build.sh#L145-L151)）。
-- **Negative**：🔴 [README.md#L21](file:///Users/huji/work/MyProject/code_mine/gitee/boop/README.md#L21) 曾写 `python3 -m boop`，与实际包名 `app` 不一致（2026-09-10 已修正为 `python3 -m app`）。
+- **Positive**：导入路径简洁；PyInstaller hidden-imports 配置直观（`--hidden-import app.ui.main`，见 [run_tools.sh#L145-L151](run_tools.sh-L151)）。
+- **Negative**：🔴 [README.md#L21](README.md#L21) 曾写 `python3 -m boop`，与实际包名 `app` 不一致（2026-09-10 已修正为 `python3 -m app`）。
 - **Trade-off accepted**：放弃了 PyPI 可发布性，换取开发简洁。
 
 ## Compliance
 
-- 所有内部导入以 `app.` 开头（见 [module-map §2](../06-module-map.md#2-内部依赖图)）
-- `build.sh` 的 `--hidden-import` 列表使用 `app.*`
+- 所有内部导入以 `app.` 开头（见 [架构文档 §9.2](../architecture.md#92-内部依赖图)）
+- `run_tools.sh` 的 `--hidden-import` 列表使用 `app.*`
 
 ## Change Log
 

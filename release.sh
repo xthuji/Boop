@@ -3,13 +3,12 @@
 # Boop - 发布工具
 # =============================================================================
 # 读取 version.txt 中的 VERSION 创建 git tag v{version}，推送到 GitHub
-# 远程，触发 .github/workflows/release.yml 自动构建 Python App 并发布 DMG
-# 到 GitHub Release。
+# 远程，触发 .github/workflows/release.yml 自动构建并发布 DMG / tar.gz / zip。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-VERSION_FILE="${SCRIPT_DIR}/version.txt"
+ROOT_DIR="$SCRIPT_DIR"
+VERSION_FILE="${ROOT_DIR}/version.txt"
 REMOTE_NAME="${RELEASE_REMOTE:-backupstream}"
 
 RED='\033[0;31m'
@@ -29,8 +28,8 @@ usage() {
 ${BOLD}用法:${NC} $0 [--version=<ver>] [--remote=<name>] [--dry-run]
 
 ${BOLD}说明:${NC}
-  读取 boop/version.txt 中的版本号创建 git tag v{version}，推送到 GitHub
-  远程，触发 .github/workflows/release.yml 自动构建并发布 DMG。
+  读取 version.txt 中的版本号创建 git tag v{version}，推送到 GitHub
+  远程，触发 .github/workflows/release.yml 自动构建并发布。
 
 ${BOLD}选项:${NC}
   --version=<ver>  指定版本号 (覆盖 version.txt)
@@ -68,8 +67,7 @@ if [[ -n "$CUSTOM_VERSION" ]]; then
     APP_VERSION="$CUSTOM_VERSION"
 else
     [[ -f "$VERSION_FILE" ]] || die "未找到版本文件: $VERSION_FILE"
-    # version.txt 格式为: VERSION = X.Y.Z
-    APP_VERSION="$(grep -E '^VERSION = ' "$VERSION_FILE" | cut -d ' ' -f 3 | tr -d '[:space:]')"
+    APP_VERSION="$(grep -E '^VERSION\s*=' "$VERSION_FILE" | head -1 | sed 's/.*=\s*//' | tr -d '[:space:]')"
 fi
 
 [[ -z "$APP_VERSION" ]] && die "版本号为空"
@@ -83,7 +81,7 @@ echo -e "${CYAN}${BOLD}═══ Boop Release ═══${NC}"
 echo -e "  版本: ${BOLD}${APP_VERSION}${NC}"
 echo -e "  Tag:  ${BOLD}${TAG_NAME}${NC}"
 echo -e "  远程: ${BOLD}${REMOTE_NAME}${NC}"
-echo -e "  模式: $($DRY_RUN && echo -e "${YELLOW}DRY-RUN${NC}" || echo -e "${GREEN}实际执行${NC}")"
+echo -e "  模式: $( $DRY_RUN && echo -e "${YELLOW}DRY-RUN${NC}" || echo -e "${GREEN}实际执行${NC}")"
 echo ""
 
 run() {
@@ -124,6 +122,6 @@ else
     echo ""
     ok "Tag ${TAG_NAME} 已推送到 ${REMOTE_NAME}"
     echo ""
-    info "GitHub Actions 工作流应已触发: https://github.com/xthuji/Boop/actions"
-    info "Release 页面:                https://github.com/xthuji/Boop/releases/tag/${TAG_NAME}"
+    info "GitHub Actions: 请在仓库的 Actions 页面查看工作流状态"
+    info "Release 页面:   请在仓库的 Releases 页面查看 ${TAG_NAME}"
 fi

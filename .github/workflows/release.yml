@@ -10,38 +10,106 @@ permissions:
 
 jobs:
   build:
-    name: Build & Package (boop Python app, macOS)
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: .
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-12
+            platform: darwin
+            arch: arm64
+            artifact: "*.dmg"
+          - os: macos-12
+            platform: darwin
+            arch: x86_64
+            artifact: "*_x86_64.dmg"
+          - os: ubuntu-latest
+            platform: linux
+            arch: amd64
+            artifact: "*.tar.gz"
+          - os: windows-latest
+            platform: windows
+            arch: amd64
+            artifact: "*.zip"
+
+    name: Build (${{ matrix.platform }}/${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      # --- Python 安装: arm64/linux/windows 用 setup-python, x86_64 macOS 用 Rosetta brew ---
+      - name: Setup Python (arm64 / linux / windows)
+        if: matrix.arch != 'x86_64'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Setup Python via Rosetta (x86_64 macOS)
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        run: |
+          # Rosetta 2 通常已预装，失败忽略
+          softwareupdate --install-rosetta --agree-to-license || true
+
+          # 通过 Rosetta 运行 x86_64 brew 安装 Python 3.11
+          arch -x86_64 /bin/bash -c 'eval "$(/usr/local/bin/brew shellenv)" && brew install python@3.11'
+
+          # 把 x86_64 Python 路径加入 PATH (优先)
+          echo "/usr/local/opt/python@3.11/bin" >> "$GITHUB_PATH"
+
+          # 验证架构正确
+          which python3
+          python3 -V
+          python3 -c "import platform; print('arch:', platform.machine())"
+          python3 -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk zip
+
       - name: Verify Python & tkinter
+        shell: bash
         run: |
           python -V
           python -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
 
-      # build.sh 负责: 安装依赖 → 预编译字节码 → PyInstaller 打包 .app
-      # → PlistBuddy 更新版本号 → hdiutil 打包 DMG → 清理 dist 只保留 .app/DMG
-      # BOOP_PYTHON 指定 CI 中的 Python 解释器；--dmg 跳过交互确认强制生成 DMG
+      # --- 构建 ---
       - name: Build & Package
+        shell: bash
         run: |
-          chmod +x ./build.sh
-          ./build.sh --macos --dmg
+          chmod +x ./run_tools.sh
+          # x86_64 整个构建过程用 Rosetta 执行，确保 PyInstaller 产出 x86_64 二进制
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            arch -x86_64 ./run_tools.sh build
+          else
+            ./run_tools.sh build
+          fi
         env:
           BOOP_PYTHON: python
+          MACOSX_DEPLOYMENT_TARGET: '12.0'
+
+      # --- macOS: 重命名 DMG 区分架构 (arm64 保留原名, x86_64 加后缀) ---
+      - name: Rename DMG with arch suffix (macOS)
+        if: matrix.platform == 'darwin'
+        shell: bash
+        run: |
+          ls -lh release/
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            for f in release/*.dmg; do
+              [ -f "$f" ] || continue
+              base="$(basename "$f" .dmg)"
+              mv "$f" "release/${base}_x86_64.dmg"
+              echo "renamed → release/${base}_x86_64.dmg"
+            done
+          fi
+          ls -lh release/
 
       - name: List artifacts
-        run: ls -lh dist/
+        shell: bash
+        run: ls -lh release/
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -51,7 +119,18 @@ jobs:
           body: |
             ## Boop ${{ github.ref_name }}
 
-            Auto-built macOS App (DMG), double-click to install and use.
-          files: dist/*.dmg
+            Cross-platform text processing app.
+
+            ### macOS (≥ 12 Monterey)
+            - **Apple Silicon (M1/M2/M3/M4)**: `Boop_v*.dmg`
+            - **Intel**: `Boop_v*_x86_64.dmg`
+            - 双击 `.dmg`，把 Boop 拖进 Applications
+
+            ### Windows
+            解压 `.zip`，运行 `Boop.exe`
+
+            ### Linux
+            解压 `.tar.gz`，运行 `./Boop`
+          files: release/${{ matrix.artifact }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
