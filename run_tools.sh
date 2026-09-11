@@ -130,6 +130,76 @@ ensure_pyinstaller() {
   log_success "PyInstaller 已就绪"
 }
 
+# macOS: 查找 Python.framework 路径 (用于 universal 构建时合并 Python 框架)
+find_python_framework_path() {
+  local py="$1"
+  local prefix
+  prefix=$("$py" -c "import sys; print(sys.prefix)" 2>/dev/null || echo "")
+  [ -z "$prefix" ] && return 1
+
+  # Homebrew: prefix 通常是 /opt/homebrew 或 /usr/local，框架在 Frameworks/Python.framework
+  if [ -d "$prefix/Frameworks/Python.framework" ]; then
+    echo "$prefix/Frameworks/Python.framework"
+    return 0
+  fi
+  # python.org 安装器: /Library/Frameworks/Python.framework/Versions/X.Y
+  if echo "$prefix" | grep -q '/Library/Frameworks/Python.framework'; then
+    echo "$prefix"
+    return 0
+  fi
+  return 1
+}
+
+# macOS: 合并两个架构的 Python.framework (universal 构建用)
+merge_macos_frameworks() {
+  local arm64_fw="$1" x86_64_fw="$2" target_fw="$3"
+  log_info "合并 Python.framework (arm64 + x86_64) ..."
+  mkdir -p "$target_fw"
+  cp -R "$arm64_fw/Headers" "$target_fw/" 2>/dev/null || true
+  cp -R "$arm64_fw/Resources" "$target_fw/" 2>/dev/null || true
+  mkdir -p "$target_fw/Versions/Current"
+  local src_v dst_v
+  src_v="$(basename "$(ls -d "$arm64_fw/Versions/"* 2>/dev/null | head -1)")"
+  dst_v="$target_fw/Versions/$src_v"
+  mkdir -p "$dst_v"
+  lipo -create \
+    "$arm64_fw/Versions/$src_v/Python" \
+    "$x86_64_fw/Versions/$src_v/Python" \
+    -output "$dst_v/Python" || die "lipo 合并 Python framework 失败"
+  (cd "$target_fw/Versions" && rm -f Current && ln -s "$src_v" Current) 2>/dev/null || true
+  log_success "Python.framework 合并完成"
+}
+
+# macOS: 查找 x86_64 Python (用于 universal 构建)
+find_x86_64_python() {
+  [ "$HOST_OS" = "darwin" ] || return 1
+
+  # 显式环境变量
+  if [ -n "${BOOP_PYTHON_X86_64:-}" ]; then
+    if arch -x86_64 "$BOOP_PYTHON_X86_64" -c "import platform; exit(0 if platform.machine() == 'x86_64' else 1)" 2>/dev/null; then
+      echo "$BOOP_PYTHON_X86_64"
+      return 0
+    fi
+    return 1
+  fi
+
+  local candidate
+  for candidate in \
+    /usr/local/opt/python@3.11/bin/python3 \
+    /usr/local/opt/python@3.12/bin/python3 \
+    /usr/local/opt/python@3/bin/python3 \
+    /usr/local/bin/python3 \
+    /usr/local/bin/python; do
+    if [ -x "$candidate" ]; then
+      if arch -x86_64 "$candidate" -c "import platform; exit(0 if platform.machine() == 'x86_64' else 1)" 2>/dev/null; then
+        echo "$candidate"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 # 项目运行时依赖（首次构建前安装）
 ensure_runtime_deps() {
   if [ ! -f "$PROJECT_DIR/requirements.txt" ]; then
@@ -224,14 +294,20 @@ get_platform_icon_args() {
 }
 
 # ============================================================
-# PyInstaller 构建
+# PyInstaller 构建 (单架构)
 # ============================================================
-pyinstaller_build() {
+pyinstaller_build_arch() {
+  local target_arch="${1:-$HOST_ARCH}"
+  local py="${2:-$PYTHON}"
   local version
   version=$(get_version)
 
   ensure_runtime_deps
-  ensure_pyinstaller
+  if ! $py -m pip show -q pyinstaller 2>/dev/null; then
+    log_info "为 $target_arch Python 安装 PyInstaller ..."
+    $py -m pip install -q pyinstaller pyinstaller-hooks-contrib \
+      || die "PyInstaller 安装失败 ($target_arch)"
+  fi
 
   local args=(
     --name "$APP_NAME"
@@ -265,9 +341,8 @@ pyinstaller_build() {
   # 平台特定
   if [ "$HOST_OS" = "darwin" ]; then
     args+=(--osx-bundle-identifier "$APP_BUNDLE_ID")
-    # 确保最低部署版本 (本地构建时 workflow 环境变量可能不存在)
     export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-$MACOS_MIN_VERSION}"
-    log_info "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
+    log_info "  MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET (arch=$target_arch)"
   fi
   local plat_icon_args
   plat_icon_args=$(get_platform_icon_args)
@@ -278,12 +353,102 @@ pyinstaller_build() {
 
   args+=("$PROJECT_DIR/app/__main__.py")
 
-  log_info "PyInstaller 构建 ($APP_NAME, version=$version)..."
-  if ! $PYTHON -m PyInstaller "${args[@]}"; then
-    log_error "PyInstaller 构建失败"
+  log_info "PyInstaller 构建 ($APP_NAME, version=$version, arch=$target_arch)..."
+
+  # macOS 交叉构建时，确保 Python 以目标架构运行
+  local arch_prefix=""
+  if [ "$HOST_OS" = "darwin" ] && [ "$target_arch" = "x86_64" ]; then
+    arch_prefix="arch -x86_64"
+  fi
+
+  # shellcheck disable=SC2086
+  if ! $arch_prefix $py -m PyInstaller "${args[@]}"; then
+    log_error "PyInstaller 构建失败 ($target_arch)"
     return 1
   fi
-  log_success "PyInstaller 构建完成"
+  log_success "PyInstaller 构建完成 ($target_arch)"
+}
+
+# ============================================================
+# PyInstaller 构建 (入口: macOS 自动尝试 universal 构建)
+# ============================================================
+pyinstaller_build() {
+  if [ "$HOST_OS" = "darwin" ]; then
+    local x86_py
+    x86_py=$(find_x86_64_python 2>/dev/null || echo "")
+
+    if [ -n "$x86_py" ]; then
+      log_info "检测到 x86_64 Python: $x86_py → 构建 universal binary"
+
+      # 确保两个 Python 解释器都有 PyInstaller
+      ensure_runtime_deps
+      ensure_pyinstaller
+      if ! $x86_py -m pip show -q pyinstaller 2>/dev/null; then
+        log_info "为 x86_64 Python 安装 PyInstaller ..."
+        $x86_py -m pip install -q pyinstaller pyinstaller-hooks-contrib \
+          || die "x86_64 PyInstaller 安装失败"
+      fi
+
+      # 1) arm64 构建
+      log_info "=== 构建 arm64 slice ==="
+      rm -rf "$BUILD_DIR"/* "$DIST_DIR"/*
+      pyinstaller_build_arch "arm64" "$PYTHON" || die "arm64 构建失败"
+
+      local arm64_app="$DIST_DIR/${APP_NAME}.app"
+      local arm64_stage="$BUILD_DIR/stage_arm64"
+      [ -d "$arm64_app" ] || die "arm64 .app 未找到"
+      mv "$arm64_app" "$arm64_stage"
+
+      # 2) x86_64 构建
+      log_info "=== 构建 x86_64 slice ==="
+      rm -rf "$BUILD_DIR"/* "$DIST_DIR"/*
+      pyinstaller_build_arch "x86_64" "$x86_py" || die "x86_64 构建失败"
+
+      local x86_app="$DIST_DIR/${APP_NAME}.app"
+      local x86_stage="$BUILD_DIR/stage_x86_64"
+      [ -d "$x86_app" ] || die "x86_64 .app 未找到"
+      mv "$x86_app" "$x86_stage"
+
+      # 3) 合并 Python.framework
+      local arm64_fw x86_fw merged_fw
+      arm64_fw=$(find_python_framework_path "$PYTHON")
+      x86_fw=$(find_python_framework_path "$x86_py")
+      if [ -n "$arm64_fw" ] && [ -n "$x86_fw" ]; then
+        merged_fw="$arm64_stage/Contents/Frameworks/Python.framework"
+        merge_macos_frameworks "$arm64_fw" "$x86_fw" "$merged_fw"
+      else
+        log_warn "未找到 Python.framework，仅合并主二进制 (arm64_fw=$arm64_fw, x86_fw=$x86_fw)"
+      fi
+
+      # 4) lipo 合并主二进制
+      log_info "lipo 合并主二进制 ..."
+      lipo -create \
+        "$arm64_stage/Contents/MacOS/$APP_NAME" \
+        "$x86_stage/Contents/MacOS/$APP_NAME" \
+        -output "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" \
+        || die "lipo 合并失败"
+      chmod +x "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME"
+      lipo -info "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" || true
+
+      # ad-hoc 签名
+      if command -v codesign &>/dev/null; then
+        codesign --force --deep --sign - --timestamp=none "$DIST_DIR/${APP_NAME}.app" \
+          || log_warn "universal .app ad-hoc 签名失败（仅提示）"
+      fi
+
+      # 清理临时目录
+      rm -rf "$arm64_stage" "$x86_stage"
+
+      log_success "Universal .app 构建完成 (arm64 + x86_64)"
+      return 0
+    fi
+
+    log_info "未检测到 x86_64 Python，仅构建 arm64"
+  fi
+
+  # 非 macOS 或未找到 x86_64 Python: 单架构构建
+  rm -rf "$BUILD_DIR"/* "$DIST_DIR"/*
+  pyinstaller_build_arch "$HOST_ARCH" "$PYTHON"
 }
 
 # ============================================================
@@ -398,6 +563,13 @@ needs_build() {
     target="$DIST_DIR/${APP_NAME}${EXT}"
   fi
   [ -f "$target" ] || [ -d "$DIST_DIR/${APP_NAME}.app" ] || return 0
+
+  # macOS universal: 检查是否包含双架构
+  if [ "$HOST_OS" = "darwin" ] && [ -f "$target" ]; then
+    if lipo -info "$target" 2>/dev/null | grep -q 'x86_64'; then
+      : # universal binary, 继续检查源文件变更
+    fi
+  fi
 
   local newer
   newer=$(find "$PROJECT_DIR" \

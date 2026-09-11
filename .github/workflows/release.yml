@@ -1,4 +1,16 @@
-name: Release
+name: Release Boop
+
+# =============================================================================
+# v* tag 触发，三平台并行构建，汇总发布到 GitHub Release。
+#
+# 全部构建逻辑集中在 ./run_tools.sh build（自动按当前 runner 平台分派）：
+#   - macOS: 检测 x86_64 Python → PyInstaller 分别构建 arm64 + x86_64 →
+#     lipo 合并主二进制与 Python.framework → ad-hoc 签名 → hdiutil 生成 DMG
+#   - Linux: PyInstaller 构建 → tar.gz 打包
+#   - Windows: PyInstaller 构建 → zip 打包
+# 本 workflow 只做 runner 引导（checkout、Python 工具链）与产物上传，不写任何
+# 构建 / 打包细节，避免与本地行为漂移。
+# =============================================================================
 
 on:
   push:
@@ -9,128 +21,143 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-12
-            platform: darwin
-            arch: arm64
-            artifact: "*.dmg"
-          - os: macos-12
-            platform: darwin
-            arch: x86_64
-            artifact: "*_x86_64.dmg"
-          - os: ubuntu-latest
-            platform: linux
-            arch: amd64
-            artifact: "*.tar.gz"
-          - os: windows-latest
-            platform: windows
-            arch: amd64
-            artifact: "*.zip"
-
-    name: Build (${{ matrix.platform }}/${{ matrix.arch }})
-    runs-on: ${{ matrix.os }}
-
+  build-macos:
+    name: macOS (universal)
+    runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # --- Python 安装: arm64/linux/windows 用 setup-python, x86_64 macOS 用 Rosetta brew ---
-      - name: Setup Python (arm64 / linux / windows)
-        if: matrix.arch != 'x86_64'
-        uses: actions/setup-python@v5
+      # arm64 Python (macos-latest 默认)
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Setup Python via Rosetta (x86_64 macOS)
-        if: matrix.arch == 'x86_64'
+      # x86_64 Python (通过 Rosetta + brew，供 run_tools.sh 内部 universal 构建使用)
+      - name: Setup x86_64 Python via Rosetta
         shell: bash
         run: |
-          # Rosetta 2 通常已预装，失败忽略
           softwareupdate --install-rosetta --agree-to-license || true
-
-          # 通过 Rosetta 运行 x86_64 brew 安装 Python 3.11
           arch -x86_64 /bin/bash -c 'eval "$(/usr/local/bin/brew shellenv)" && brew install python@3.11'
-
-          # 把 x86_64 Python 路径加入 PATH (优先)
           echo "/usr/local/opt/python@3.11/bin" >> "$GITHUB_PATH"
 
-          # 验证架构正确
-          which python3
+          # 验证两个架构的 Python 均可用
+          echo "--- arm64 Python ---"
           python3 -V
           python3 -c "import platform; print('arch:', platform.machine())"
           python3 -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
 
-      - name: Install Linux dependencies
-        if: matrix.platform == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-tk zip
+          echo "--- x86_64 Python ---"
+          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -V
+          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -c "import platform; print('arch:', platform.machine())"
+          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
 
-      - name: Verify Python & tkinter
-        shell: bash
-        run: |
-          python -V
-          python -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
-
-      # --- 构建 ---
-      - name: Build & Package
-        shell: bash
+      # run_tools.sh 内部完成：
+      #   PyInstaller arm64 构建 → PyInstaller x86_64 构建 →
+      #   lipo 合并二进制 + Python.framework → ad-hoc 签名 → DMG
+      - name: Build & package via run_tools.sh
         run: |
           chmod +x ./run_tools.sh
-          # x86_64 整个构建过程用 Rosetta 执行，确保 PyInstaller 产出 x86_64 二进制
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            arch -x86_64 ./run_tools.sh build
-          else
-            ./run_tools.sh build
-          fi
+          ./run_tools.sh build
         env:
-          BOOP_PYTHON: python
           MACOSX_DEPLOYMENT_TARGET: '12.0'
 
-      # --- macOS: 重命名 DMG 区分架构 (arm64 保留原名, x86_64 加后缀) ---
-      - name: Rename DMG with arch suffix (macOS)
-        if: matrix.platform == 'darwin'
-        shell: bash
-        run: |
-          ls -lh release/
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            for f in release/*.dmg; do
-              [ -f "$f" ] || continue
-              base="$(basename "$f" .dmg)"
-              mv "$f" "release/${base}_x86_64.dmg"
-              echo "renamed → release/${base}_x86_64.dmg"
-            done
-          fi
-          ls -lh release/
-
       - name: List artifacts
-        shell: bash
         run: ls -lh release/
 
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: release/*.dmg
+
+  build-linux:
+    name: Linux (amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-tk zip
+
+      - name: Build & package via run_tools.sh
+        run: |
+          chmod +x ./run_tools.sh
+          ./run_tools.sh build
+
+      - name: List artifacts
+        run: ls -lh release/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-tar
+          path: release/*.tar.gz
+
+  build-windows:
+    name: Windows (amd64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build & package via run_tools.sh
+        run: |
+          chmod +x ./run_tools.sh
+          ./run_tools.sh build
+
+      - name: List artifacts
+        run: ls -lh release/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: release/*.zip
+
+  release:
+    name: Create GitHub Release
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: List release assets
+        run: ls -lhR release/
+
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Boop ${{ github.ref_name }}
           body: |
             ## Boop ${{ github.ref_name }}
 
-            Cross-platform text processing app.
+            跨平台文本处理工具。构建逻辑由 `./run_tools.sh build` 统一实现。
 
             ### macOS (≥ 12 Monterey)
-            - **Apple Silicon (M1/M2/M3/M4)**: `Boop_v*.dmg`
-            - **Intel**: `Boop_v*_x86_64.dmg`
+            - `Boop_v*.dmg` — universal (arm64 + x86_64)，支持 Apple Silicon 与 Intel Mac
             - 双击 `.dmg`，把 Boop 拖进 Applications
+            - 未做 Apple 公证，首次打开如被 Gatekeeper 拦截，请右键应用选"打开"确认一次即可
 
             ### Windows
-            解压 `.zip`，运行 `Boop.exe`
+            - `Boop_v*_windows_amd64.zip` — 解压后运行 `Boop.exe`
 
             ### Linux
-            解压 `.tar.gz`，运行 `./Boop`
-          files: release/${{ matrix.artifact }}
+            - `Boop_v*_linux_amd64.tar.gz` — 解压后运行 `./Boop`
+          files: |
+            release/*.dmg
+            release/*.tar.gz
+            release/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
