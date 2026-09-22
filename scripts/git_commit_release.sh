@@ -9,7 +9,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}" && pwd)"
+# 脚本位于 <project>/scripts/，项目根目录为其上级目录
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PRIMARY_REMOTE="origin"
 SYNC_REMOTE="backupstream"
 
@@ -158,7 +159,7 @@ $DRY_RUN || ok "已同步到 ${SYNC_REMOTE}/${BRANCH}"
 # -----------------------------------------------------------------------------
 if $SKIP_RELEASE; then
     echo ""
-    info "已跳过发布（--no-release）。需要时执行: ./release.sh"
+    info "已跳过发布（--no-release）。需要时执行: ./scripts/release.sh"
     exit 0
 fi
 
@@ -170,7 +171,7 @@ fi
 DRY_ARG=""
 $DRY_RUN && DRY_ARG="--dry-run"
 
-run ./release.sh $DRY_ARG
+run "${SCRIPT_DIR}/release.sh" $DRY_ARG
 
 echo ""
 if $DRY_RUN; then

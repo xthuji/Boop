@@ -7,7 +7,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$SCRIPT_DIR"
+# 脚本位于 <project>/scripts/，项目根目录为其上级目录
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION_FILE="${ROOT_DIR}/version.txt"
 REMOTE_NAME="${RELEASE_REMOTE:-backupstream}"
 

@@ -34,9 +34,9 @@ python3 -m app
 ### 打包桌面应用
 
 ```bash
-./run_tools.sh build          # 构建当前平台的桌面应用
-./run_tools.sh                # 交互式菜单（回车默认 dev）
-./release.sh --dry-run        # 预览发布命令（创建 tag 触发 CI）
+./scripts/run_tools.sh build          # 构建当前平台的桌面应用
+./scripts/run_tools.sh                # 交互式菜单（回车默认 dev）
+./scripts/release.sh --dry-run        # 预览发布命令（创建 tag 触发 CI）
 ```
 
 **打包产物（按平台自动生成）：**
@@ -152,14 +152,13 @@ boop/
 │   ├── config/                     # BoopConfig + JSON 持久化
 │   ├── core/                       # 脚本管理 / 缓存 / 日志 / 热键 / 事件
 │   └── ui/                         # MainWindow / Editor / ScriptPicker / Preferences
-├── scripts/                        # 70+ 内置脚本（格式化、转换、编解码、行操作等）
+├── custom_scripts/                 # 70+ 内置脚本（格式化、转换、编解码、行操作等）
+├── scripts/                        # Shell 工具脚本（run_tools.sh / release.sh / git_commit_release.sh）
 ├── data/config.json                # 默认配置样本
 ├── icons/                          # 图标资源（.icns / .ico / .png）
 ├── docs/                           # 架构与开发文档 + ADR
 ├── tests/                          # 脚本测试 + 编辑器测试
 ├── LICENSE                         # MIT License
-├── run_tools.sh                    # 构建/运行/测试一体化工具（交互菜单或命令行）
-├── release.sh                      # Git tag 发布辅助脚本
 ├── version.txt                     # 版本号（单一来源）
 └── requirements.txt                # 依赖清单
 ```
@@ -172,13 +171,13 @@ boop/
 
 ```bash
 # 开发模式（直接 python -m app 运行）
-./run_tools.sh dev
+./scripts/run_tools.sh dev
 
 # 构建并运行桌面应用
-./run_tools.sh run
+./scripts/run_tools.sh run
 
 # 打包当前平台
-./run_tools.sh build
+./scripts/run_tools.sh build
 ```
 
 ### CI 发布流程
@@ -186,9 +185,9 @@ boop/
 ```bash
 # 1. 更新 version.txt 中的版本号
 # 2. 创建 tag 并推送
-./release.sh                          # 读取 version.txt
-./release.sh --version=1.1.0          # 强制指定版本
-./release.sh --version=1.1.0 --dry-run # 预览不执行
+./scripts/release.sh                          # 读取 version.txt
+./scripts/release.sh --version=1.1.0          # 强制指定版本
+./scripts/release.sh --version=1.1.0 --dry-run # 预览不执行
 ```
 
 推送 `v{version}` 标签后，GitHub Actions 将自动：
@@ -242,7 +241,7 @@ python3 -m app                     # 启动应用（包名是 app，不是 boop�
 cd tests/test_scripts && python3 run_tests.py
 
 # 使用 run_tools.sh 运行测试（自动安装 pytest）
-./run_tools.sh test
+./scripts/run_tools.sh test
 
 # 编辑器按键测试（需要图形环境）
 python3 tests/test_editor_keys.py
@@ -264,7 +263,7 @@ mypy app/                   # type check
 
 ### 常见开发任务
 
-**新增脚本** → 在 `scripts/` 下新建 `.py`，文件开头 docstring 写 JSON 元数据（`name`、`description` 必填），定义 `main(state)` 函数。若声明了 `dependencies`，在偏好设置 Scripts Tab 点击 **Install All Dependencies**。
+**新增脚本** → 在 `custom_scripts/` 下新建 `.py`，文件开头 docstring 写 JSON 元数据（`name`、`description` 必填），定义 `main(state)` 函数。若声明了 `dependencies`，在偏好设置 Scripts Tab 点击 **Install All Dependencies**。
 
 **添加测试用例** → 在 `tests/test_scripts/test_cases_<category>.json` 中追加：
 ```json
@@ -274,11 +273,11 @@ mypy app/                   # type check
 **打包分发**：
 
 ```bash
-./run_tools.sh build       # 构建当前平台
-./run_tools.sh run         # 构建并运行 App
-./run_tools.sh dev         # 开发模式：python -m app
-./run_tools.sh test        # 运行单元测试
-./run_tools.sh clean       # 清理构建产物
+./scripts/run_tools.sh build       # 构建当前平台
+./scripts/run_tools.sh run         # 构建并运行 App
+./scripts/run_tools.sh dev         # 开发模式：python -m app
+./scripts/run_tools.sh test        # 运行单元测试
+./scripts/run_tools.sh clean       # 清理构建产物
 ```
 
 > 💡 Python 解释器自动探测顺序：环境变量 `BOOP_PYTHON` → 当前已激活 venv → `command -v python3`。

@@ -38,8 +38,8 @@ Boop Python 是一个**跨平台桌面文本处理工具**，灵感来自 macOS 
 
 | 目标 | 指标 | 目标值 | 数据来源 |
 |------|------|--------|----------|
-| 跨平台一致体验 | 支持平台数 | 3（macOS/Linux/Windows） | [run_tools.sh](../run_tools.sh) |
-| 脚本丰富度 | 内置脚本数 | 70+ | [scripts/](../scripts/) 目录 |
+| 跨平台一致体验 | 支持平台数 | 3（macOS/Linux/Windows） | [scripts/run_tools.sh](../scripts/run_tools.sh) |
+| 脚本丰富度 | 内置脚本数 | 70+ | [custom_scripts/](../custom_scripts/) 目录 |
 | 启动响应快 | 主窗口初始化耗时 | < 1s | [app/__main__.py](../app/__main__.py) 已埋点 |
 | 脚本执行安全 | 崩溃不影响主进程 | 100%（子进程隔离） | [app/core/utils.py](../app/core/utils.py) |
 | 分发包体积适中 | 安装包大小 | < 50 MB | PyInstaller `--onedir` + UPX 压缩 |
@@ -123,7 +123,7 @@ flowchart LR
 | 上游系统 | Python 解释器 | 执行用户脚本的运行时；可由用户在偏好设置中指定路径，或使用 PyInstaller 内嵌环境 | [app/core/utils.py](../app/core/utils.py) |
 | 上游系统 | PyPI | 脚本声明的第三方依赖安装来源 | [app/ui/preferences.py](../app/ui/preferences.py) |
 | 上游系统 | 操作系统输入子系统 | `pynput` 监听全局键盘事件的来源 | [app/core/global_hotkey.py](../app/core/global_hotkey.py) |
-| 数据存储 | 脚本目录（本地 FS） | 默认 `<project>/scripts/`，可配置多目录 | [app/core/path.py](../app/core/path.py) |
+| 数据存储 | 脚本目录（本地 FS） | 默认 `<project>/custom_scripts/`，可配置多目录 | [app/core/path.py](../app/core/path.py) |
 | 数据存储 | 用户数据目录（本地 FS） | 配置 `config.json`、缓存 `cache/metadata.json`、日志 `logs/boop.log` | [app/core/path.py](../app/core/path.py) |
 
 **部署上下文：**
@@ -170,7 +170,7 @@ flowchart TB
 | 入口 | `app/__main__.py` → `python -m app` |
 | 职责 | UI 渲染、编辑器、脚本选择器、偏好设置、配置持久化、元数据缓存、日志、快捷键、派生子进程 |
 | 入站接口 | Tk 事件（键盘/鼠标）、`pynput` 全局键盘事件 |
-| 出站接口 | 文件 I/O（config/cache/logs/scripts）、`subprocess.Popen`、`pyperclip` |
+| 出站接口 | 文件 I/O（config/cache/logs/custom_scripts）、`subprocess.Popen`、`pyperclip` |
 | 数据存储 | 用户数据目录（JSON 文件）+ 脚本目录 |
 | 并发模型 | 单主线程 + 1 个 daemon 线程（全局热键监听） |
 | 部署形态 | PyInstaller `--onedir --windowed` |
@@ -218,7 +218,7 @@ flowchart TB
         Core[app.core<br/>核心服务]:::core
         Cfg[app.config<br/>配置]:::cfg
     end
-    Scripts[scripts/<br/>用户脚本包]:::scripts
+    Scripts[custom_scripts/<br/>用户脚本包]:::scripts
     Data[(用户数据目录)]:::store
 
     UI --> Core
@@ -268,12 +268,12 @@ flowchart TB
 |------|------|----------|
 | `settings.py` | 应用配置数据类 + JSON 加载/保存 + 平台默认快捷键 | `BoopConfig` |
 
-#### scripts/ — 用户脚本包
+#### custom_scripts/ — 用户脚本包
 
 | 模块 | 职责 |
 |------|------|
-| `scripts/lib/base.py` | 脚本运行时基类 `State`（提供 `post_info`/`post_error`，简化版） |
-| `scripts/format_*.py` 等 70+ 脚本 | 格式化、转换、统计、编解码、行操作、大小写 |
+| `custom_scripts/lib/base.py` | 脚本运行时基类 `State`（提供 `post_info`/`post_error`，简化版） |
+| `custom_scripts/format_*.py` 等 70+ 脚本 | 格式化、转换、统计、编解码、行操作、大小写 |
 
 **公共 API 表面：**
 
@@ -446,8 +446,10 @@ sequenceDiagram
 boop/
 ├── requirements.txt                    # 依赖清单（无 pyproject.toml）
 ├── version.txt                         # 版本号
-├── run_tools.sh                        # 跨平台打包 + 测试一体化
-├── release.sh                          # Git tag 发布辅助
+├── scripts/                            # Shell 工具脚本（位于子目录）
+│   ├── run_tools.sh                    # 跨平台打包 + 测试一体化
+│   ├── release.sh                      # Git tag 发布辅助
+│   └── git_commit_release.sh           # 提交/推送/发布一体化
 ├── app/                                # 主包（flat layout）
 │   ├── __init__.py                     # 版本元信息
 │   ├── __main__.py                     # 入口：python -m app
@@ -463,7 +465,7 @@ boop/
 │       ├── __init__.py                 # 重导出 MainWindow 等
 │       ├── editor.py / editor_extensions.py / main.py
 │       ├── preferences.py / script_picker.py
-├── scripts/                            # 用户脚本包（70+）
+├── custom_scripts/                       # 用户脚本包（70+）
 ├── data/config.json                    # 默认配置样本
 ├── icons/                              # 图标资源
 └── tests/
@@ -471,7 +473,7 @@ boop/
     └── test_scripts/                   # 自研测试运行器
 ```
 
-**布局类型**：flat（`app/` 与 `scripts/` 直接位于项目根）
+**布局类型**：flat（`app/` 与 `custom_scripts/` 直接位于项目根；Shell 工具脚本位于 `scripts/`）
 **根包名**：`app`
 **Python 版本要求**：3.9+
 
@@ -611,7 +613,7 @@ app/ui/preferences.py      → app.config.settings, app.core.log, app.core.utils
 
 **当前状态**：提供两种测试方式：
 1. **自研测试运行器** `tests/test_scripts/run_tests.py`（`unittest` + `concurrent.futures` 并行）
-2. **pytest**（通过 `./run_tools.sh test` 调用，自动安装）
+2. **pytest**（通过 `./scripts/run_tools.sh test` 调用，自动安装）
 
 无覆盖率配置。
 

@@ -3,7 +3,7 @@ name: Release Boop
 # =============================================================================
 # v* tag 触发，三平台并行构建，汇总发布到 GitHub Release。
 #
-# 全部构建逻辑集中在 ./run_tools.sh build（自动按当前 runner 平台分派）：
+# 全部构建逻辑集中在 ./scripts/run_tools.sh build（自动按当前 runner 平台分派）：
 #   - macOS: 检测 x86_64 Python → PyInstaller 分别构建 arm64 + x86_64 →
 #     lipo 合并主二进制与 Python.framework → ad-hoc 签名 → hdiutil 生成 DMG
 #   - Linux: PyInstaller 构建 → tar.gz 打包
@@ -56,8 +56,8 @@ jobs:
       #   lipo 合并二进制 + Python.framework → ad-hoc 签名 → DMG
       - name: Build & package via run_tools.sh
         run: |
-          chmod +x ./run_tools.sh
-          ./run_tools.sh build
+          chmod +x ./scripts/run_tools.sh
+          ./scripts/run_tools.sh build
         env:
           MACOSX_DEPLOYMENT_TARGET: '12.0'
 
@@ -86,8 +86,8 @@ jobs:
 
       - name: Build & package via run_tools.sh
         run: |
-          chmod +x ./run_tools.sh
-          ./run_tools.sh build
+          chmod +x ./scripts/run_tools.sh
+          ./scripts/run_tools.sh build
 
       - name: List artifacts
         run: ls -lh release/
@@ -112,8 +112,8 @@ jobs:
 
       - name: Build & package via run_tools.sh
         run: |
-          chmod +x ./run_tools.sh
-          ./run_tools.sh build
+          chmod +x ./scripts/run_tools.sh
+          ./scripts/run_tools.sh build
 
       - name: List artifacts
         run: ls -lh release/
@@ -143,7 +143,7 @@ jobs:
           body: |
             ## Boop ${{ github.ref_name }}
 
-            跨平台文本处理工具。构建逻辑由 `./run_tools.sh build` 统一实现。
+            跨平台文本处理工具。构建逻辑由 `./scripts/run_tools.sh build` 统一实现。
 
             ### macOS (≥ 12 Monterey)
             - `Boop_v*.dmg` — universal (arm64 + x86_64)，支持 Apple Silicon 与 Intel Mac

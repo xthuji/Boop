@@ -59,17 +59,17 @@ def get_default_script_dir() -> Optional[Path]:
     if hasattr(sys, '_MEIPASS'):
         # We're in a PyInstaller bundle
         bundle_dir = Path(sys._MEIPASS)
-        # Check direct scripts directory (for macOS Contents/Resources)
-        direct_script_dir = bundle_dir / "scripts"
+        # Check direct custom_scripts directory (for macOS Contents/Resources)
+        direct_script_dir = bundle_dir / "custom_scripts"
         if direct_script_dir.exists():
             # Resolve symbolic links to get the actual path
             resolved_path = direct_script_dir.resolve()
             return resolved_path
     else:
-        # In development mode, use the scripts directory relative to the project root
+        # In development mode, use the custom_scripts directory relative to the project root
         # path.py is in app/core/, so we need to go up 3 levels to get to boop directory
         current_dir = Path(__file__).parent.parent.parent  # boop directory
-        dev_script_dir = current_dir / "scripts"
+        dev_script_dir = current_dir / "custom_scripts"
         if dev_script_dir.exists():
             return dev_script_dir
     
