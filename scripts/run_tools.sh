@@ -25,9 +25,11 @@ APP_NAME="Boop"
 APP_BUNDLE_ID="com.xthuji.boop"
 MACOS_MIN_VERSION="12.0"
 BUILD_DIR="$PROJECT_DIR/build"
-# dist 与 release 已合并: PyInstaller 产物 (.app / 目录) 与发布包 (DMG/tgz/zip) 统一输出到 release/
+# PyInstaller 中间产物 (.app / onedir 目录) 输出到 build/dist，
+# release/ 仅保留可分发的发布包 (DMG/tgz/zip)，不再包含 .app
+DIST_DIR="$BUILD_DIR/dist"
 RELEASE_DIR="$PROJECT_DIR/release"
-VERSION_FILE="$PROJECT_DIR/version.txt"
+VERSION_FILE="$PROJECT_DIR/VERSION"
 PYTHON=""
 
 # --- 平台检测 ---
@@ -151,44 +153,40 @@ ensure_pytest() {
   log_success "pytest 已就绪"
 }
 
-# macOS: 查找 Python.framework 路径 (用于 universal 构建时合并 Python 框架)
-find_python_framework_path() {
-  local py="$1"
-  local prefix
-  prefix=$("$py" -c "import sys; print(sys.prefix)" 2>/dev/null || echo "")
-  [ -z "$prefix" ] && return 1
-
-  # Homebrew: prefix 通常是 /opt/homebrew 或 /usr/local，框架在 Frameworks/Python.framework
-  if [ -d "$prefix/Frameworks/Python.framework" ]; then
-    echo "$prefix/Frameworks/Python.framework"
-    return 0
+# macOS: 将 base 内的 Mach-O 与对照 x86_64 构建的同名文件合并为 universal2
+# 说明: universal2 解释器经 PyInstaller 采集后，部分二进制会被裁薄为当前 slice
+# 架构；此处仅在 base 缺 x86_64 时从对照文件补齐（base 已含 x86_64 则跳过）。
+lipo_ensure_universal() {
+  local base="$1" x86_bin="$2" label="${3:-$1}"
+  [ -f "$base" ] && [ -f "$x86_bin" ] || return 0
+  # base 已是 universal2（含 x86_64）则无需处理
+  lipo -archs "$base" 2>/dev/null | grep -qw 'x86_64' && return 0
+  # 两者必须均为 Mach-O，否则 lipo 报错（非二进制文件直接忽略）
+  local a="${base}.arm64" x="${base}.x86_64" o="${base}.universal"
+  lipo -thin arm64  "$base"    -output "$a" 2>/dev/null || { rm -f "$a" "$x" "$o"; return 0; }
+  lipo -thin x86_64 "$x86_bin" -output "$x" 2>/dev/null || { rm -f "$a" "$x" "$o"; return 0; }
+  if lipo -create "$a" "$x" -output "$o" 2>/dev/null; then
+    mv "$o" "$base"
+    log_info "  补齐 universal2: $label"
   fi
-  # python.org 安装器: /Library/Frameworks/Python.framework/Versions/X.Y
-  if echo "$prefix" | grep -q '/Library/Frameworks/Python.framework'; then
-    echo "$prefix"
-    return 0
-  fi
-  return 1
+  rm -f "$a" "$x" "$o" 2>/dev/null || true
 }
 
-# macOS: 合并两个架构的 Python.framework (universal 构建用)
-merge_macos_frameworks() {
-  local arm64_fw="$1" x86_64_fw="$2" target_fw="$3"
-  log_info "合并 Python.framework (arm64 + x86_64) ..."
-  mkdir -p "$target_fw"
-  cp -R "$arm64_fw/Headers" "$target_fw/" 2>/dev/null || true
-  cp -R "$arm64_fw/Resources" "$target_fw/" 2>/dev/null || true
-  mkdir -p "$target_fw/Versions/Current"
-  local src_v dst_v
-  src_v="$(basename "$(ls -d "$arm64_fw/Versions/"* 2>/dev/null | head -1)")"
-  dst_v="$target_fw/Versions/$src_v"
-  mkdir -p "$dst_v"
-  lipo -create \
-    "$arm64_fw/Versions/$src_v/Python" \
-    "$x86_64_fw/Versions/$src_v/Python" \
-    -output "$dst_v/Python" || die "lipo 合并 Python framework 失败"
-  (cd "$target_fw/Versions" && rm -f Current && ln -s "$src_v" Current) 2>/dev/null || true
-  log_success "Python.framework 合并完成"
+# macOS: 以 arm64 slice 为完整基线，遍历 final .app 内所有 Mach-O，与 x86_64
+# slice 中同路径文件合并，得到完整 universal2 bundle
+assemble_universal_app() {
+  local final_app="$1" x86_stage="$2"
+  local f rel
+  while IFS= read -r f; do
+    rel="${f#"$final_app"/}"
+    [ -f "$x86_stage/$rel" ] || continue
+    lipo_ensure_universal "$f" "$x86_stage/$rel" "$rel" || true
+  done < <(
+    find "$final_app/Contents" -type f \
+      \( -path '*/MacOS/*' -o -name '*.so' -o -name '*.dylib' \
+         -o -path '*/Python.framework/Versions/*/Python' \) \
+      2>/dev/null
+  )
 }
 
 # macOS: 查找 x86_64 Python (用于 universal 构建)
@@ -208,6 +206,8 @@ find_x86_64_python() {
 
   local candidate
   for candidate in \
+    /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 \
+    /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 \
     /usr/local/opt/python@3.11/bin/python3 \
     /usr/local/opt/python@3.12/bin/python3 \
     /usr/local/opt/python@3/bin/python3 \
@@ -243,7 +243,7 @@ ensure_runtime_deps() {
 get_version() {
   if [ -f "$VERSION_FILE" ]; then
     local ver
-    ver=$(grep -E '^VERSION\s*=' "$VERSION_FILE" | head -1 | sed 's/.*=\s*//' | tr -d '[:space:]')
+    ver=$(tr -d '[:space:]' < "$VERSION_FILE")
     if [ -n "$ver" ]; then
       echo "$ver"; return
     fi
@@ -295,7 +295,7 @@ _to_native_path() {
 readonly APP_DATA_FILES=(
   "$(_to_native_path "$PROJECT_DIR/custom_scripts")${DATA_SEP}custom_scripts"
   "$(_to_native_path "$PROJECT_DIR/app/core/script_wrapper.py")${DATA_SEP}app/core"
-  "$(_to_native_path "$PROJECT_DIR/version.txt")${DATA_SEP}."
+  "$(_to_native_path "$PROJECT_DIR/VERSION")${DATA_SEP}."
   "$(_to_native_path "$PROJECT_DIR/data")${DATA_SEP}data"
 )
 
@@ -316,12 +316,11 @@ get_platform_icon_args() {
   echo "$args"
 }
 
-# 清理旧的 App 产物（保留 release/ 下已有的 DMG/tgz/zip 发布包）
+# 清理旧的 App 中间产物（仅清理 build/dist，不影响发布包与 universal 合并的临时 stage）
 clean_app_artifacts() {
-  rm -rf "$BUILD_DIR"/* \
-    "$RELEASE_DIR/${APP_NAME}.app" \
-    "$RELEASE_DIR/${APP_NAME}" \
-    "$RELEASE_DIR/${APP_NAME}${EXT}"
+  rm -rf "$DIST_DIR/${APP_NAME}.app" \
+    "$DIST_DIR/${APP_NAME}" \
+    "$DIST_DIR/${APP_NAME}${EXT}"
 }
 
 # ============================================================
@@ -346,7 +345,7 @@ pyinstaller_build_arch() {
     --onedir
     -y
     --workpath "$BUILD_DIR"
-    --distpath "$RELEASE_DIR"
+    --distpath "$DIST_DIR"
     --optimize=2
     --strip
     --noconfirm
@@ -417,67 +416,53 @@ pyinstaller_build() {
     fi
 
     if [ -n "$x86_py" ]; then
-      log_info "检测到 x86_64 Python: $x86_py → 构建 universal binary"
+      log_info "检测到 x86_64 可运行解释器: $x86_py → 构建 universal binary"
 
-      # 确保两个 Python 解释器都有 PyInstaller
+      # 依赖与 PyInstaller：universal2 解释器（python.org）下 arm64/x86_64 共享
+      # 同一 site-packages，装一次即可；仅当两 slice 用不同解释器时才为 x86_64 补装
       ensure_runtime_deps
       ensure_pyinstaller
-      if ! $x86_py -m pip show -q pyinstaller 2>/dev/null; then
+      if [ "$x86_py" != "$PYTHON" ] && ! $x86_py -m pip show -q pyinstaller 2>/dev/null; then
         log_info "为 x86_64 Python 安装 PyInstaller ..."
         $x86_py -m pip install -q pyinstaller pyinstaller-hooks-contrib \
           || die "x86_64 PyInstaller 安装失败"
       fi
 
-      # 1) arm64 构建
+      local arm64_stage="$BUILD_DIR/stage_arm64"
+      local x86_stage="$BUILD_DIR/stage_x86_64"
+      local final_app="$DIST_DIR/${APP_NAME}.app"
+
+      # 1) arm64 slice → stage_arm64
       log_info "=== 构建 arm64 slice ==="
       clean_app_artifacts
       pyinstaller_build_arch "arm64" "$PYTHON" || die "arm64 构建失败"
+      [ -d "$final_app" ] || die "arm64 .app 未找到"
+      rm -rf "$arm64_stage"; mv "$final_app" "$arm64_stage"
 
-      local arm64_app="$RELEASE_DIR/${APP_NAME}.app"
-      local arm64_stage="$BUILD_DIR/stage_arm64"
-      [ -d "$arm64_app" ] || die "arm64 .app 未找到"
-      mv "$arm64_app" "$arm64_stage"
-
-      # 2) x86_64 构建
+      # 2) x86_64 slice → stage_x86_64
       log_info "=== 构建 x86_64 slice ==="
       clean_app_artifacts
       pyinstaller_build_arch "x86_64" "$x86_py" || die "x86_64 构建失败"
+      [ -d "$final_app" ] || die "x86_64 .app 未找到"
+      rm -rf "$x86_stage"; mv "$final_app" "$x86_stage"
 
-      local x86_app="$RELEASE_DIR/${APP_NAME}.app"
-      local x86_stage="$BUILD_DIR/stage_x86_64"
-      [ -d "$x86_app" ] || die "x86_64 .app 未找到"
-      mv "$x86_app" "$x86_stage"
+      # 3) 以 arm64 bundle 为完整基线（含 Info.plist/资源/框架），按缺失架构补齐
+      #    所有 Mach-O。python.org universal2 下框架本就是 universal2，通常仅主
+      #    启动器需合并；被 PyInstaller 裁薄的扩展/框架也能在此一并补回。
+      log_info "组装 universal .app (以 arm64 slice 为基线) ..."
+      rm -rf "$final_app"
+      cp -R "$arm64_stage" "$final_app"
+      assemble_universal_app "$final_app" "$x86_stage"
+      chmod +x "$final_app/Contents/MacOS/$APP_NAME"
+      lipo -info "$final_app/Contents/MacOS/$APP_NAME" || true
 
-      # 3) 合并 Python.framework
-      local arm64_fw x86_fw merged_fw
-      arm64_fw=$(find_python_framework_path "$PYTHON")
-      x86_fw=$(find_python_framework_path "$x86_py")
-      if [ -n "$arm64_fw" ] && [ -n "$x86_fw" ]; then
-        merged_fw="$arm64_stage/Contents/Frameworks/Python.framework"
-        merge_macos_frameworks "$arm64_fw" "$x86_fw" "$merged_fw"
-      else
-        log_warn "未找到 Python.framework，仅合并主二进制 (arm64_fw=$arm64_fw, x86_fw=$x86_fw)"
-      fi
-
-      # 4) lipo 合并主二进制
-      log_info "lipo 合并主二进制 ..."
-      lipo -create \
-        "$arm64_stage/Contents/MacOS/$APP_NAME" \
-        "$x86_stage/Contents/MacOS/$APP_NAME" \
-        -output "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" \
-        || die "lipo 合并失败"
-      chmod +x "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME"
-      lipo -info "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" || true
-
-      # ad-hoc 签名
+      # 4) 合并后二进制已变更，重新 ad-hoc 签名
       if command -v codesign &>/dev/null; then
-        codesign --force --deep --sign - --timestamp=none "$RELEASE_DIR/${APP_NAME}.app" \
+        codesign --force --deep --sign - --timestamp=none "$final_app" \
           || log_warn "universal .app ad-hoc 签名失败（仅提示）"
       fi
 
-      # 清理临时目录
       rm -rf "$arm64_stage" "$x86_stage"
-
       log_success "Universal .app 构建完成 (arm64 + x86_64)"
       return 0
     fi
@@ -503,7 +488,7 @@ fix_app_info() {
   [ "$HOST_OS" = "darwin" ] || return 0
   local version
   version=$(get_version)
-  local plist="$RELEASE_DIR/${APP_NAME}.app/Contents/Info.plist"
+  local plist="$DIST_DIR/${APP_NAME}.app/Contents/Info.plist"
   [ -f "$plist" ] || return 0
 
   plutil -replace CFBundleIdentifier -string "$APP_BUNDLE_ID" "$plist" 2>/dev/null || true
@@ -521,7 +506,7 @@ build_dmg() {
   [ "$HOST_OS" = "darwin" ] || return 0
   local version
   version=$(get_version)
-  local app_path="$RELEASE_DIR/${APP_NAME}.app"
+  local app_path="$DIST_DIR/${APP_NAME}.app"
   local dmg_name="${APP_NAME}_v${version}.dmg"
   local dmg_path="${RELEASE_DIR}/${dmg_name}"
 
@@ -554,7 +539,7 @@ build_tarball() {
   [ "$HOST_OS" = "linux" ] || return 0
   local version
   version=$(get_version)
-  local dir="$RELEASE_DIR/${APP_NAME}"
+  local dir="$DIST_DIR/${APP_NAME}"
   local tar_path="${RELEASE_DIR}/${APP_NAME}_v${version}_linux_${HOST_ARCH}.tar.gz"
 
   [ -d "$dir" ] || return 0
@@ -562,7 +547,7 @@ build_tarball() {
   rm -f "$tar_path"
 
   log_info "生成 tar.gz ..."
-  (cd "$RELEASE_DIR" && tar -czf "$tar_path" "${APP_NAME}")
+  (cd "$DIST_DIR" && tar -czf "$tar_path" "${APP_NAME}")
   log_success "Release tgz  → $tar_path"
 }
 
@@ -571,7 +556,7 @@ build_zip() {
   [ "$HOST_OS" = "windows" ] || return 0
   local version
   version=$(get_version)
-  local dir="$RELEASE_DIR/${APP_NAME}"
+  local dir="$DIST_DIR/${APP_NAME}"
   local zip_name="${APP_NAME}_v${version}_windows_${HOST_ARCH}.zip"
   local zip_path="${RELEASE_DIR}/${zip_name}"
 
@@ -581,7 +566,7 @@ build_zip() {
 
   log_info "生成 ZIP: $zip_name ..."
   if command -v zip &>/dev/null; then
-    (cd "$RELEASE_DIR" && zip -rq "$zip_path" "${APP_NAME}")
+    (cd "$DIST_DIR" && zip -rq "$zip_path" "${APP_NAME}")
   elif command -v powershell &>/dev/null; then
     local win_dir win_zip_path
     win_dir="$(_to_native_path "$dir")"
@@ -601,11 +586,11 @@ build_zip() {
 needs_build() {
   local target
   if [ "$HOST_OS" = "darwin" ]; then
-    target="$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+    target="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
   else
-    target="$RELEASE_DIR/${APP_NAME}${EXT}"
+    target="$DIST_DIR/${APP_NAME}${EXT}"
   fi
-  [ -f "$target" ] || [ -d "$RELEASE_DIR/${APP_NAME}.app" ] || return 0
+  [ -f "$target" ] || [ -d "$DIST_DIR/${APP_NAME}.app" ] || return 0
 
   # macOS universal: 检查是否包含双架构
   if [ "$HOST_OS" = "darwin" ] && [ -f "$target" ]; then
@@ -616,7 +601,7 @@ needs_build() {
 
   local newer
   newer=$(find "$PROJECT_DIR" \
-    \( -name '*.py' -o -name 'version.txt' -o -name 'requirements.txt' -o \
+    \( -name '*.py' -o -name 'VERSION' -o -name 'requirements.txt' -o \
        -path '*/custom_scripts/*' -o -path '*/icons/*' -o -path '*/data/*' \) \
     -not -path '*/build/*' \
     -not -path '*/release/*' \
@@ -666,9 +651,9 @@ cmd_build() {
   check_python
   check_tkinter
 
-  mkdir -p "$BUILD_DIR" "$RELEASE_DIR"
-
+  # 构建开始时清空工作目录（此时尚未生成 universal 合并的临时 stage）
   rm -rf "$BUILD_DIR"/*
+  mkdir -p "$BUILD_DIR" "$DIST_DIR" "$RELEASE_DIR"
 
   pyinstaller_build
   local rc=$?
@@ -687,12 +672,13 @@ cmd_build() {
   fi
 
   log_success "=== 构建完成 ==="
-  if [ "$HOST_OS" = "darwin" ] && [ -d "$RELEASE_DIR/${APP_NAME}.app" ]; then
-    log_info "App 产物: $RELEASE_DIR/${APP_NAME}.app"
-  elif [ -d "$RELEASE_DIR/${APP_NAME}" ]; then
-    log_info "产物目录: $RELEASE_DIR/${APP_NAME}"
+  if [ "$HOST_OS" = "darwin" ]; then
+    local dmg_file
+    dmg_file=$(ls "$RELEASE_DIR"/*.dmg 2>/dev/null | head -1)
+    [ -n "$dmg_file" ] && log_info "Release DMG: $dmg_file"
+    log_info "中间产物 (不在 release/): $DIST_DIR/${APP_NAME}.app"
   fi
-  log_info "Release 目录: $RELEASE_DIR"
+  log_info "Release 目录 (仅发布包): $RELEASE_DIR"
 }
 
 cmd_run() {
@@ -713,9 +699,9 @@ cmd_run() {
 
   local binary
   if [ "$HOST_OS" = "darwin" ]; then
-    binary="$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+    binary="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
   else
-    binary="$RELEASE_DIR/${APP_NAME}/${APP_NAME}${EXT}"
+    binary="$DIST_DIR/${APP_NAME}/${APP_NAME}${EXT}"
   fi
   [ -x "$binary" ] || die "找不到可执行文件: $binary"
 
@@ -843,7 +829,8 @@ Python 检测顺序:
 
 项目路径:
   源码:     $PROJECT_DIR
-  发布产物:  $RELEASE_DIR (App 目录 + DMG/tgz/zip)
+  中间产物:  $DIST_DIR (PyInstaller .app / onedir)
+  发布产物:  $RELEASE_DIR (仅 DMG/tgz/zip)
   运行日志:  $BUILD_DIR/run.log 和 $BUILD_DIR/dev.log
   版本文件:  $VERSION_FILE
 EOF

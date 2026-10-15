@@ -46,7 +46,7 @@
 ## Compliance
 
 - `run_tools.sh` 是唯一构建入口
-- `version.txt` 同时作为 PyInstaller 版本资源
+- `VERSION`（纯文本，内容即版本号）同时作为 PyInstaller 版本资源
 - `data/`、`scripts/`、`script_wrapper.py` 通过 `--add-data` 打入包（[run_tools.sh#L29-L33](run_tools.sh-L33)）
 
 ## Change Log

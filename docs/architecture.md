@@ -445,7 +445,7 @@ sequenceDiagram
 ```
 boop/
 ├── requirements.txt                    # 依赖清单（无 pyproject.toml）
-├── version.txt                         # 版本号
+├── VERSION                             # 版本号（纯文本，内容即版本号）
 ├── scripts/                            # Shell 工具脚本（位于子目录）
 │   ├── run_tools.sh                    # 跨平台打包 + 测试一体化
 │   ├── release.sh                      # Git tag 发布辅助

@@ -159,7 +159,7 @@ boop/
 ├── docs/                           # 架构与开发文档 + ADR
 ├── tests/                          # 脚本测试 + 编辑器测试
 ├── LICENSE                         # MIT License
-├── version.txt                     # 版本号（单一来源）
+├── VERSION                         # 版本号（单一来源，纯文本仅含版本号）
 └── requirements.txt                # 依赖清单
 ```
 
@@ -183,9 +183,9 @@ boop/
 ### CI 发布流程
 
 ```bash
-# 1. 更新 version.txt 中的版本号
+# 1. 更新 VERSION 中的版本号
 # 2. 创建 tag 并推送
-./scripts/release.sh                          # 读取 version.txt
+./scripts/release.sh                          # 读取 VERSION
 ./scripts/release.sh --version=1.1.0          # 强制指定版本
 ./scripts/release.sh --version=1.1.0 --dry-run # 预览不执行
 ```

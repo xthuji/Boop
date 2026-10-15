@@ -4,8 +4,9 @@ name: Release Boop
 # v* tag 触发，三平台并行构建，汇总发布到 GitHub Release。
 #
 # 全部构建逻辑集中在 ./scripts/run_tools.sh build（自动按当前 runner 平台分派）：
-#   - macOS: 检测 x86_64 Python → PyInstaller 分别构建 arm64 + x86_64 →
-#     lipo 合并主二进制与 Python.framework → ad-hoc 签名 → hdiutil 生成 DMG
+#   - macOS: 用 python.org universal2 解释器，分别以 arm64 / x86_64(Rosetta) 运行
+#     PyInstaller 构建两 slice → 以 arm64 bundle 为基线 lipo 补齐所有 Mach-O →
+#     ad-hoc 签名 → hdiutil 生成 DMG
 #   - Linux: PyInstaller 构建 → tar.gz 打包
 #   - Windows: PyInstaller 构建 → zip 打包
 # 本 workflow 只做 runner 引导（checkout、Python 工具链）与产物上传，不写任何
@@ -27,33 +28,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # arm64 Python (macos-latest 默认)
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # x86_64 Python (通过 Rosetta + brew，供 run_tools.sh 内部 universal 构建使用)
-      - name: Setup x86_64 Python via Rosetta
+      # python.org universal2 解释器：同一二进制既可原生以 arm64 运行，也可经 Rosetta
+      # 以 x86_64 运行。用它构建两 slice，无需再安装 Intel(x86_64) Homebrew，避免
+      # ARM runner 上 "Cannot install under Rosetta 2 in ARM default prefix" 报错。
+      - name: Install python.org universal2 Python 3.11
         shell: bash
         run: |
+          set -euo pipefail
           softwareupdate --install-rosetta --agree-to-license || true
-          arch -x86_64 /bin/bash -c 'eval "$(/usr/local/bin/brew shellenv)" && brew install python@3.11'
-          echo "/usr/local/opt/python@3.11/bin" >> "$GITHUB_PATH"
 
-          # 验证两个架构的 Python 均可用
-          echo "--- arm64 Python ---"
-          python3 -V
-          python3 -c "import platform; print('arch:', platform.machine())"
-          python3 -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
+          PY_FULL=3.11.9
+          PY_MINOR="${PY_FULL%.*}"
+          PKG_URL="https://www.python.org/ftp/python/${PY_FULL}/python-${PY_FULL}-macos11.pkg"
+          curl -fsSL -o /tmp/python-universal2.pkg "$PKG_URL"
+          sudo installer -pkg /tmp/python-universal2.pkg -target /
 
-          echo "--- x86_64 Python ---"
-          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -V
-          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -c "import platform; print('arch:', platform.machine())"
-          arch -x86_64 /usr/local/opt/python@3.11/bin/python3 -c "import tkinter; print('tkinter OK:', tkinter.TkVersion)"
+          PYBIN="/Library/Frameworks/Python.framework/Versions/${PY_MINOR}/bin/python${PY_MINOR}"
+          [ -x "$PYBIN" ] || { echo "未找到 universal2 解释器: $PYBIN"; exit 1; }
+
+          # 两个 slice 复用同一 universal2 解释器，通过环境变量告知 run_tools.sh
+          echo "BOOP_PYTHON=$PYBIN"        >> "$GITHUB_ENV"
+          echo "BOOP_PYTHON_X86_64=$PYBIN" >> "$GITHUB_ENV"
+
+          # 自检：默认 arm64；arch -x86_64 前缀走 Rosetta，两者 tkinter 均可用
+          echo "--- arm64 ---"
+          "$PYBIN" -c "import platform,tkinter;print(platform.machine(),'tkinter',tkinter.TkVersion)"
+          echo "--- x86_64 (Rosetta) ---"
+          arch -x86_64 "$PYBIN" -c "import platform,tkinter;assert platform.machine()=='x86_64';print(platform.machine(),'tkinter',tkinter.TkVersion)"
 
       # run_tools.sh 内部完成：
       #   PyInstaller arm64 构建 → PyInstaller x86_64 构建 →
-      #   lipo 合并二进制 + Python.framework → ad-hoc 签名 → DMG
+      #   以 arm64 bundle 为基线 lipo 补齐 Mach-O → ad-hoc 签名 → DMG
       - name: Build & package via run_tools.sh
         run: |
           chmod +x ./scripts/run_tools.sh
