@@ -25,9 +25,11 @@ APP_NAME="Boop"
 APP_BUNDLE_ID="com.xthuji.boop"
 MACOS_MIN_VERSION="12.0"
 BUILD_DIR="$PROJECT_DIR/build"
-# dist 与 release 已合并: PyInstaller 产物 (.app / 目录) 与发布包 (DMG/tgz/zip) 统一输出到 release/
+# PyInstaller 中间产物 (.app / onedir 目录) 输出到 build/dist，
+# release/ 仅保留可分发的发布包 (DMG/tgz/zip)，不再包含 .app
+DIST_DIR="$BUILD_DIR/dist"
 RELEASE_DIR="$PROJECT_DIR/release"
-VERSION_FILE="$PROJECT_DIR/version.txt"
+VERSION_FILE="$PROJECT_DIR/VERSION"
 PYTHON=""
 
 # --- 平台检测 ---
@@ -243,7 +245,7 @@ ensure_runtime_deps() {
 get_version() {
   if [ -f "$VERSION_FILE" ]; then
     local ver
-    ver=$(grep -E '^VERSION\s*=' "$VERSION_FILE" | head -1 | sed 's/.*=\s*//' | tr -d '[:space:]')
+    ver=$(tr -d '[:space:]' < "$VERSION_FILE")
     if [ -n "$ver" ]; then
       echo "$ver"; return
     fi
@@ -295,7 +297,7 @@ _to_native_path() {
 readonly APP_DATA_FILES=(
   "$(_to_native_path "$PROJECT_DIR/custom_scripts")${DATA_SEP}custom_scripts"
   "$(_to_native_path "$PROJECT_DIR/app/core/script_wrapper.py")${DATA_SEP}app/core"
-  "$(_to_native_path "$PROJECT_DIR/version.txt")${DATA_SEP}."
+  "$(_to_native_path "$PROJECT_DIR/VERSION")${DATA_SEP}."
   "$(_to_native_path "$PROJECT_DIR/data")${DATA_SEP}data"
 )
 
@@ -316,12 +318,11 @@ get_platform_icon_args() {
   echo "$args"
 }
 
-# 清理旧的 App 产物（保留 release/ 下已有的 DMG/tgz/zip 发布包）
+# 清理旧的 App 中间产物（仅清理 build/dist，不影响发布包与 universal 合并的临时 stage）
 clean_app_artifacts() {
-  rm -rf "$BUILD_DIR"/* \
-    "$RELEASE_DIR/${APP_NAME}.app" \
-    "$RELEASE_DIR/${APP_NAME}" \
-    "$RELEASE_DIR/${APP_NAME}${EXT}"
+  rm -rf "$DIST_DIR/${APP_NAME}.app" \
+    "$DIST_DIR/${APP_NAME}" \
+    "$DIST_DIR/${APP_NAME}${EXT}"
 }
 
 # ============================================================
@@ -346,7 +347,7 @@ pyinstaller_build_arch() {
     --onedir
     -y
     --workpath "$BUILD_DIR"
-    --distpath "$RELEASE_DIR"
+    --distpath "$DIST_DIR"
     --optimize=2
     --strip
     --noconfirm
@@ -433,7 +434,7 @@ pyinstaller_build() {
       clean_app_artifacts
       pyinstaller_build_arch "arm64" "$PYTHON" || die "arm64 构建失败"
 
-      local arm64_app="$RELEASE_DIR/${APP_NAME}.app"
+      local arm64_app="$DIST_DIR/${APP_NAME}.app"
       local arm64_stage="$BUILD_DIR/stage_arm64"
       [ -d "$arm64_app" ] || die "arm64 .app 未找到"
       mv "$arm64_app" "$arm64_stage"
@@ -443,7 +444,7 @@ pyinstaller_build() {
       clean_app_artifacts
       pyinstaller_build_arch "x86_64" "$x86_py" || die "x86_64 构建失败"
 
-      local x86_app="$RELEASE_DIR/${APP_NAME}.app"
+      local x86_app="$DIST_DIR/${APP_NAME}.app"
       local x86_stage="$BUILD_DIR/stage_x86_64"
       [ -d "$x86_app" ] || die "x86_64 .app 未找到"
       mv "$x86_app" "$x86_stage"
@@ -464,14 +465,14 @@ pyinstaller_build() {
       lipo -create \
         "$arm64_stage/Contents/MacOS/$APP_NAME" \
         "$x86_stage/Contents/MacOS/$APP_NAME" \
-        -output "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" \
+        -output "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" \
         || die "lipo 合并失败"
-      chmod +x "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME"
-      lipo -info "$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" || true
+      chmod +x "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME"
+      lipo -info "$DIST_DIR/${APP_NAME}.app/Contents/MacOS/$APP_NAME" || true
 
       # ad-hoc 签名
       if command -v codesign &>/dev/null; then
-        codesign --force --deep --sign - --timestamp=none "$RELEASE_DIR/${APP_NAME}.app" \
+        codesign --force --deep --sign - --timestamp=none "$DIST_DIR/${APP_NAME}.app" \
           || log_warn "universal .app ad-hoc 签名失败（仅提示）"
       fi
 
@@ -503,7 +504,7 @@ fix_app_info() {
   [ "$HOST_OS" = "darwin" ] || return 0
   local version
   version=$(get_version)
-  local plist="$RELEASE_DIR/${APP_NAME}.app/Contents/Info.plist"
+  local plist="$DIST_DIR/${APP_NAME}.app/Contents/Info.plist"
   [ -f "$plist" ] || return 0
 
   plutil -replace CFBundleIdentifier -string "$APP_BUNDLE_ID" "$plist" 2>/dev/null || true
@@ -521,7 +522,7 @@ build_dmg() {
   [ "$HOST_OS" = "darwin" ] || return 0
   local version
   version=$(get_version)
-  local app_path="$RELEASE_DIR/${APP_NAME}.app"
+  local app_path="$DIST_DIR/${APP_NAME}.app"
   local dmg_name="${APP_NAME}_v${version}.dmg"
   local dmg_path="${RELEASE_DIR}/${dmg_name}"
 
@@ -554,7 +555,7 @@ build_tarball() {
   [ "$HOST_OS" = "linux" ] || return 0
   local version
   version=$(get_version)
-  local dir="$RELEASE_DIR/${APP_NAME}"
+  local dir="$DIST_DIR/${APP_NAME}"
   local tar_path="${RELEASE_DIR}/${APP_NAME}_v${version}_linux_${HOST_ARCH}.tar.gz"
 
   [ -d "$dir" ] || return 0
@@ -562,7 +563,7 @@ build_tarball() {
   rm -f "$tar_path"
 
   log_info "生成 tar.gz ..."
-  (cd "$RELEASE_DIR" && tar -czf "$tar_path" "${APP_NAME}")
+  (cd "$DIST_DIR" && tar -czf "$tar_path" "${APP_NAME}")
   log_success "Release tgz  → $tar_path"
 }
 
@@ -571,7 +572,7 @@ build_zip() {
   [ "$HOST_OS" = "windows" ] || return 0
   local version
   version=$(get_version)
-  local dir="$RELEASE_DIR/${APP_NAME}"
+  local dir="$DIST_DIR/${APP_NAME}"
   local zip_name="${APP_NAME}_v${version}_windows_${HOST_ARCH}.zip"
   local zip_path="${RELEASE_DIR}/${zip_name}"
 
@@ -581,7 +582,7 @@ build_zip() {
 
   log_info "生成 ZIP: $zip_name ..."
   if command -v zip &>/dev/null; then
-    (cd "$RELEASE_DIR" && zip -rq "$zip_path" "${APP_NAME}")
+    (cd "$DIST_DIR" && zip -rq "$zip_path" "${APP_NAME}")
   elif command -v powershell &>/dev/null; then
     local win_dir win_zip_path
     win_dir="$(_to_native_path "$dir")"
@@ -601,11 +602,11 @@ build_zip() {
 needs_build() {
   local target
   if [ "$HOST_OS" = "darwin" ]; then
-    target="$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+    target="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
   else
-    target="$RELEASE_DIR/${APP_NAME}${EXT}"
+    target="$DIST_DIR/${APP_NAME}${EXT}"
   fi
-  [ -f "$target" ] || [ -d "$RELEASE_DIR/${APP_NAME}.app" ] || return 0
+  [ -f "$target" ] || [ -d "$DIST_DIR/${APP_NAME}.app" ] || return 0
 
   # macOS universal: 检查是否包含双架构
   if [ "$HOST_OS" = "darwin" ] && [ -f "$target" ]; then
@@ -616,7 +617,7 @@ needs_build() {
 
   local newer
   newer=$(find "$PROJECT_DIR" \
-    \( -name '*.py' -o -name 'version.txt' -o -name 'requirements.txt' -o \
+    \( -name '*.py' -o -name 'VERSION' -o -name 'requirements.txt' -o \
        -path '*/custom_scripts/*' -o -path '*/icons/*' -o -path '*/data/*' \) \
     -not -path '*/build/*' \
     -not -path '*/release/*' \
@@ -666,9 +667,9 @@ cmd_build() {
   check_python
   check_tkinter
 
-  mkdir -p "$BUILD_DIR" "$RELEASE_DIR"
-
+  # 构建开始时清空工作目录（此时尚未生成 universal 合并的临时 stage）
   rm -rf "$BUILD_DIR"/*
+  mkdir -p "$BUILD_DIR" "$DIST_DIR" "$RELEASE_DIR"
 
   pyinstaller_build
   local rc=$?
@@ -687,12 +688,13 @@ cmd_build() {
   fi
 
   log_success "=== 构建完成 ==="
-  if [ "$HOST_OS" = "darwin" ] && [ -d "$RELEASE_DIR/${APP_NAME}.app" ]; then
-    log_info "App 产物: $RELEASE_DIR/${APP_NAME}.app"
-  elif [ -d "$RELEASE_DIR/${APP_NAME}" ]; then
-    log_info "产物目录: $RELEASE_DIR/${APP_NAME}"
+  if [ "$HOST_OS" = "darwin" ]; then
+    local dmg_file
+    dmg_file=$(ls "$RELEASE_DIR"/*.dmg 2>/dev/null | head -1)
+    [ -n "$dmg_file" ] && log_info "Release DMG: $dmg_file"
+    log_info "中间产物 (不在 release/): $DIST_DIR/${APP_NAME}.app"
   fi
-  log_info "Release 目录: $RELEASE_DIR"
+  log_info "Release 目录 (仅发布包): $RELEASE_DIR"
 }
 
 cmd_run() {
@@ -713,9 +715,9 @@ cmd_run() {
 
   local binary
   if [ "$HOST_OS" = "darwin" ]; then
-    binary="$RELEASE_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+    binary="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
   else
-    binary="$RELEASE_DIR/${APP_NAME}/${APP_NAME}${EXT}"
+    binary="$DIST_DIR/${APP_NAME}/${APP_NAME}${EXT}"
   fi
   [ -x "$binary" ] || die "找不到可执行文件: $binary"
 
@@ -843,7 +845,8 @@ Python 检测顺序:
 
 项目路径:
   源码:     $PROJECT_DIR
-  发布产物:  $RELEASE_DIR (App 目录 + DMG/tgz/zip)
+  中间产物:  $DIST_DIR (PyInstaller .app / onedir)
+  发布产物:  $RELEASE_DIR (仅 DMG/tgz/zip)
   运行日志:  $BUILD_DIR/run.log 和 $BUILD_DIR/dev.log
   版本文件:  $VERSION_FILE
 EOF

@@ -9,7 +9,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# 脚本位于 <project>/scripts/，项目根目录为其上级目录
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PRIMARY_REMOTE="origin"
 SYNC_REMOTE="backupstream"
@@ -49,7 +48,7 @@ ${BOLD}选项:${NC}
 
 ${BOLD}示例:${NC}
   $0                                    # 全流程交互式
-  $0 -m "feat: 支持天气多源切换"         # 指定 message
+  $0 -m "feat: 支持多源切换"         # 指定 message
   $0 -m "docs: 更新架构文档" --no-release # 不触发发布
   $0 --dry-run                          # 预览
 EOF
@@ -71,7 +70,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# 打印并执行命令；dry-run 时只打印
+# 打印并执行命令；dry-run 时只打印。直接传参数数组，绝不 eval，避免 message 内容被 shell 二次解析。
 run() {
     if $DRY_RUN; then
         echo -e "  ${YELLOW}[dry-run]${NC} $*"
