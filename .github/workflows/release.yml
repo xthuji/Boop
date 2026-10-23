@@ -3,14 +3,16 @@ name: Release Boop
 # =============================================================================
 # v* tag 触发，三平台并行构建，汇总发布到 GitHub Release。
 #
-# 全部构建逻辑集中在 ./scripts/run_tools.sh build（自动按当前 runner 平台分派）：
-#   - macOS: 用 python.org universal2 解释器，分别以 arm64 / x86_64(Rosetta) 运行
-#     PyInstaller 构建两 slice → 以 arm64 bundle 为基线 lipo 补齐所有 Mach-O →
-#     ad-hoc 签名 → hdiutil 生成 DMG
+# 全部构建逻辑集中在 ./scripts/run_tools.sh build（自动按当前 runner 平台分派，
+# 入口 run_tools.sh 声明常量与命令表，公共实现源在 run_tools_master.sh）：
+#   - macOS: 单架构打包（NEEDS_UNIVERSAL=0）。用 python.org universal2 解释器，
+#     矩阵分别产出 arm64（原生）与 x86_64（经 Rosetta：arch -x86_64 运行脚本），
+#     各自 PyInstaller 单 slice → 修正 Info.plist → ad-hoc 签名 → hdiutil 生成 DMG；
+#     产物名带架构后缀，两份独立 DMG。
 #   - Linux: PyInstaller 构建 → tar.gz 打包
 #   - Windows: PyInstaller 构建 → zip 打包
 # 本 workflow 只做 runner 引导（checkout、Python 工具链）与产物上传，不写任何
-# 构建 / 打包细节，避免与本地行为漂移。
+# 构建 / 打包细节，避免与本地行为漂移。产物缺失时上传直接报错，不发空 Release。
 # =============================================================================
 
 on:
@@ -23,14 +25,18 @@ permissions:
 
 jobs:
   build-macos:
-    name: macOS (universal)
+    name: macOS (${{ matrix.arch }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
     steps:
       - uses: actions/checkout@v4
 
       # python.org universal2 解释器：同一二进制既可原生以 arm64 运行，也可经 Rosetta
-      # 以 x86_64 运行。用它构建两 slice，无需再安装 Intel(x86_64) Homebrew，避免
-      # ARM runner 上 "Cannot install under Rosetta 2 in ARM default prefix" 报错。
+      # 以 x86_64 运行。单架构构建时 arm64 job 直接用它，x86_64 job 经 arch -x86_64
+      # 在其 x86_64 slice 上跑整个 run_tools.sh；无需再装 Intel Homebrew。
       - name: Install python.org universal2 Python 3.11
         shell: bash
         run: |
@@ -46,33 +52,46 @@ jobs:
           PYBIN="/Library/Frameworks/Python.framework/Versions/${PY_MINOR}/bin/python${PY_MINOR}"
           [ -x "$PYBIN" ] || { echo "未找到 universal2 解释器: $PYBIN"; exit 1; }
 
-          # 两个 slice 复用同一 universal2 解释器，通过环境变量告知 run_tools.sh
-          echo "BOOP_PYTHON=$PYBIN"        >> "$GITHUB_ENV"
-          echo "BOOP_PYTHON_X86_64=$PYBIN" >> "$GITHUB_ENV"
+          # 单架构构建仅需主解释器；run_tools.sh 据此选择当前 slice 运行
+          echo "BOOP_PYTHON=$PYBIN" >> "$GITHUB_ENV"
 
-          # 自检：默认 arm64；arch -x86_64 前缀走 Rosetta，两者 tkinter 均可用
-          echo "--- arm64 ---"
-          "$PYBIN" -c "import platform,tkinter;print(platform.machine(),'tkinter',tkinter.TkVersion)"
-          echo "--- x86_64 (Rosetta) ---"
-          arch -x86_64 "$PYBIN" -c "import platform,tkinter;assert platform.machine()=='x86_64';print(platform.machine(),'tkinter',tkinter.TkVersion)"
+          # 自检：对应矩阵 slice 下 tkinter 可用
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            arch -x86_64 "$PYBIN" -c "import platform,tkinter;assert platform.machine()=='x86_64';print('x86_64 (Rosetta) tkinter',tkinter.TkVersion)"
+          else
+            "$PYBIN" -c "import platform,tkinter;assert platform.machine()=='arm64';print('arm64 tkinter',tkinter.TkVersion)"
+          fi
 
-      # run_tools.sh 内部完成：
-      #   PyInstaller arm64 构建 → PyInstaller x86_64 构建 →
-      #   以 arm64 bundle 为基线 lipo 补齐 Mach-O → ad-hoc 签名 → DMG
+      # 单架构构建：arm64 直接跑；x86_64 用 arch -x86_64 把整个脚本置于 Rosetta
+      # 下执行，脚本内 uname -m 即报 x86_64 → 产出 x86_64 单 slice .app → DMG。
       - name: Build & package via run_tools.sh
-        run: |
-          chmod +x ./scripts/run_tools.sh
-          ./scripts/run_tools.sh build
         env:
           MACOSX_DEPLOYMENT_TARGET: '12.0'
+        run: |
+          chmod +x ./scripts/run_tools.sh
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            arch -x86_64 ./scripts/run_tools.sh build
+          else
+            ./scripts/run_tools.sh build
+          fi
 
-      - name: List artifacts
-        run: ls -lh release/
+      # 产物名带架构后缀，避免两矩阵 leg 合并到 Release 时同名覆盖。
+      - name: Name DMG with arch
+        shell: bash
+        run: |
+          set -euo pipefail
+          ver="$(tr -d '[:space:]' < VERSION)"
+          for f in release/*.dmg; do
+            base="$(basename "${f%.dmg}")"
+            mv "$f" "release/${base}_macos_${{ matrix.arch }}.dmg"
+          done
+          ls -lh release/
 
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
+          name: macos-dmg-${{ matrix.arch }}
           path: release/*.dmg
+          if-no-files-found: error
 
   build-linux:
     name: Linux (amd64)
@@ -101,6 +120,7 @@ jobs:
         with:
           name: linux-tar
           path: release/*.tar.gz
+          if-no-files-found: error
 
   build-windows:
     name: Windows (amd64)
@@ -127,6 +147,7 @@ jobs:
         with:
           name: windows-zip
           path: release/*.zip
+          if-no-files-found: error
 
   release:
     name: Create GitHub Release
@@ -150,9 +171,10 @@ jobs:
 
             跨平台文本处理工具。构建逻辑由 `./scripts/run_tools.sh build` 统一实现。
 
-            ### macOS (≥ 12 Monterey)
-            - `Boop_v*.dmg` — universal (arm64 + x86_64)，支持 Apple Silicon 与 Intel Mac
-            - 双击 `.dmg`，把 Boop 拖进 Applications
+            ### macOS (≥ 12 Monterey，单架构产物)
+            - `Boop_v*_macos_arm64.dmg` — Apple Silicon（M 系列）专用
+            - `Boop_v*_macos_x86_64.dmg` — Intel Mac 专用
+            - 按自己机器型号选对应架构下载；双击 `.dmg`，把 Boop 拖进 Applications
             - 未做 Apple 公证，首次打开如被 Gatekeeper 拦截，请右键应用选"打开"确认一次即可
 
             ### Windows

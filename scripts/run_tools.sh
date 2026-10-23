@@ -3,14 +3,33 @@
 # Boop - 构建与运行工具 (跨平台: macOS / Linux / Windows Git Bash)
 # =============================================================================
 # 命令:
-#   1|b|build    构建桌面应用 (PyInstaller 打包, 自动适配当前平台)
-#   2|r|run      构建并前台运行 (Ctrl+C 关闭)
-#   3|d|dev      开发模式: 直接 python -m app 前台运行 (Ctrl+C 关闭)
-#   4|t|test     运行单元测试 (pytest, 跳过 GUI 自动化测试)
-#   5|s|scripts  同步 custom_scripts/ 到 /Applications/Boop.app/Contents/Resources/custom_scripts
-#   6|c|clean    清理构建产物
-#   7|i|install  安装依赖包 (requirements.txt + PyInstaller + pytest)
-#   0|q|exit     退出
+#   1|b,build     构建桌面应用 (PyInstaller 打包, 自动适配当前平台)
+#   2|r,run       构建并前台运行 (Ctrl+C 关闭)
+#   3|d,dev       开发模式: 直接 python -m app 前台运行 (Ctrl+C 关闭)
+#   4|t,test      运行单元测试 (业务用例 run_tests.py + pytest 冒烟, 跳过 GUI 自动化)
+#   5|s,scripts   同步 custom_scripts/ 到 /Applications/Boop.app
+#   6|c,clean     清理构建产物
+#   7|i,install   安装依赖包 (requirements.txt + PyInstaller + pytest)
+#   0|q|exit      退出
+#
+# 发布产物: macOS 的最终发布物是 DMG（release/ 只存放 DMG，不再放 .app），
+#   .app 仅作为 DMG 的输入保留在 build/dist（构建中间产物目录）。
+#
+# macOS 架构策略：单架构打包（NEEDS_UNIVERSAL=0），产物跟随构建机架构。
+#   本机：Intel 出 x86_64、Apple Silicon 出 arm64，各自单 slice、不做 universal 合并。
+#   CI：macos-latest（arm64）用矩阵分别构建 arm64 与 x86_64 两个单架构 DMG，
+#   x86_64 经 Rosetta 用 python.org universal2 解释器的 x86_64 slice 构建。
+#
+# CI 契约（.github/workflows/release.yml 按 tag 三平台并行调用）:
+#   ./scripts/run_tools.sh build                 → 当前 runner 原生架构单 slice
+#   arch -x86_64 ./scripts/run_tools.sh build    → x86_64 单 slice（Rosetta）
+#   经 BOOP_PYTHON 注入解释器；内部完成 PyInstaller 单架构 → plist 修正 →
+#   ad-hoc 签名 → DMG；产物 glob: release/*.dmg | release/*.tar.gz | release/*.zip
+#
+# 全部构建/打包/测试逻辑集中在入口与公共母版模块，CI workflow 只做 runner 引导
+# 与产物上传，避免 CI 与本地漂移。母版拆分为 run_tools_master.sh（与
+# easy_translate 逐字节一致，入口 source 加载），入口只保留常量与命令表 /
+# 专属实现内联区。
 # =============================================================================
 
 set -euo pipefail
@@ -20,268 +39,78 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_DIR"
 
-# --- 项目常量 ---
+# --- 顶层内联平台探测：常量表求值早于母版加载，HOST_OS 必须先于 DATA_SEP 就绪 ---
+HOST_OS="$(uname -s 2>/dev/null || echo unknown)"
+case "$HOST_OS" in
+  Darwin*)              HOST_OS="darwin" ;;
+  Linux*)               HOST_OS="linux" ;;
+  MINGW*|MSYS*|CYGWIN*) HOST_OS="windows" ;;
+  *)                    HOST_OS="unknown" ;;
+esac
+
+# ============================================================
+# 项目差异区 · 常量与命令表（脚本唯一需要按项目调整的部分）
+# ============================================================
+
+# --- 项目标识 ---
 APP_NAME="Boop"
+APP_DISPLAY_NAME="Boop"
 APP_BUNDLE_ID="com.xthuji.boop"
-MACOS_MIN_VERSION="12.0"
+RELEASE_PREFIX=""                 # release 产物命名前缀（留空同 APP_NAME）
+
+# --- 目录与产物 ---
 BUILD_DIR="$PROJECT_DIR/build"
 # PyInstaller 中间产物 (.app / onedir 目录) 输出到 build/dist，
 # release/ 仅保留可分发的发布包 (DMG/tgz/zip)，不再包含 .app
 DIST_DIR="$BUILD_DIR/dist"
 RELEASE_DIR="$PROJECT_DIR/release"
+PYI_WORKPATH="$BUILD_DIR"
 VERSION_FILE="$PROJECT_DIR/VERSION"
+VERSION=""
+
+# --- Python 解释器与依赖 ---
 PYTHON=""
-
-# --- 平台检测 ---
-HOST_OS=""
-HOST_ARCH=""
-EXT=""
-
-detect_platform() {
-  local os
-  os="$(uname -s 2>/dev/null || echo "unknown")"
-  case "$os" in
-    Darwin*)              HOST_OS="darwin"  ;;
-    Linux*)               HOST_OS="linux"   ;;
-    MINGW*|MSYS*|CYGWIN*) HOST_OS="windows" ;;
-    *)                    HOST_OS="unknown" ;;
-  esac
-
-  local arch
-  arch="$(uname -m 2>/dev/null || echo "unknown")"
-  case "$arch" in
-    x86_64|amd64)   HOST_ARCH="amd64" ;;
-    arm64|aarch64)  HOST_ARCH="arm64" ;;
-    *)              HOST_ARCH="amd64" ;;
-  esac
-
-  if [ "$HOST_OS" = "windows" ]; then
-    EXT=".exe"
-  else
-    EXT=""
-  fi
-}
-
-detect_platform
-
-# --- 彩色输出 ---
-BLUE='\033[0;34m'; GREEN='\033[0;32m'; RED='\033[0;31m'
-YELLOW='\033[1;33m'; BOLD='\033[1m'; NC='\033[0m'
-log_info()    { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $*"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
-die() { log_error "$*"; exit 1; }
-
-# ============================================================
-# Python 解释器检测（可移植，无外部依赖）
-# ============================================================
-# 本地优先使用的 Python 环境（miniconda python39）
+PYTHON_ENV_VAR="BOOP_PYTHON"                    # 显式指定解释器的环境变量名（CI 用）
+PYTHON_ENV_VAR_X86_64="BOOP_PYTHON_X86_64"      # 仅 universal 分支需（NEEDS_UNIVERSAL=0 下不启用）
 PREFERRED_PYTHON="${HOME}/miniconda3/envs/python39/bin/python3"
+MIN_PYTHON_VERSION="3.9"
+DEPS_IMPORT_CHECK="pynput,pyperclip"            # install 命令展示的依赖
+RUNTIME_IMPORT_PROBE="import pynput, pyperclip" # ensure_runtime_deps 的就绪探测
+NEEDS_TKINTER=1
+NEEDS_PYTEST=1                  # 测试体系为 unittest 驱动的 run_tests.py（cmd_test 已覆盖），
+#                                 pytest 仅经 install 安装供 tests/ 下按键测试偶尔冒烟
 
-detect_python() {
-  if [ -n "$PYTHON" ]; then return 0; fi
+# --- 构建策略 ---
+NEEDS_UNIVERSAL=0               # 0=macOS 单架构打包（跟随构建机架构，不做 universal 合并）
+MACOS_UNIVERSAL_FORCE=0         # NEEDS_UNIVERSAL=0 时无效（universal 分支整体不进入）
+PLATFORM_SCOPE="all"            # 三平台出包（macOS 单架构 DMG / Linux tgz / Windows zip）
+MACOS_MIN_VERSION="12.0"
+MACOSX_DEPLOYMENT_TARGET_DEFAULT="$MACOS_MIN_VERSION"
+PYI_WINDOWED=1
+PYI_OPTIMIZE=2
+PYI_STRIP=1
+PYI_LOG_LEVEL="ERROR"
+ENTRY_PY="$PROJECT_DIR/app/__main__.py"
 
-  # 1) 显式环境变量
-  if [ -n "${BOOP_PYTHON:-}" ]; then
-    if [ -x "$BOOP_PYTHON" ]; then
-      PYTHON="$BOOP_PYTHON"
-    elif command -v "$BOOP_PYTHON" &>/dev/null; then
-      PYTHON="$(command -v "$BOOP_PYTHON")"
-    else
-      die "BOOP_PYTHON 设置了但找不到: $BOOP_PYTHON"
-    fi
-    return 0
-  fi
+# --- 图标（mac 用预制 .icns，Windows 用 .ico，Linux 用 .png）---
+ICON_ICNS="$PROJECT_DIR/icons/icon.icns"
+ICON_ICO="$PROJECT_DIR/icons/icon.ico"
+ICON_PNG="$PROJECT_DIR/icons/icon_256x256.png"
 
-  # 2) 本地优先环境: ~/miniconda3/envs/python39/bin/python3
-  if [ -x "$PREFERRED_PYTHON" ]; then
-    PYTHON="$PREFERRED_PYTHON"
-    return 0
-  fi
+# --- 产物细节 ---
+ADHOC_SIGN=1                    # 1=macOS 构建后 ad-hoc 签名（改 Info.plist 会让 PyInstaller 签名失效）
+# hdiutil 额外参数（数组，逐项传参）：-imagekey zlib-level=9 提升压缩率
+readonly DMG_IMAGEKEY_ARGS=( -imagekey zlib-level=9 )
+# 清理 release 中历史残留的中间产物（旧版曾把 .app/onedir 落进 release/）
+RELEASE_CLEAN_TARGETS=( "${RELEASE_PREFIX:-$APP_NAME}.app" "${RELEASE_PREFIX:-$APP_NAME}" )
+CLEAN_TARGETS=( "$BUILD_DIR" "$RELEASE_DIR" )
 
-  # 3) 当前已激活的虚拟环境
-  if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
-    PYTHON="$VIRTUAL_ENV/bin/python"
-    return 0
-  fi
-
-  # 4) PATH 上找 python3
-  if command -v python3 &>/dev/null; then
-    PYTHON="$(command -v python3)"
-    return 0
-  fi
-
-  die "找不到 Python，请先安装 Python 3.9+ 或设置 BOOP_PYTHON 环境变量"
-}
-
-detect_python
-
-# ============================================================
-# 依赖检查
-# ============================================================
-check_python() {
-  $PYTHON -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)" \
-    || die "Python 版本过低 (需要 3.9+, 当前: $($PYTHON --version))"
-  log_success "Python: $PYTHON ($($PYTHON --version 2>&1))"
-}
-
-check_tkinter() {
-  $PYTHON -c "import tkinter" 2>/dev/null \
-    || die "Tkinter 不可用 (macOS: brew install python-tk; Ubuntu: apt install python3-tk)"
-  log_success "Tkinter: ok"
-}
-
-# 确保 PyInstaller 已安装到目标解释器（避免 PATH 上的 pyinstaller 解释器不匹配）
-ensure_pyinstaller() {
-  if $PYTHON -m pip show -q pyinstaller 2>/dev/null; then
-    return 0
-  fi
-  log_info "首次安装 PyInstaller ..."
-  $PYTHON -m pip install -q pyinstaller pyinstaller-hooks-contrib \
-    || die "PyInstaller 安装失败"
-  log_success "PyInstaller 已就绪"
-}
-
-# 确保 pytest 已安装（test / install 共用）
-ensure_pytest() {
-  if $PYTHON -m pip show -q pytest 2>/dev/null; then
-    return 0
-  fi
-  log_info "首次安装 pytest ..."
-  $PYTHON -m pip install -q pytest || die "pytest 安装失败"
-  log_success "pytest 已就绪"
-}
-
-# macOS: 将 base 内的 Mach-O 与对照 x86_64 构建的同名文件合并为 universal2
-# 说明: universal2 解释器经 PyInstaller 采集后，部分二进制会被裁薄为当前 slice
-# 架构；此处仅在 base 缺 x86_64 时从对照文件补齐（base 已含 x86_64 则跳过）。
-lipo_ensure_universal() {
-  local base="$1" x86_bin="$2" label="${3:-$1}"
-  [ -f "$base" ] && [ -f "$x86_bin" ] || return 0
-  # base 已是 universal2（含 x86_64）则无需处理
-  lipo -archs "$base" 2>/dev/null | grep -qw 'x86_64' && return 0
-  # 两者必须均为 Mach-O，否则 lipo 报错（非二进制文件直接忽略）
-  local a="${base}.arm64" x="${base}.x86_64" o="${base}.universal"
-  lipo -thin arm64  "$base"    -output "$a" 2>/dev/null || { rm -f "$a" "$x" "$o"; return 0; }
-  lipo -thin x86_64 "$x86_bin" -output "$x" 2>/dev/null || { rm -f "$a" "$x" "$o"; return 0; }
-  if lipo -create "$a" "$x" -output "$o" 2>/dev/null; then
-    mv "$o" "$base"
-    log_info "  补齐 universal2: $label"
-  fi
-  rm -f "$a" "$x" "$o" 2>/dev/null || true
-}
-
-# macOS: 以 arm64 slice 为完整基线，遍历 final .app 内所有 Mach-O，与 x86_64
-# slice 中同路径文件合并，得到完整 universal2 bundle
-assemble_universal_app() {
-  local final_app="$1" x86_stage="$2"
-  local f rel
-  while IFS= read -r f; do
-    rel="${f#"$final_app"/}"
-    [ -f "$x86_stage/$rel" ] || continue
-    lipo_ensure_universal "$f" "$x86_stage/$rel" "$rel" || true
-  done < <(
-    find "$final_app/Contents" -type f \
-      \( -path '*/MacOS/*' -o -name '*.so' -o -name '*.dylib' \
-         -o -path '*/Python.framework/Versions/*/Python' \) \
-      2>/dev/null
-  )
-}
-
-# macOS: 查找 x86_64 Python (用于 universal 构建)
-find_x86_64_python() {
-  [ "$HOST_OS" = "darwin" ] || return 1
-  # 主机器为 Intel 时，主解释器已是 x86_64，无需也无法构建 universal
-  [ "$HOST_ARCH" = "arm64" ] || return 1
-
-  # 显式环境变量
-  if [ -n "${BOOP_PYTHON_X86_64:-}" ]; then
-    if arch -x86_64 "$BOOP_PYTHON_X86_64" -c "import platform; exit(0 if platform.machine() == 'x86_64' else 1)" 2>/dev/null; then
-      echo "$BOOP_PYTHON_X86_64"
-      return 0
-    fi
-    return 1
-  fi
-
-  local candidate
-  for candidate in \
-    /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 \
-    /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 \
-    /usr/local/opt/python@3.11/bin/python3 \
-    /usr/local/opt/python@3.12/bin/python3 \
-    /usr/local/opt/python@3/bin/python3 \
-    /usr/local/bin/python3 \
-    /usr/local/bin/python; do
-    if [ -x "$candidate" ]; then
-      if arch -x86_64 "$candidate" -c "import platform; exit(0 if platform.machine() == 'x86_64' else 1)" 2>/dev/null; then
-        echo "$candidate"
-        return 0
-      fi
-    fi
-  done
-  return 1
-}
-
-# 项目运行时依赖（首次构建前安装）
-ensure_runtime_deps() {
-  if [ ! -f "$PROJECT_DIR/requirements.txt" ]; then
-    return 0
-  fi
-  if $PYTHON -c "import pynput, pyperclip" 2>/dev/null; then
-    return 0
-  fi
-  log_info "安装运行时依赖 (requirements.txt) ..."
-  $PYTHON -m pip install -q -r "$PROJECT_DIR/requirements.txt" \
-    || die "依赖安装失败"
-  log_success "运行时依赖已就绪"
-}
-
-# ============================================================
-# 版本管理
-# ============================================================
-get_version() {
-  if [ -f "$VERSION_FILE" ]; then
-    local ver
-    ver=$(tr -d '[:space:]' < "$VERSION_FILE")
-    if [ -n "$ver" ]; then
-      echo "$ver"; return
-    fi
-  fi
-  git describe --tags --always --dirty 2>/dev/null || echo "dev"
-}
-
-# ============================================================
-# PyInstaller 核心配置
-# ============================================================
-readonly EXCLUDE_MODULES=(
-  # 测试 / 调试
-  "test" "tkinter.test" "unittest" "doctest"
-  "trace" "profile" "pstats" "tabnanny" "pyclbr"
-  # 模块工具
-  "pickletools" "zipimport" "modulefinder" "lib2to3"
-  # 数据库
-  "sqlite3"
-  # 网络（不使用 requests / urllib）
-  "email" "urllib3" "requests"
-  # 并发（用 threading，不用 multiprocessing / asyncio）
-  "multiprocessing" "asyncio" "concurrent"
-  # 包管理
-  "distutils" "setuptools" "pkg_resources"
-  # 不常见 GUI / Web / 科学
-  "PyQt5" "PyQt6" "PySide2" "PySide6" "gi" "wx"
-  "django" "flask" "fastapi" "sqlalchemy"
-  "numpy" "scipy" "pandas" "matplotlib"
-)
-
-# PyInstaller --add-data 分隔符: Windows 用 ';', macOS/Linux 用 ':'
+# --- add-data 分隔符与资源清单（Windows Git Bash 需原生路径，避免 MSYS 路径漂移）---
 if [ "$HOST_OS" = "windows" ]; then
   DATA_SEP=";"
 else
   DATA_SEP=":"
 fi
-
-# 将路径转为原生格式，避免 MSYS2/Git Bash 路径转换导致 PyInstaller 找不到文件
 _to_native_path() {
   if [ "$HOST_OS" = "windows" ] && command -v cygpath &>/dev/null; then
     cygpath -w "$1"
@@ -291,7 +120,8 @@ _to_native_path() {
 }
 
 # 需要一起打包的非 .py 资源 (src{sep}dest)
-# Windows 下源路径必须是原生 Windows 格式 (D:\... 而非 /d/...)
+# custom_scripts 为用户可热扩展脚本族，运行时从解包目录扫描加载；
+# script_wrapper.py 是脚本运行契约源文件，须以 app/core 路径随包可导入。
 readonly APP_DATA_FILES=(
   "$(_to_native_path "$PROJECT_DIR/custom_scripts")${DATA_SEP}custom_scripts"
   "$(_to_native_path "$PROJECT_DIR/app/core/script_wrapper.py")${DATA_SEP}app/core"
@@ -299,454 +129,106 @@ readonly APP_DATA_FILES=(
   "$(_to_native_path "$PROJECT_DIR/data")${DATA_SEP}data"
 )
 
-# PyInstaller 用 --icon 统一接受 .icns (mac) / .ico (win) / .png (linux)
-get_platform_icon_args() {
-  local args=""
-  local icns="$PROJECT_DIR/icons/icon.icns"
-  local ico="$PROJECT_DIR/icons/icon.ico"
-  local png="$PROJECT_DIR/icons/icon_256x256.png"
+# 隐藏导入（PyInstaller 静态分析不到的动态引用）
+readonly HIDDEN_IMPORTS=(
+  "tkinter"
+  "tkinter.ttk"
+  "pynput"
+  "pynput.keyboard"
+)
 
-  if [ "$HOST_OS" = "darwin" ] && [ -f "$icns" ]; then
-    args="--icon $icns"
-  elif [ "$HOST_OS" = "windows" ] && [ -f "$ico" ]; then
-    args="--icon $ico"
-  elif [ "$HOST_OS" = "linux" ] && [ -f "$png" ]; then
-    args="--icon $png"
-  fi
-  echo "$args"
-}
+# 无条件排除：测试/调试、模块工具、数据库、未用的网络与并发、
+# 包管理、其他 GUI/Web/科学栈（conda 环境防御，避免被连带吸入）
+readonly EXCLUDE_MODULES=(
+  "test" "tkinter.test" "unittest" "doctest"
+  "trace" "profile" "pstats" "tabnanny" "pyclbr"
+  "pickletools" "zipimport" "modulefinder" "lib2to3"
+  "sqlite3"
+  "email" "urllib3" "requests"
+  "multiprocessing" "asyncio" "concurrent"
+  "distutils" "setuptools" "pkg_resources"
+  "PyQt5" "PyQt6" "PySide2" "PySide6" "gi" "wx"
+  "django" "flask" "fastapi" "sqlalchemy"
+  "numpy" "scipy" "pandas" "matplotlib"
+)
 
-# 清理旧的 App 中间产物（仅清理 build/dist，不影响发布包与 universal 合并的临时 stage）
-clean_app_artifacts() {
-  rm -rf "$DIST_DIR/${APP_NAME}.app" \
-    "$DIST_DIR/${APP_NAME}" \
-    "$DIST_DIR/${APP_NAME}${EXT}"
-}
+# 条件排除：本项目不使用的可选轻型模块，仅当构建环境未安装时才排除
+# （"Boop" 为无条件排除：Linux onedir 产物目录名与 App 同名，避免自吸入）
+readonly OPTIONAL_EXCLUDE_CANDIDATES=(
+  "pystray" "tkinter.test.support" "Boop"
+)
 
-# ============================================================
-# PyInstaller 构建 (单架构)
-# ============================================================
-pyinstaller_build_arch() {
-  local target_arch="${1:-$HOST_ARCH}"
-  local py="${2:-$PYTHON}"
-  local version
-  version=$(get_version)
+# --- 测试 / 清理（cmd_test 已覆盖为 run_tests.py + pytest 冒烟，以下仅作登记）---
+PYTEST_PATHS=( tests/ )
+PYTEST_EXTRA=()
+PYTEST_SKIP_EXPR=""
+CLEAN_EXTRA=()
 
-  ensure_runtime_deps
-  if ! $py -m pip show -q pyinstaller 2>/dev/null; then
-    log_info "为 $target_arch Python 安装 PyInstaller ..."
-    $py -m pip install -q pyinstaller pyinstaller-hooks-contrib \
-      || die "PyInstaller 安装失败 ($target_arch)"
-  fi
+# --- 菜单与分发 ---
+DEFAULT_CMD="dev"               # 交互菜单回车默认
+FALLBACK_CMD="cmd_dev"          # 未识别命令按开发模式兜底（延续历史行为）
+SRC_FIND_EXPR=( -name '*.py' -o -name 'VERSION' -o -name 'requirements.txt'
+  -o -path '*/custom_scripts/*' -o -path '*/icons/*' -o -path '*/data/*' )
 
-  local args=(
-    --name "$APP_NAME"
-    --windowed
-    --onedir
-    -y
-    --workpath "$BUILD_DIR"
-    --distpath "$DIST_DIR"
-    --optimize=2
-    --strip
-    --noconfirm
-    --log-level=ERROR
-  )
-
-  for module in "${EXCLUDE_MODULES[@]}"; do
-    args+=(--exclude-module="$module")
-  done
-
-  for file in "${APP_DATA_FILES[@]}"; do
-    args+=(--add-data "$file")
-  done
-
-  # 隐藏导入（PyInstaller 静态分析不到的动态引用）
-  args+=(
-    --hidden-import tkinter
-    --hidden-import tkinter.ttk
-    --hidden-import pynput
-    --hidden-import pynput.keyboard
-  )
-
-  # 平台特定
-  if [ "$HOST_OS" = "darwin" ]; then
-    args+=(--osx-bundle-identifier "$APP_BUNDLE_ID")
-    export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-$MACOS_MIN_VERSION}"
-    log_info "  MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET (arch=$target_arch)"
-  fi
-  local plat_icon_args
-  plat_icon_args=$(get_platform_icon_args)
-  if [ -n "$plat_icon_args" ]; then
-    # shellcheck disable=SC2086
-    args+=($plat_icon_args)
-  fi
-
-  args+=("$PROJECT_DIR/app/__main__.py")
-
-  log_info "PyInstaller 构建 ($APP_NAME, version=$version, arch=$target_arch)..."
-
-  # macOS 交叉构建时，确保 Python 以目标架构运行
-  local arch_prefix=""
-  if [ "$HOST_OS" = "darwin" ] && [ "$target_arch" = "x86_64" ]; then
-    arch_prefix="arch -x86_64"
-  fi
-
-  # shellcheck disable=SC2086
-  if ! $arch_prefix $py -m PyInstaller "${args[@]}"; then
-    log_error "PyInstaller 构建失败 ($target_arch)"
-    return 1
-  fi
-  log_success "PyInstaller 构建完成 ($target_arch)"
-}
+# --- 命令表：序号|别名(逗号分隔)|说明|处理函数（菜单/帮助/分发唯一真源）---
+commands=(
+  "1|b,build|构建桌面应用 (PyInstaller, 当前平台)|cmd_build"
+  "2|r,run|构建并前台运行 (Ctrl+C 关闭)|cmd_run"
+  "3|d,dev|开发模式: python -m app 前台运行|cmd_dev"
+  "4|t,test|运行单元测试 (业务用例 + pytest 冒烟)|cmd_test"
+  "5|s,scripts|同步 custom_scripts/ 到 /Applications/Boop.app|cmd_scripts"
+  "6|c,clean|清理构建产物|cmd_clean"
+  "7|i,install|安装依赖包 (requirements + PyInstaller + pytest)|cmd_install"
+)
 
 # ============================================================
-# PyInstaller 构建 (入口: macOS 自动尝试 universal 构建)
+# 公共模块：母版实现（与其余 Python 桌面应用逐字节一致，请勿在此修改）
+# 必须在常量表之后 source：母版顶层执行 detect_platform + detect_python，
+# 依赖常量表已设的 PYTHON/PYTHON_ENV_VAR；HOST_OS 已由上方内联探测就绪。
 # ============================================================
-pyinstaller_build() {
-  if [ "$HOST_OS" = "darwin" ]; then
-    # universal 构建仅在解释器以 arm64 运行（Apple Silicon）时才有意义，
-    # 否则（Intel 机器）强行构建会误入双架构分支，导致向 Homebrew
-    # Python 安装 PyInstaller 触发 PEP 668 externally-managed-environment 错误
-    local main_py_arch
-    main_py_arch=$("$PYTHON" -c "import platform; print(platform.machine())" 2>/dev/null || echo "")
-
-    local x86_py=""
-    if [ "$main_py_arch" = "arm64" ]; then
-      x86_py=$(find_x86_64_python 2>/dev/null || echo "")
-    fi
-
-    if [ -n "$x86_py" ]; then
-      log_info "检测到 x86_64 可运行解释器: $x86_py → 构建 universal binary"
-
-      # 依赖与 PyInstaller：universal2 解释器（python.org）下 arm64/x86_64 共享
-      # 同一 site-packages，装一次即可；仅当两 slice 用不同解释器时才为 x86_64 补装
-      ensure_runtime_deps
-      ensure_pyinstaller
-      if [ "$x86_py" != "$PYTHON" ] && ! $x86_py -m pip show -q pyinstaller 2>/dev/null; then
-        log_info "为 x86_64 Python 安装 PyInstaller ..."
-        $x86_py -m pip install -q pyinstaller pyinstaller-hooks-contrib \
-          || die "x86_64 PyInstaller 安装失败"
-      fi
-
-      local arm64_stage="$BUILD_DIR/stage_arm64"
-      local x86_stage="$BUILD_DIR/stage_x86_64"
-      local final_app="$DIST_DIR/${APP_NAME}.app"
-
-      # 1) arm64 slice → stage_arm64
-      log_info "=== 构建 arm64 slice ==="
-      clean_app_artifacts
-      pyinstaller_build_arch "arm64" "$PYTHON" || die "arm64 构建失败"
-      [ -d "$final_app" ] || die "arm64 .app 未找到"
-      rm -rf "$arm64_stage"; mv "$final_app" "$arm64_stage"
-
-      # 2) x86_64 slice → stage_x86_64
-      log_info "=== 构建 x86_64 slice ==="
-      clean_app_artifacts
-      pyinstaller_build_arch "x86_64" "$x86_py" || die "x86_64 构建失败"
-      [ -d "$final_app" ] || die "x86_64 .app 未找到"
-      rm -rf "$x86_stage"; mv "$final_app" "$x86_stage"
-
-      # 3) 以 arm64 bundle 为完整基线（含 Info.plist/资源/框架），按缺失架构补齐
-      #    所有 Mach-O。python.org universal2 下框架本就是 universal2，通常仅主
-      #    启动器需合并；被 PyInstaller 裁薄的扩展/框架也能在此一并补回。
-      log_info "组装 universal .app (以 arm64 slice 为基线) ..."
-      rm -rf "$final_app"
-      cp -R "$arm64_stage" "$final_app"
-      assemble_universal_app "$final_app" "$x86_stage"
-      chmod +x "$final_app/Contents/MacOS/$APP_NAME"
-      lipo -info "$final_app/Contents/MacOS/$APP_NAME" || true
-
-      # 4) 合并后二进制已变更，重新 ad-hoc 签名
-      if command -v codesign &>/dev/null; then
-        codesign --force --deep --sign - --timestamp=none "$final_app" \
-          || log_warn "universal .app ad-hoc 签名失败（仅提示）"
-      fi
-
-      rm -rf "$arm64_stage" "$x86_stage"
-      log_success "Universal .app 构建完成 (arm64 + x86_64)"
-      return 0
-    fi
-
-    if [ "$main_py_arch" = "arm64" ]; then
-      log_info "未检测到 x86_64 Python，仅构建 arm64"
-    else
-      log_info "主解释器架构为 $main_py_arch (非 Apple Silicon)，跳过 universal 构建"
-    fi
-  fi
-
-  # 非 macOS 或未找到 x86_64 Python: 单架构构建
-  clean_app_artifacts
-  pyinstaller_build_arch "$HOST_ARCH" "$PYTHON"
-}
+source "$SCRIPT_DIR/run_tools_master.sh"
 
 # ============================================================
-# 构建后处理
+# 项目专属实现（覆盖母版默认 / 追加项目专属命令）
 # ============================================================
-
-# macOS: 更新 Info.plist 中的版本号 / bundle id
-fix_app_info() {
-  [ "$HOST_OS" = "darwin" ] || return 0
-  local version
-  version=$(get_version)
-  local plist="$DIST_DIR/${APP_NAME}.app/Contents/Info.plist"
-  [ -f "$plist" ] || return 0
-
-  plutil -replace CFBundleIdentifier -string "$APP_BUNDLE_ID" "$plist" 2>/dev/null || true
-  plutil -replace CFBundleShortVersionString -string "$version" "$plist" 2>/dev/null || \
-    plutil -insert CFBundleShortVersionString -string "$version" "$plist" 2>/dev/null || true
-  plutil -replace CFBundleVersion -string "$version" "$plist" 2>/dev/null || \
-    plutil -insert CFBundleVersion -string "$version" "$plist" 2>/dev/null || true
-  plutil -replace LSMinimumSystemVersion -string "$MACOS_MIN_VERSION" "$plist" 2>/dev/null || \
-    plutil -insert LSMinimumSystemVersion -string "$MACOS_MIN_VERSION" "$plist" 2>/dev/null || true
-  log_info "Info.plist 已更新: version=$version bundle=$APP_BUNDLE_ID minOS=$MACOS_MIN_VERSION"
-}
-
-# macOS: 生成 DMG
-build_dmg() {
-  [ "$HOST_OS" = "darwin" ] || return 0
-  local version
-  version=$(get_version)
-  local app_path="$DIST_DIR/${APP_NAME}.app"
-  local dmg_name="${APP_NAME}_v${version}.dmg"
-  local dmg_path="${RELEASE_DIR}/${dmg_name}"
-
-  [ -d "$app_path" ] || return 0
-
-  mkdir -p "$RELEASE_DIR"
-  rm -f "$dmg_path"
-
-  log_info "生成 DMG: $dmg_name ..."
-  local tmp_stage="$RELEASE_DIR/dmg_stage"
-  rm -rf "$tmp_stage"
-  mkdir -p "$tmp_stage"
-  cp -R "$app_path" "$tmp_stage/"
-  ln -s /Applications "$tmp_stage/Applications" 2>/dev/null || true
-
-  if hdiutil create \
-      -volname "$APP_NAME" \
-      -srcfolder "$tmp_stage" \
-      -ov -format UDZO \
-      "$dmg_path" > /dev/null 2>&1; then
-    log_success "Release DMG  → $dmg_path ($(du -sh "$dmg_path" | cut -f1))"
-  else
-    log_warn "DMG 生成失败（sandbox 或权限限制），但 .app 已可用: $app_path"
-  fi
-  rm -rf "$tmp_stage"
-}
-
-# Linux: 生成 tar.gz
-build_tarball() {
-  [ "$HOST_OS" = "linux" ] || return 0
-  local version
-  version=$(get_version)
-  local dir="$DIST_DIR/${APP_NAME}"
-  local tar_path="${RELEASE_DIR}/${APP_NAME}_v${version}_linux_${HOST_ARCH}.tar.gz"
-
-  [ -d "$dir" ] || return 0
-  mkdir -p "$RELEASE_DIR"
-  rm -f "$tar_path"
-
-  log_info "生成 tar.gz ..."
-  (cd "$DIST_DIR" && tar -czf "$tar_path" "${APP_NAME}")
-  log_success "Release tgz  → $tar_path"
-}
-
-# Windows: 生成 zip
-build_zip() {
-  [ "$HOST_OS" = "windows" ] || return 0
-  local version
-  version=$(get_version)
-  local dir="$DIST_DIR/${APP_NAME}"
-  local zip_name="${APP_NAME}_v${version}_windows_${HOST_ARCH}.zip"
-  local zip_path="${RELEASE_DIR}/${zip_name}"
-
-  [ -d "$dir" ] || return 0
-  mkdir -p "$RELEASE_DIR"
-  rm -f "$zip_path"
-
-  log_info "生成 ZIP: $zip_name ..."
-  if command -v zip &>/dev/null; then
-    (cd "$DIST_DIR" && zip -rq "$zip_path" "${APP_NAME}")
-  elif command -v powershell &>/dev/null; then
-    local win_dir win_zip_path
-    win_dir="$(_to_native_path "$dir")"
-    win_zip_path="$(_to_native_path "$zip_path")"
-    powershell -NoProfile -Command \
-      "Compress-Archive -Path '${win_dir}\\*' -DestinationPath '${win_zip_path}' -Force"
-  else
-    log_warn "zip 不可用，跳过"
-    return 0
-  fi
-  log_success "Release ZIP  → $zip_path"
-}
-
-# ============================================================
-# 增量构建检查
-# ============================================================
-needs_build() {
-  local target
-  if [ "$HOST_OS" = "darwin" ]; then
-    target="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
-  else
-    target="$DIST_DIR/${APP_NAME}${EXT}"
-  fi
-  [ -f "$target" ] || [ -d "$DIST_DIR/${APP_NAME}.app" ] || return 0
-
-  # macOS universal: 检查是否包含双架构
-  if [ "$HOST_OS" = "darwin" ] && [ -f "$target" ]; then
-    if lipo -info "$target" 2>/dev/null | grep -q 'x86_64'; then
-      : # universal binary, 继续检查源文件变更
-    fi
-  fi
-
-  local newer
-  newer=$(find "$PROJECT_DIR" \
-    \( -name '*.py' -o -name 'VERSION' -o -name 'requirements.txt' -o \
-       -path '*/custom_scripts/*' -o -path '*/icons/*' -o -path '*/data/*' \) \
-    -not -path '*/build/*' \
-    -not -path '*/release/*' \
-    -not -path '*/.git/*' \
-    -not -path '*/.venv*/*' \
-    -newer "$target" \
-    -print -quit 2>/dev/null)
-  [ -n "$newer" ]
-}
-
-# ============================================================
-# 进程处理
-# ============================================================
-kill_existing() {
-  local pids
-  pids=$(pgrep -f "${APP_NAME}" 2>/dev/null || true)
-  if [ -n "$pids" ]; then
-    log_info "停止已有 App 进程: $pids"
-    echo "$pids" | xargs kill 2>/dev/null || true
-    sleep 1
-    pids=$(pgrep -f "${APP_NAME}" 2>/dev/null || true)
-    if [ -n "$pids" ]; then
-      echo "$pids" | xargs kill -9 2>/dev/null || true
-    fi
-    log_success "旧进程已停止"
-  fi
-}
-
-# ============================================================
-# 命令实现
-# ============================================================
-# 安装/补齐依赖包: 运行时依赖 + 构建工具 + 测试工具
-cmd_install() {
-  check_python
-  check_tkinter
-  ensure_runtime_deps
-  ensure_pyinstaller
-  ensure_pytest
-
-  log_info "依赖版本:"
-  $PYTHON -m pip show pynput pyperclip pyinstaller pytest 2>/dev/null \
-    | grep -E '^(Name|Version):' | paste - - | sed 's/^/  /' || true
-  log_success "=== 依赖安装完成 ==="
-}
-
-cmd_build() {
-  check_python
-  check_tkinter
-
-  # 构建开始时清空工作目录（此时尚未生成 universal 合并的临时 stage）
-  rm -rf "$BUILD_DIR"/*
-  mkdir -p "$BUILD_DIR" "$DIST_DIR" "$RELEASE_DIR"
-
-  pyinstaller_build
-  local rc=$?
-  if [ $rc -ne 0 ]; then
-    die "构建失败 (PyInstaller rc=$rc)"
-  fi
-
-  fix_app_info
-
-  if [ "$HOST_OS" = "darwin" ]; then
-    build_dmg
-  elif [ "$HOST_OS" = "linux" ]; then
-    build_tarball
-  else
-    build_zip
-  fi
-
-  log_success "=== 构建完成 ==="
-  if [ "$HOST_OS" = "darwin" ]; then
-    local dmg_file
-    dmg_file=$(ls "$RELEASE_DIR"/*.dmg 2>/dev/null | head -1)
-    [ -n "$dmg_file" ] && log_info "Release DMG: $dmg_file"
-    log_info "中间产物 (不在 release/): $DIST_DIR/${APP_NAME}.app"
-  fi
-  log_info "Release 目录 (仅发布包): $RELEASE_DIR"
-}
-
-cmd_run() {
-  if [ "$HOST_OS" = "windows" ]; then
-    log_error "run 不支持 Windows，请直接双击 release/${APP_NAME}.exe"
-  fi
-
-  local log_file="$BUILD_DIR/run.log"
-  mkdir -p "$BUILD_DIR"
-
-  kill_existing
-
-  if needs_build; then
-    cmd_build
-  else
-    log_success "源文件无变化，跳过构建"
-  fi
-
-  local binary
-  if [ "$HOST_OS" = "darwin" ]; then
-    binary="$DIST_DIR/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
-  else
-    binary="$DIST_DIR/${APP_NAME}/${APP_NAME}${EXT}"
-  fi
-  [ -x "$binary" ] || die "找不到可执行文件: $binary"
-
-  log_info "启动 $APP_NAME (前台模式)..."
-  log_info "按 Ctrl+C 关闭"
-  echo ""
-
-  : > "$log_file"
-  "$binary" 2>&1 | tee -a "$log_file" || true
-  echo ""
-  log_success "App 已退出"
-}
-
-cmd_dev() {
-  check_python
-  mkdir -p "$BUILD_DIR"
-  local log_file="$BUILD_DIR/dev.log"
-
-  log_info "开发模式: python -m app"
-  log_info "按 Ctrl+C 停止"
-  echo ""
-
-  : > "$log_file"
-  cd "$PROJECT_DIR"
-  $PYTHON -m app 2>&1 | tee -a "$log_file" || true
-  echo ""
-  log_success "开发模式已停止"
-}
-
+# 业务脚本用例（非 pytest 体系）：tests/test_scripts/run_tests.py 扫描
+# custom_scripts/ 并按 JSON 用例分组执行；pytest 对 tests/ 的收集恒为 0
+#（GUI 按键测试是独立脚本不是用例），母版默认 cmd_test 会假绿，故覆盖。
 cmd_test() {
   check_python
-  ensure_pytest
 
-  log_info "运行 pytest (跳过 GUI 自动化测试)..."
-  cd "$PROJECT_DIR"
-  $PYTHON -m pytest tests/ -v \
-    -k "not test_editor_keys and not test_key_states" 2>&1 || \
-    log_warn "pytest 返回非 0 (可能 GUI 测试需真实 Tk 环境)"
+  log_info "运行业务脚本用例 (tests/test_scripts/run_tests.py)..."
+  local rc=0
+  if $DRY_RUN; then
+    log_warn "[dry-run] $PYTHON tests/test_scripts/run_tests.py"
+  else
+    $PYTHON "$PROJECT_DIR/tests/test_scripts/run_tests.py" || rc=$?
+  fi
+
+  ensure_pytest
+  log_info "pytest 冒烟 (跳过需真实 Tk 窗口的 GUI 自动化测试)..."
+  if ! $DRY_RUN; then
+    $PYTHON -m pytest tests/ -v \
+      -k "not test_editor_keys and not test_key_states" \
+      || log_warn "pytest 返回非 0 (可能无收集用例或 GUI 测试需真实 Tk 环境)"
+  fi
+
+  if [ "$rc" -ne 0 ]; then
+    log_error "业务脚本用例未通过 (run_tests.py rc=$rc)"
+  fi
   log_success "测试命令执行完成"
 }
 
-# 同步 custom_scripts/ 到已安装的 Boop.app（macOS 开发期用）
+# 同步 custom_scripts/ 到已安装的 Boop.app（macOS 开发期用）：
+# 先整体备份到 custom_scripts.bak_<时间戳>/，再清装新脚本（只同步顶层 .py 与 lib/）。
 cmd_scripts() {
   local target="/Applications/Boop.app/Contents/Resources/custom_scripts"
-  [ -d "$target" ] || die "未找到 /Applications/Boop.app（请先安装或打包）"
+  [ -d "$target" ] || log_error "未找到 /Applications/Boop.app（请先安装或打包）"
+
+  if $DRY_RUN; then
+    log_warn "[dry-run] 备份 $target → custom_scripts.bak_<时间戳>/，再同步项目 custom_scripts/"
+    return 0
+  fi
 
   local backup_dir="$PROJECT_DIR/custom_scripts.bak_$(date +%Y%m%d_%H%M%S)"
   mkdir -p "$backup_dir"
@@ -763,100 +245,33 @@ cmd_scripts() {
   log_success "custom_scripts/ 已同步 → $target"
 }
 
-cmd_clean() {
-  log_info "清理构建产物..."
-  kill_existing 2>/dev/null || true
-  rm -rf "$BUILD_DIR" "$RELEASE_DIR" \
-         "$PROJECT_DIR/${APP_NAME}.spec"
-  find "$PROJECT_DIR" -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
-  find "$PROJECT_DIR" -name '*.pyc' -delete 2>/dev/null || true
-  log_success "清理完成"
+# 构建产物落 dist 后的项目附加动作：清掉随 --add-data 整目录拷入的
+# __pycache__/*.pyc（解包扫描加载会读到陈旧字节码，且徒增体积）。
+hook_post_build() {
+  $DRY_RUN && return 0
+  local res="$DIST_DIR/${APP_NAME}.app/Contents/Resources"
+  [ -d "$res" ] || return 0
+  find "$res" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+  find "$res" -name '*.pyc' -delete 2>/dev/null || true
 }
 
-# ============================================================
-# 交互菜单
-# ============================================================
-commands=(
-  "1|b|build    |构建桌面应用 (当前平台)"
-  "2|r|run      |构建并前台运行 (Ctrl+C 关闭)"
-  "3|d|dev      |开发模式: python -m app 前台运行"
-  "4|t|test     |运行单元测试 (pytest, 跳过 GUI 测试)"
-  "5|s|scripts  |同步 custom_scripts/ 到 /Applications/Boop.app"
-  "6|c|clean    |清理构建产物"
-  "7|i|install  |安装依赖包 (requirements + PyInstaller + pytest)"
-  "0|q|exit     |退出"
-)
-
-show_menu() {
-  echo ""
-  echo "=========================================="
-  echo "      Boop - 构建工具 ($HOST_OS/$HOST_ARCH)"
-  echo "=========================================="
-  for c in "${commands[@]}"; do
-    IFS='|' read -r num name desc <<< "$c"
-    printf "  %s) %-10s %s\n" "$num" "$name" "$desc"
-  done
-  echo "=========================================="
-  echo -n "请输入选择 [0-7] (回车=dev): "
-}
-
-show_help() {
-  local version
-  version=$(get_version)
+# 帮助尾部补充：项目专属命令与环境变量说明
+show_help_extra() {
   cat <<EOF
-Boop 构建工具
 
-用法: $0 [命令]
-
-当前平台: $HOST_OS/$HOST_ARCH   版本: $version   Python: $PYTHON
-
-命令:
-  (无参数)    显示交互菜单（回车默认 dev）
-  1|build     构建桌面应用 (PyInstaller)
-  2|run       构建并前台运行 App (Ctrl+C 关闭)
-  3|dev       开发模式: python -m app 前台运行
-  4|test      运行单元测试 (跳过需真实 Tk 窗口的测试)
-  5|scripts   同步 custom_scripts/ 到 /Applications/Boop.app
-  6|clean     清理 build/ release/ __pycache__
-  7|install   安装依赖包 (requirements.txt + PyInstaller + pytest)
-  0|exit      退出
+项目说明:
+  scripts 命令将项目 custom_scripts/ 同步到已安装的
+  /Applications/Boop.app/Contents/Resources/custom_scripts（同步前自动备份）。
+  custom_scripts/ 与 data/ 已通过 --add-data 随包，构建期无需额外操作。
 
 环境变量:
-  BOOP_PYTHON   显式指定 Python 解释器路径（CI 用）
+  $PYTHON_ENV_VAR           显式指定 Python 解释器路径（本机单架构直接用当前 slice）
+  MACOSX_DEPLOYMENT_TARGET  macOS 部署目标（缺省 ${MACOS_MIN_VERSION}）
 
-Python 检测顺序:
-  BOOP_PYTHON → ~/miniconda3/envs/python39/bin/python3 → 已激活虚拟环境 → PATH 上的 python3
-
-项目路径:
-  源码:     $PROJECT_DIR
-  中间产物:  $DIST_DIR (PyInstaller .app / onedir)
-  发布产物:  $RELEASE_DIR (仅 DMG/tgz/zip)
-  运行日志:  $BUILD_DIR/run.log 和 $BUILD_DIR/dev.log
-  版本文件:  $VERSION_FILE
+macOS 采用单架构打包（NEEDS_UNIVERSAL=0）：产物跟随构建机架构（本机 Intel → x86_64、
+Apple Silicon → arm64）。CI 用矩阵分别在 arm64 与 x86_64 slice 上构建两份单架构 DMG，
+x86_64 侧经 `arch -x86_64 ./scripts/run_tools.sh build`（Rosetta）得到。
 EOF
-}
-
-main() {
-  local cmd="${1:-}"
-
-  if [ -z "$cmd" ]; then
-    show_menu
-    read -r choice
-    cmd="${choice:-dev}"
-  fi
-
-  case "$cmd" in
-    1|b|build)       cmd_build ;;
-    2|r|run)         cmd_run ;;
-    3|d|dev|"")      cmd_dev ;;
-    4|t|test)        cmd_test ;;
-    5|s|scripts)     cmd_scripts ;;
-    6|c|clean)       cmd_clean ;;
-    7|i|install)     cmd_install ;;
-    0|q|exit|quit)   echo "退出..."; exit 0 ;;
-    help|-h|--help)  show_help ;;
-    *)               echo "未知命令: $cmd (--help 查看)"; exit 1 ;;
-  esac
 }
 
 main "$@"

@@ -153,7 +153,7 @@ boop/
 │   ├── core/                       # 脚本管理 / 缓存 / 日志 / 热键 / 事件
 │   └── ui/                         # MainWindow / Editor / ScriptPicker / Preferences
 ├── custom_scripts/                 # 70+ 内置脚本（格式化、转换、编解码、行操作等）
-├── scripts/                        # Shell 工具脚本（run_tools.sh / release.sh / git_commit_release.sh）
+├── scripts/                        # Shell 工具脚本（run_tools.sh 入口 + run_tools_master.sh 公共母版 / release.sh / git_commit_release.sh）
 ├── data/config.json                # 默认配置样本
 ├── icons/                          # 图标资源（.icns / .ico / .png）
 ├── docs/                           # 架构与开发文档 + ADR

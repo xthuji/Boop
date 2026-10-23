@@ -447,7 +447,8 @@ boop/
 ├── requirements.txt                    # 依赖清单（无 pyproject.toml）
 ├── VERSION                             # 版本号（纯文本，内容即版本号）
 ├── scripts/                            # Shell 工具脚本（位于子目录）
-│   ├── run_tools.sh                    # 跨平台打包 + 测试一体化
+│   ├── run_tools.sh                    # 跨平台打包 + 测试一体化（入口：常量与命令表 + 专属实现）
+│   ├── run_tools_master.sh             # 公共母版模块（与 easy_translate 逐字节一致，入口 source 加载）
 │   ├── release.sh                      # Git tag 发布辅助
 │   └── git_commit_release.sh           # 提交/推送/发布一体化
 ├── app/                                # 主包（flat layout）
