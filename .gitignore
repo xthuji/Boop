@@ -29,6 +29,8 @@ logs/
 # 临时文件
 *.tmp
 *.bak
+# 脚本目录备份（.bak_时间戳）
+*.bak_*/
 
 # macOS
 .DS_Store
